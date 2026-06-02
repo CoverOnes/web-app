@@ -1,0 +1,14 @@
+.placeholder-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  font-size: 24px;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px var(--shadow);
+  margin: 20px;
+  padding: 40px;
+  text-align: center;
+}

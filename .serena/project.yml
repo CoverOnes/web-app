@@ -1,0 +1,22 @@
+project_name: "chat-web"
+
+languages:
+- typescript
+
+encoding: "utf-8"
+ignore_all_files_in_gitignore: true
+
+ignored_paths:
+- "node_modules/"
+- "dist/"
+- ".vite/"
+- "coverage/"
+- "build/"
+- "playwright-report/"
+- "test-results/"
+- "**/*.snap"
+
+read_only: false
+
+excluded_tools:
+- execute_shell_command

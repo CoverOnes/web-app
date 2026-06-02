@@ -1,0 +1,246 @@
+@import "tailwindcss";
+
+@theme {
+  /* ===== Design System: Accent (blue default, overridable via JS) ===== */
+  --color-accent: #2563EB;
+  --color-accent-hover: #1D4ED8;
+  --color-accent-soft: rgba(37,99,235,0.14);
+  --color-indigo: #6366F1;
+  --color-green: #059669;
+  --color-cyan: #22D3EE;
+  --color-red: #EF4444;
+  --color-amber: #F59E0B;
+
+  /* ===== Sidebar tokens (dark default) ===== */
+  --color-sb-bg: #0B1220;
+  --color-sb-bg-2: #0F172A;
+  --color-sb-hover: rgba(255,255,255,0.04);
+  --color-sb-active: rgba(255,255,255,0.06);
+  --color-sb-border: rgba(255,255,255,0.06);
+  --color-sb-text: #E2E8F0;
+  --color-sb-text-dim: #94A3B8;
+  --color-sb-tint: rgba(255,255,255,0.04);
+  --color-sb-tint-2: rgba(255,255,255,0.06);
+
+  /* ===== Main area tokens (dark default) ===== */
+  --color-main-bg: #111827;
+  --color-main-bg-2: #1E293B;
+  --color-main-text: #E5E7EB;
+  --color-main-text-dim: #94A3B8;
+  --color-main-border: rgba(255,255,255,0.08);
+  --color-bubble-other: #1E293B;
+  --color-bubble-other-text: #E5E7EB;
+  --color-input-bg: #0F172A;
+
+  /* ===== Legacy palette (kept for backward compat) ===== */
+  --color-primary-50:  #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #3b82f6;
+  --color-primary-500: #1d4ed8;
+  --color-primary-600: #1e3a8a;
+  --color-primary-700: #1a2f7a;
+  --color-primary-800: #162566;
+  --color-primary-900: #0f1a4a;
+  --color-primary-950: #090f2e;
+  --color-accent-100: #cffafe;
+  --color-accent-200: #a5f3fc;
+  --color-accent-300: #67e8f9;
+  --color-accent-400: #22d3ee;
+  --color-accent-500: #00bcd4;
+  --color-accent-600: #0891b2;
+  --color-accent-900: #164e63;
+  --color-neutral-50:  #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1e293b;
+  --color-neutral-900: #0f172a;
+  --color-success-100: #dcfce7;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-warning-100: #fef3c7;
+  --color-warning-500: #f59e0b;
+  --color-error-100:   #fee2e2;
+  --color-error-400:   #f87171;
+  --color-error-500:   #ef4444;
+  --color-info-100:    #eff6ff;
+  --color-info-500:    #3b82f6;
+
+  /* ===== Typography ===== */
+  --font-sans: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  /* ===== Geometry tokens ===== */
+  --radius-card: 12px;
+  --radius-bubble: 10px;
+  --radius-input: 8px;
+  --radius-chip: 999px;
+  --navbar-h: 56px;
+  --sidebar-w: 280px;
+  --shadow-pop: 0 10px 30px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.2);
+  --shadow-modal: 0 40px 80px -20px rgba(0,0,0,0.6), 0 2px 10px rgba(0,0,0,0.3);
+
+  /* ===== Density tokens (comfortable default) ===== */
+  --density-row: 52px;
+  --density-gap: 10px;
+  --density-pad: 16px;
+
+  /* ===== Legacy border radius ===== */
+  --radius-bubble-own:   18px 18px 4px 18px;
+  --radius-bubble-other: 18px 18px 18px 4px;
+
+  /* ===== Animation durations ===== */
+  --duration-fast:   150ms;
+  --duration-base:   200ms;
+  --duration-theme:  300ms;
+  --duration-slide:  250ms;
+  --duration-popup:  200ms;
+
+  /* ===== Z-Index ===== */
+  --z-dropdown:        100;
+  --z-sidebar-mobile:  200;
+  --z-popup:           300;
+  --z-modal:           400;
+  --z-toast:           500;
+  --z-navbar:          600;
+
+  /* ===== Spacing Extensions ===== */
+  --spacing-13: 52px;
+  --spacing-18: 72px;
+  --spacing-22: 88px;
+}
+
+/* ===== Light theme override via data-panel="light" ===== */
+[data-panel="light"] {
+  --color-sb-bg: #FFFFFF;
+  --color-sb-bg-2: #F8FAFC;
+  --color-sb-hover: rgba(15,23,42,0.04);
+  --color-sb-active: rgba(37,99,235,0.08);
+  --color-sb-border: rgba(15,23,42,0.08);
+  --color-sb-text: #0F172A;
+  --color-sb-text-dim: #64748B;
+  --color-sb-tint: rgba(15,23,42,0.04);
+  --color-sb-tint-2: rgba(15,23,42,0.06);
+  --color-main-bg: #F8FAFC;
+  --color-main-bg-2: #FFFFFF;
+  --color-main-text: #0F172A;
+  --color-main-text-dim: #64748B;
+  --color-main-border: rgba(15,23,42,0.08);
+  --color-bubble-other: #F1F5F9;
+  --color-bubble-other-text: #0F172A;
+  --color-input-bg: #FFFFFF;
+}
+
+/* ===== Density modes ===== */
+[data-density="compact"] {
+  --density-row: 44px;
+  --density-gap: 6px;
+  --density-pad: 12px;
+}
+
+[data-density="spacious"] {
+  --density-row: 60px;
+  --density-gap: 14px;
+  --density-pad: 20px;
+}
+
+/* ===== Base ===== */
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  [data-panel="light"] {
+    color-scheme: light;
+  }
+
+  body {
+    font-feature-settings: "cv11","ss01","ss03";
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.94) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ===== Typing indicator dot ===== */
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-main-text-dim);
+  animation: typingBounce 1.2s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* ===== Reaction bar hover activation ===== */
+.msg-hover:hover .reaction-bar {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  pointer-events: auto !important;
+}
+
+/* ===== Custom scrollbar for sidebar room list ===== */
+.sb-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.sb-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sb-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148,163,184,0.15);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+/* ===== Placeholder page ===== */
+.placeholder-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-main-text-dim);
+  font-size: 14px;
+}
