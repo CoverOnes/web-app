@@ -1,0 +1,22 @@
+# Secrets — never bake into the image (even the builder layer)
+.env
+.env.*
+*.local
+*.pem
+*.key
+*.p12
+*.pfx
+local.yaml
+
+# Deps / build artifacts (npm ci re-installs inside the builder)
+node_modules
+dist
+build
+
+# VCS / tooling
+.git
+.gitignore
+.github
+*.log
+.DS_Store
+coverage
