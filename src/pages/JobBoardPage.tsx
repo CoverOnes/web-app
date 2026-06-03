@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useListings } from '../lib/query';
+import { kycTierError } from '../lib/api/coverones';
+import { KycRequiredBanner } from '../components/auth/KycRequiredBanner';
 import { ProjectCard } from '../components/marketplace/ProjectCard';
 import { PageHead } from '../components/layout/PageHead';
 import { Tabs } from '../components/ui/Tabs';
@@ -31,8 +33,12 @@ function filterListings(listings: Listing[], tab: TabId): Listing[] {
 const JobBoardPage = () => {
   const navigate = useNavigate();
   const kycTier = useAuthStore((s) => s.user?.kycTier ?? 0);
-  const { data: listings, isLoading, isError } = useListings({ status: 'OPEN' });
+  const { data: listings, isLoading, isError, error } = useListings({ status: 'OPEN' });
   const [activeTab, setActiveTab] = useState<TabId>('ALL');
+
+  // A 403 KYC_TIER_REQUIRED is a verification gate, not a load failure — Tier-0
+  // users hitting an OPEN listing feed get this and must be shown the KYC CTA.
+  const kycGate = isError ? kycTierError(error) : null;
 
   const canPost = kycTier >= 2;
 
@@ -117,6 +123,13 @@ const JobBoardPage = () => {
         {isLoading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
             <LoadingSkeleton count={6} height="h-36" />
+          </div>
+        ) : kycGate ? (
+          <div style={{ maxWidth: 560 }}>
+            <KycRequiredBanner
+              requiredTier={kycGate.requiredTier}
+              message={`完成 KYC Tier ${kycGate.requiredTier} 驗證才能瀏覽案件看板（目前 Tier ${kycGate.currentTier}）。`}
+            />
           </div>
         ) : isError ? (
           <EmptyState

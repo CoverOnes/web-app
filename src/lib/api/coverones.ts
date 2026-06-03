@@ -1,5 +1,53 @@
 import { http } from './http';
 import type { AuthUser } from '../../store/authStore';
+import { AxiosError } from 'axios';
+
+// ===== Error envelope =====
+// Backend wraps every error as { error: { code, message, details? } }.
+// (httpx.ErrorResponse / ErrorBody in the Go services.) The success interceptor
+// in http.ts only unwraps `{ data }` on 2xx, so on error err.response.data is
+// this raw envelope.
+export interface ApiErrorBody {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
+export interface ApiErrorEnvelope {
+  error: ApiErrorBody;
+}
+
+/** Narrow an unknown thrown value to the backend error envelope (or null). */
+export function apiError(err: unknown): ApiErrorBody | null {
+  if (err instanceof AxiosError) {
+    const body = err.response?.data as Partial<ApiErrorEnvelope> | undefined;
+    if (body && typeof body.error === 'object' && body.error !== null) {
+      return body.error as ApiErrorBody;
+    }
+  }
+  return null;
+}
+
+/** Human-readable message from an API error, falling back to a default. */
+export function apiErrorMessage(err: unknown, fallback: string): string {
+  return apiError(err)?.message ?? fallback;
+}
+
+/**
+ * Detect a 403 KYC_TIER_REQUIRED error and pull its tier details.
+ * Returns null for any other error so callers can distinguish a tier gate
+ * (show KYC CTA) from a genuine load failure (show retry message).
+ */
+export function kycTierError(err: unknown): { requiredTier: number; currentTier: number } | null {
+  if (!(err instanceof AxiosError) || err.response?.status !== 403) return null;
+  const body = apiError(err);
+  if (body?.code !== 'KYC_TIER_REQUIRED') return null;
+  const details = body.details as { requiredTier?: unknown; currentTier?: unknown } | undefined;
+  return {
+    requiredTier: typeof details?.requiredTier === 'number' ? details.requiredTier : 1,
+    currentTier: typeof details?.currentTier === 'number' ? details.currentTier : 0,
+  };
+}
 
 // ===== Auth =====
 export interface RegisterRequest {

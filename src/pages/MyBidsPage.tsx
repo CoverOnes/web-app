@@ -1,4 +1,6 @@
 import { useMyBids, useWithdrawBid } from '../lib/query';
+import { kycTierError } from '../lib/api/coverones';
+import { KycRequiredBanner } from '../components/auth/KycRequiredBanner';
 import { PipelineCard } from '../components/marketplace/PipelineCard';
 import { PageHead } from '../components/layout/PageHead';
 import { StatCard } from '../components/ui/StatCard';
@@ -18,9 +20,12 @@ const PIPELINE_COLUMNS: { id: BidStatus | 'ALL'; label: string }[] = [
 ];
 
 const MyBidsPage = () => {
-  const { data: bids, isLoading, isError } = useMyBids();
+  const { data: bids, isLoading, isError, error } = useMyBids();
   const withdrawBid = useWithdrawBid();
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+
+  // 403 KYC_TIER_REQUIRED → show verification CTA, not a generic load failure.
+  const kycGate = isError ? kycTierError(error) : null;
 
   const handleWithdraw = async (bidId: string) => {
     setWithdrawingId(bidId);
@@ -62,6 +67,13 @@ const MyBidsPage = () => {
                 <LoadingSkeleton count={3} height="h-24" />
               </div>
             ))}
+          </div>
+        ) : kycGate ? (
+          <div style={{ maxWidth: 560 }}>
+            <KycRequiredBanner
+              requiredTier={kycGate.requiredTier}
+              message={`完成 KYC Tier ${kycGate.requiredTier} 驗證才能查看投標記錄（目前 Tier ${kycGate.currentTier}）。`}
+            />
           </div>
         ) : isError ? (
           <EmptyState

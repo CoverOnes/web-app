@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { authApi } from '../lib/api/coverones';
+import { authApi, apiErrorMessage } from '../lib/api/coverones';
 import { AuthHeroPanel } from '../components/auth/AuthHeroPanel';
-import type { AxiosError } from 'axios';
 
 type AccountType = 'PERSONAL' | 'COMPANY';
 
@@ -15,8 +14,11 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [accountType, setAccountType] = useState<AccountType>('PERSONAL');
+  const [companyName, setCompanyName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const isCompany = accountType === 'COMPANY';
 
   const fieldStyle: React.CSSProperties = {
     height: 46,
@@ -55,20 +57,34 @@ const Register = () => {
       setError('Passwords do not match.');
       return;
     }
+    // COMPANY accounts MUST provide a company name — the backend rejects an empty
+    // one with 400 "company name required for COMPANY account type".
+    if (isCompany && !companyName.trim()) {
+      setError('Company name is required for a Client / Company account.');
+      return;
+    }
 
     setIsLoading(true);
     setError('');
 
     try {
-      await authApi.register({ email, password, displayName, accountType });
+      await authApi.register({
+        email,
+        password,
+        displayName,
+        accountType,
+        // Only send companyName for COMPANY accounts; PERSONAL omits it.
+        ...(isCompany ? { companyName: companyName.trim() } : {}),
+      });
       // Auto-login after register — pass token directly so me() has Authorization header.
       const tokenRes = await authApi.login({ email, password });
       const user = await authApi.me(tokenRes.accessToken);
       login(tokenRes.accessToken, tokenRes.refreshToken, user);
       navigate('/jobs', { replace: true });
     } catch (err) {
-      const axErr = err as AxiosError<{ message?: string }>;
-      setError(axErr.response?.data?.message ?? 'Registration failed. Please try again.');
+      // Surface the backend's human message (e.g. "company name required …",
+      // "password must be at least 12 characters") instead of a raw code.
+      setError(apiErrorMessage(err, 'Registration failed. Please try again.'));
     } finally {
       setIsLoading(false);
     }
@@ -221,17 +237,36 @@ const Register = () => {
                 </select>
               </div>
 
+              {isCompany && (
+                <div>
+                  <label htmlFor="reg-companyName" style={labelStyle}>Company Name</label>
+                  <input
+                    id="reg-companyName"
+                    type="text"
+                    autoComplete="organization"
+                    placeholder="Your company / organization name"
+                    maxLength={120}
+                    required
+                    aria-required="true"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    disabled={isLoading}
+                    style={fieldStyle}
+                  />
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || (isCompany && !companyName.trim())}
                 style={{
                   width: '100%', height: 48, borderRadius: 12,
                   background: 'linear-gradient(135deg, #2563EB 0%, #6366F1 50%, #8B5CF6 100%)',
                   color: '#fff', fontWeight: 600, fontSize: 15, border: 'none',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                   boxShadow: '0 10px 24px rgba(99,102,241,0.4)',
-                  cursor: isLoading ? 'wait' : 'pointer',
-                  opacity: isLoading ? 0.75 : 1,
+                  cursor: isLoading ? 'wait' : (isCompany && !companyName.trim()) ? 'not-allowed' : 'pointer',
+                  opacity: isLoading ? 0.75 : (isCompany && !companyName.trim()) ? 0.6 : 1,
                   transition: 'opacity 150ms',
                   marginTop: 6,
                 }}

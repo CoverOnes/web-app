@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContracts } from '../lib/query';
+import { kycTierError } from '../lib/api/coverones';
+import { KycRequiredBanner } from '../components/auth/KycRequiredBanner';
 import { ContractRow } from '../components/workspace/ContractRow';
 import { PageHead } from '../components/layout/PageHead';
 import { StatCard } from '../components/ui/StatCard';
@@ -21,9 +23,12 @@ const FILTER_TABS: { id: FilterOption; label: string }[] = [
 const MyContractsPage = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<FilterOption>('ALL');
-  const { data: contracts, isLoading, isError } = useContracts(
+  const { data: contracts, isLoading, isError, error } = useContracts(
     activeFilter !== 'ALL' ? activeFilter : undefined
   );
+
+  // 403 KYC_TIER_REQUIRED → show verification CTA, not a generic load failure.
+  const kycGate = isError ? kycTierError(error) : null;
 
   const activeCount = contracts?.filter((c) => c.status === 'ACTIVE').length ?? 0;
   const pendingCount = contracts?.filter((c) => c.status === 'PENDING_SIGNATURE').length ?? 0;
@@ -99,6 +104,13 @@ const MyContractsPage = () => {
         {isLoading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <LoadingSkeleton count={5} height="h-16" />
+          </div>
+        ) : kycGate ? (
+          <div style={{ maxWidth: 560 }}>
+            <KycRequiredBanner
+              requiredTier={kycGate.requiredTier}
+              message={`完成 KYC Tier ${kycGate.requiredTier} 驗證才能查看合約（目前 Tier ${kycGate.currentTier}）。`}
+            />
           </div>
         ) : isError ? (
           <EmptyState
