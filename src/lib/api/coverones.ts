@@ -141,8 +141,11 @@ export const authApi = {
     http.post('/v1/auth/logout', { refreshToken }).then((r) => r.data),
 
   // /api/user/v1/me → gateway strips /api/user → user service receives /v1/me
-  me: () =>
-    http.get<AuthUser>('/api/user/v1/me').then((r) => r.data),
+  // Accepts an optional token to use directly (bypasses store, for post-login hydration).
+  me: (token?: string) =>
+    http.get<AuthUser>('/api/user/v1/me', {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    }).then((r) => r.data),
 };
 
 export const marketplaceApi = {

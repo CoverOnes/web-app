@@ -26,7 +26,8 @@ const Login = () => {
 
     try {
       const tokenRes = await authApi.login({ email, password });
-      const user = await authApi.me();
+      // Pass token directly — store not yet updated, so interceptor can't see it.
+      const user = await authApi.me(tokenRes.accessToken);
       login(tokenRes.accessToken, tokenRes.refreshToken, user);
       navigate('/jobs', { replace: true });
     } catch (err) {

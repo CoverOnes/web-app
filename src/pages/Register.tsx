@@ -61,9 +61,9 @@ const Register = () => {
 
     try {
       await authApi.register({ email, password, displayName, accountType });
-      // Auto-login after register
+      // Auto-login after register — pass token directly so me() has Authorization header.
       const tokenRes = await authApi.login({ email, password });
-      const user = await authApi.me();
+      const user = await authApi.me(tokenRes.accessToken);
       login(tokenRes.accessToken, tokenRes.refreshToken, user);
       navigate('/jobs', { replace: true });
     } catch (err) {

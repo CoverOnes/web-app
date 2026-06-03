@@ -61,7 +61,14 @@ const createHttpClient = (): AxiosInstance => {
   );
 
   client.interceptors.response.use(
-    (response) => response,
+    (response) => {
+      // Backend wraps every success response in { data: <payload> }.
+      // Unwrap here so callers see the payload directly via r.data.
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        response.data = (response.data as { data: unknown }).data;
+      }
+      return response;
+    },
     async (error: AxiosError) => {
       const originalRequest = error.config as typeof error.config & { _retry?: boolean };
       if (error.response?.status === 401 && !originalRequest?._retry) {
@@ -96,11 +103,11 @@ const createHttpClient = (): AxiosInstance => {
 
         try {
           // WA-M3: /v1/auth/refresh is a public gateway route (no /api/:svc prefix).
-          const res = await axios.post<{ accessToken: string; refreshToken: string }>(
+          const res = await axios.post<{ data: { accessToken: string; refreshToken: string } }>(
             `${GATEWAY_URL}/v1/auth/refresh`,
             { refreshToken }
           );
-          const { accessToken: newAccess, refreshToken: newRefresh } = res.data;
+          const { accessToken: newAccess, refreshToken: newRefresh } = res.data.data;
           refreshTokens(newAccess, newRefresh);
           // WA-M5: Resolve all queued requests with the new access token.
           drainQueueSuccess(newAccess);
