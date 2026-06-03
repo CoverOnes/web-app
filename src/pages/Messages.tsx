@@ -135,15 +135,15 @@ const Messages = () => {
     }
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-main-bg)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--co-bg)' }}>
         {/* Mobile chat header with back button */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: 10,
           padding: '10px 12px',
-          borderBottom: '1px solid var(--color-main-border)',
-          background: 'var(--color-main-bg-2)',
+          borderBottom: '1px solid var(--co-line)',
+          background: 'var(--co-bg-card-2)',
           flexShrink: 0,
           minHeight: 52,
         }}>
@@ -160,7 +160,7 @@ const Messages = () => {
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              color: 'var(--color-main-text)',
+              color: 'var(--co-text)',
               borderRadius: 8,
               flexShrink: 0,
             }}
@@ -171,7 +171,7 @@ const Messages = () => {
             <div style={{
               fontSize: 15,
               fontWeight: 600,
-              color: 'var(--color-main-text)',
+              color: 'var(--co-text)',
               letterSpacing: '-0.01em',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -197,7 +197,7 @@ const Messages = () => {
           width: 400,
           maxWidth: '100%',
           height: '100%',
-          borderRight: '1px solid var(--color-main-border)',
+          borderRight: '1px solid var(--co-line)',
           display: 'flex',
           flexDirection: 'column',
         }}>
@@ -206,13 +206,13 @@ const Messages = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: '1px solid var(--color-main-border)',
+            borderBottom: '1px solid var(--co-line)',
             flexShrink: 0,
           }}>
             <h1 style={{
               fontSize: 24,
               fontWeight: 700,
-              color: 'var(--color-main-text)',
+              color: 'var(--co-text)',
               margin: 0,
             }}>
               聊天室
@@ -261,7 +261,7 @@ const Messages = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'var(--color-main-bg)',
+          background: 'var(--co-bg)',
         }}>
           <div style={{
             textAlign: 'center',
@@ -269,19 +269,19 @@ const Messages = () => {
             maxWidth: 400,
           }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>
-              <Icon.MessageSquare size={48} style={{ color: 'var(--color-main-text-dim)', margin: '0 auto' }} />
+              <Icon.MessageSquare size={48} style={{ color: 'var(--co-text-dim)', margin: '0 auto' }} />
             </div>
             <h2 style={{
               fontSize: 20,
               fontWeight: 600,
-              color: 'var(--color-main-text)',
+              color: 'var(--co-text)',
               margin: '0 0 8px 0',
             }}>
               聊天室列表
             </h2>
             <p style={{
               fontSize: 14,
-              color: 'var(--color-main-text-dim)',
+              color: 'var(--co-text-dim)',
               margin: '0 0 24px 0',
               lineHeight: 1.5,
             }}>

@@ -82,7 +82,7 @@
   --radius-input: 8px;
   --radius-chip: 999px;
   --navbar-h: 56px;
-  --sidebar-w: 280px;
+  --sidebar-w: 240px;
   --shadow-pop: 0 10px 30px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.2);
   --shadow-modal: 0 40px 80px -20px rgba(0,0,0,0.6), 0 2px 10px rgba(0,0,0,0.3);
 
@@ -114,6 +114,76 @@
   --spacing-13: 52px;
   --spacing-18: 72px;
   --spacing-22: 88px;
+}
+
+/* ===== CoverOnes Design System v2 ===== */
+:root {
+  /* Backgrounds */
+  --co-bg:        #060A14;
+  --co-bg-2:      #0B1220;
+  --co-bg-3:      #0F172A;
+  --co-bg-card:   #111827;
+  --co-bg-card-2: #1E293B;
+
+  /* Borders */
+  --co-line:        rgba(148,163,184,0.10);
+  --co-line-strong: rgba(148,163,184,0.18);
+
+  /* Text */
+  --co-text:       #E5E7EB;
+  --co-text-dim:   #94A3B8;
+  --co-text-muted: #64748B;
+
+  /* Accent palette */
+  --co-accent:       #6366F1;
+  --co-accent-2:     #8B5CF6;
+  --co-accent-blue:  #2563EB;
+  --co-cyan:         #22D3EE;
+  --co-green:        #10B981;
+  --co-amber:        #F59E0B;
+  --co-red:          #EF4444;
+  --co-pink:         #EC4899;
+}
+
+/* CoverOnes v2 base */
+html, body { background: #000; color: var(--co-text); }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.2); border-radius: 999px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Logo square utility classes */
+.co-lg {
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.co-lg-blue   { background: linear-gradient(135deg,#2563EB,#6366F1); }
+.co-lg-purple { background: linear-gradient(135deg,#8B5CF6,#EC4899); }
+.co-lg-orange { background: linear-gradient(135deg,#F59E0B,#EF4444); }
+.co-lg-amber  { background: linear-gradient(135deg,#F59E0B,#F97316); }
+.co-lg-green  { background: linear-gradient(135deg,#10B981,#059669); }
+.co-lg-cyan   { background: linear-gradient(135deg,#0EA5E9,#22D3EE); }
+.co-lg-indigo { background: linear-gradient(135deg,#6366F1,#8B5CF6); }
+.co-lg-rose   { background: linear-gradient(135deg,#F43F5E,#EC4899); }
+
+/* Progress bar */
+.co-bar { height: 6px; border-radius: 999px; background: rgba(148,163,184,0.1); overflow: hidden; }
+.co-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--co-accent), var(--co-cyan)); }
+
+/* Active nav item accent bar helper */
+.co-nav-active-bar {
+  position: absolute;
+  left: -12px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--co-accent);
 }
 
 /* ===== Light theme override via data-panel="light" ===== */

@@ -22,8 +22,8 @@ export function ContractCard({ contract }: ContractCardProps) {
       role="button"
       aria-label={`Contract: ${contract.title}`}
       style={{
-        background: 'var(--color-main-bg-2)',
-        border: '1px solid var(--color-main-border)',
+        background: 'var(--co-bg-card-2)',
+        border: '1px solid var(--co-line)',
         borderRadius: 'var(--radius-card)',
         padding: 16,
         cursor: 'pointer',
@@ -35,7 +35,7 @@ export function ContractCard({ contract }: ContractCardProps) {
       className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/50 hover:border-accent-500/40"
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-main-text)', flex: 1 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--co-text)', flex: 1 }}>
           {contract.title}
         </h3>
         <StatusBadge status={contract.status} />
@@ -59,7 +59,7 @@ export function ContractCard({ contract }: ContractCardProps) {
         </span>
       </div>
 
-      <p style={{ fontSize: 12, color: 'var(--color-main-text-dim)' }}>
+      <p style={{ fontSize: 12, color: 'var(--co-text-dim)' }}>
         Counterparty: {role === 'Client' ? contract.freelancerUserId.slice(0, 8) : contract.clientUserId.slice(0, 8)}...
       </p>
     </div>

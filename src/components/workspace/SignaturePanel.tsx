@@ -45,7 +45,7 @@ export function SignaturePanel({ contract, signatures, onSign, isSigning }: Sign
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-main-text)' }}>
+      <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--co-text)' }}>
         Signatures
       </h3>
 

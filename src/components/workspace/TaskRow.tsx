@@ -23,15 +23,15 @@ export function TaskRow({ task, onStatusChange, isUpdating }: TaskRowProps) {
         alignItems: 'center',
         gap: 12,
         padding: '10px 0',
-        borderBottom: '1px solid var(--color-main-border)',
+        borderBottom: '1px solid var(--co-line)',
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--color-main-text)' }}>
+        <p style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--co-text)' }}>
           {task.title}
         </p>
         {task.assigneeUserId && (
-          <p style={{ fontSize: 11, color: 'var(--color-main-text-dim)', marginTop: 2 }}>
+          <p style={{ fontSize: 11, color: 'var(--co-text-dim)', marginTop: 2 }}>
             Assignee: {task.assigneeUserId.slice(0, 8)}...
           </p>
         )}

@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { useChatStore } from '../../store/chatStore';
 import AppShell from './AppShell';
 import CoverOnesSidebar from './CoverOnesSidebar';
+import CoverOnesTopbar from './CoverOnesTopbar';
 import CoverOnesMobileBottomNav from './CoverOnesMobileBottomNav';
 import MobileDrawer from './MobileDrawer';
 import ChatPopup from '../chat/ChatPopup';
@@ -62,9 +63,16 @@ const CoverOnesLayout = () => {
           flexDirection: 'column',
           overflow: 'hidden',
           paddingBottom: isMobile ? 72 : 0,
+          background: 'var(--co-bg)',
         }}
       >
-        <Outlet />
+        {/* Topbar — sticky at top of main content column */}
+        <CoverOnesTopbar />
+
+        {/* Scrollable outlet area */}
+        <div style={{ flex: 1, overflowY: 'auto', background: 'var(--co-bg)' }}>
+          <Outlet />
+        </div>
       </main>
 
       {isMobile && (

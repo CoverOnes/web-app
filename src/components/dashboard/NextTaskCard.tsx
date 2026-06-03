@@ -48,13 +48,13 @@ export function NextTaskCard() {
     return (
       <div
         style={{
-          background: 'var(--color-main-bg-2)',
-          border: '1px solid var(--color-main-border)',
+          background: 'var(--co-bg-card-2)',
+          border: '1px solid var(--co-line)',
           borderRadius: 12,
           padding: 16,
         }}
       >
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-main-text-dim)', marginBottom: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--co-text-dim)', marginBottom: 12 }}>
           下一步任務
         </div>
         <div
@@ -86,13 +86,13 @@ export function NextTaskCard() {
     return (
       <div
         style={{
-          background: 'var(--color-main-bg-2)',
+          background: 'var(--co-bg-card-2)',
           border: '1px solid rgba(239,68,68,0.2)',
           borderRadius: 12,
           padding: 16,
         }}
       >
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-main-text-dim)', marginBottom: 8 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--co-text-dim)', marginBottom: 8 }}>
           下一步任務
         </div>
         <div style={{ fontSize: 12, color: '#FCA5A5' }}>無法載入任務資料</div>
@@ -109,8 +109,8 @@ export function NextTaskCard() {
     return (
       <div
         style={{
-          background: 'var(--color-main-bg-2)',
-          border: '1px solid var(--color-main-border)',
+          background: 'var(--co-bg-card-2)',
+          border: '1px solid var(--co-line)',
           borderRadius: 12,
           padding: 16,
         }}
@@ -132,7 +132,7 @@ export function NextTaskCard() {
           padding: '18px 0', flexDirection: 'column', gap: 6,
         }}>
           <span style={{ fontSize: 22 }}>✓</span>
-          <span style={{ fontSize: 12.5, color: 'var(--color-main-text-dim)' }}>
+          <span style={{ fontSize: 12.5, color: 'var(--co-text-dim)' }}>
             沒有待辦任務
           </span>
         </div>
@@ -148,8 +148,8 @@ export function NextTaskCard() {
       className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded-[12px]"
       style={{
         width: '100%',
-        background: 'var(--color-main-bg-2)',
-        border: '1px solid var(--color-main-border)',
+        background: 'var(--co-bg-card-2)',
+        border: '1px solid var(--co-line)',
         borderRadius: 12,
         padding: 16,
         cursor: 'pointer',
@@ -161,7 +161,7 @@ export function NextTaskCard() {
         (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.4)';
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--color-main-border)';
+        (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--co-line)';
       }}
     >
       <div style={{
@@ -200,7 +200,7 @@ export function NextTaskCard() {
         fontSize: 13.5,
         fontWeight: 600,
         lineHeight: 1.4,
-        color: 'var(--color-main-text)',
+        color: 'var(--co-text)',
         marginBottom: 10,
         display: '-webkit-box',
         WebkitLineClamp: 2,
@@ -213,7 +213,7 @@ export function NextTaskCard() {
       {/* Footer hint */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-        fontSize: 11, color: 'var(--color-main-text-dim)',
+        fontSize: 11, color: 'var(--co-text-dim)',
       }}>
         點擊前往 GTD →
       </div>

@@ -41,8 +41,8 @@ const MobileBottomNav = () => {
         left: 0,
         right: 0,
         height: 72,
-        background: 'var(--color-main-bg-2)',
-        borderTop: '1px solid var(--color-main-border)',
+        background: 'var(--co-bg-card-2)',
+        borderTop: '1px solid var(--co-line)',
         display: 'flex',
         alignItems: 'stretch',
         zIndex: 5 as React.CSSProperties['zIndex'],
@@ -71,7 +71,7 @@ const MobileBottomNav = () => {
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              color: active ? 'var(--color-accent)' : 'var(--color-main-text-dim)',
+              color: active ? 'var(--color-accent)' : 'var(--co-text-dim)',
               minWidth: 44,
               minHeight: 44,
               position: 'relative',
@@ -82,7 +82,7 @@ const MobileBottomNav = () => {
               <IconComp
                 size={22}
                 style={{
-                  color: active ? 'var(--color-accent)' : 'var(--color-main-text-dim)',
+                  color: active ? 'var(--color-accent)' : 'var(--co-text-dim)',
                   transition: 'color 150ms ease-out',
                 }}
               />
@@ -104,7 +104,7 @@ const MobileBottomNav = () => {
                     textAlign: 'center',
                     padding: '0 4px',
                     boxSizing: 'border-box',
-                    boxShadow: '0 0 0 2px var(--color-main-bg-2)',
+                    boxShadow: '0 0 0 2px var(--co-bg-card-2)',
                   }}
                 >
                   {unreadCount > 99 ? '99+' : unreadCount}
@@ -115,7 +115,7 @@ const MobileBottomNav = () => {
               fontSize: 10,
               fontWeight: 500,
               lineHeight: 1,
-              color: active ? 'var(--color-accent)' : 'var(--color-main-text-dim)',
+              color: active ? 'var(--color-accent)' : 'var(--co-text-dim)',
               transition: 'color 150ms ease-out',
             }}>
               {tab.label}

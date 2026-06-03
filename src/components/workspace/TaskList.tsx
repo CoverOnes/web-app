@@ -34,8 +34,10 @@ export function TaskList({ tasks, onStatusChange, onAddTask, isUpdating, isAddin
         {TABS.map((tab) => (
           <button
             key={tab.id}
+            id={`tasks-tab-${tab.id}`}
             role="tab"
             aria-selected={activeTab === tab.id}
+            aria-controls={`tasks-panel-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
             onKeyDown={(e) => {
               const idx = TABS.findIndex((t) => t.id === tab.id);
@@ -52,9 +54,9 @@ export function TaskList({ tasks, onStatusChange, onAddTask, isUpdating, isAddin
               borderRadius: 999,
               fontSize: 12,
               fontWeight: 500,
-              border: '1px solid var(--color-main-border)',
-              background: activeTab === tab.id ? 'var(--color-accent)' : 'transparent',
-              color: activeTab === tab.id ? '#fff' : 'var(--color-main-text-dim)',
+              border: '1px solid var(--co-line)',
+              background: activeTab === tab.id ? 'var(--co-accent)' : 'transparent',
+              color: activeTab === tab.id ? '#fff' : 'var(--co-text-dim)',
               cursor: 'pointer',
               transition: 'background 150ms',
             }}
@@ -64,7 +66,11 @@ export function TaskList({ tasks, onStatusChange, onAddTask, isUpdating, isAddin
         ))}
       </div>
 
-      <div>
+      <div
+        role="tabpanel"
+        id={`tasks-panel-${activeTab}`}
+        aria-labelledby={`tasks-tab-${activeTab}`}
+      >
         {filtered.length === 0 ? (
           <EmptyState title="No tasks" description="No tasks match the selected filter." />
         ) : (

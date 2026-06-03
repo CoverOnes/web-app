@@ -13,15 +13,15 @@ export function EmptyState({ icon, title, description, ctaLabel, onCta }: EmptyS
   return (
     <div className="flex flex-col items-center justify-center py-16 px-8 text-center gap-4">
       {icon && (
-        <div style={{ color: 'var(--color-main-text-dim)', opacity: 0.6 }}>
+        <div style={{ color: 'var(--co-text-dim)', opacity: 0.6 }}>
           {icon}
         </div>
       )}
-      <p className="text-base font-semibold" style={{ color: 'var(--color-main-text)' }}>
+      <p className="text-base font-semibold" style={{ color: 'var(--co-text)' }}>
         {title}
       </p>
       {description && (
-        <p className="text-sm max-w-sm" style={{ color: 'var(--color-main-text-dim)' }}>
+        <p className="text-sm max-w-sm" style={{ color: 'var(--co-text-dim)' }}>
           {description}
         </p>
       )}

@@ -11,8 +11,8 @@ export function TermsPanel({ terms }: TermsPanelProps) {
   return (
     <div
       style={{
-        background: 'var(--color-main-bg)',
-        border: '1px solid var(--color-main-border)',
+        background: 'var(--co-bg)',
+        border: '1px solid var(--co-line)',
         borderRadius: 10,
         padding: '16px 20px',
         maxHeight: 256,
@@ -24,7 +24,7 @@ export function TermsPanel({ terms }: TermsPanelProps) {
         style={{
           fontSize: 13,
           lineHeight: 1.65,
-          color: 'var(--color-main-text)',
+          color: 'var(--co-text)',
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
           fontFamily: 'var(--font-mono)',

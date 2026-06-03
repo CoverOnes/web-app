@@ -22,10 +22,10 @@ const Register = () => {
     height: 46,
     padding: '0 14px',
     background: 'var(--color-input-bg)',
-    border: '1px solid var(--color-main-border)',
+    border: '1px solid var(--co-line)',
     borderRadius: 11,
     fontSize: 14,
-    color: 'var(--color-main-text)',
+    color: 'var(--co-text)',
     width: '100%',
     outline: 'none',
     boxSizing: 'border-box',
@@ -37,7 +37,7 @@ const Register = () => {
     display: 'block',
     fontSize: 12,
     fontWeight: 500,
-    color: 'var(--color-main-text-dim)',
+    color: 'var(--co-text-dim)',
     marginBottom: 7,
   };
 
@@ -118,17 +118,17 @@ const Register = () => {
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 24, paddingBottom: 24 }}>
           <div style={{
             width: 480,
-            background: 'var(--color-main-bg-2)',
-            border: '1px solid var(--color-main-border)',
+            background: 'var(--co-bg-card-2)',
+            border: '1px solid var(--co-line)',
             borderRadius: 20,
             padding: '36px 36px 28px 36px',
             backdropFilter: 'blur(24px)',
             boxShadow: '0 30px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset',
           }}>
-            <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 6px 0', color: 'var(--color-main-text)' }}>
+            <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 6px 0', color: 'var(--co-text)' }}>
               Create Account
             </h2>
-            <p style={{ fontSize: 13.5, color: 'var(--color-main-text-dim)', margin: '0 0 24px 0' }}>
+            <p style={{ fontSize: 13.5, color: 'var(--co-text-dim)', margin: '0 0 24px 0' }}>
               Join the CoverOnes marketplace.
             </p>
 
@@ -243,7 +243,7 @@ const Register = () => {
               </button>
             </form>
 
-            <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-main-text-dim)', marginTop: 22, paddingTop: 20, borderTop: '1px solid var(--color-main-border)' }}>
+            <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--co-text-dim)', marginTop: 22, paddingTop: 20, borderTop: '1px solid var(--co-line)' }}>
               Already have an account?{' '}
               <Link to="/login" style={{ color: '#C7D2FE', fontWeight: 600 }}>
                 Sign in
