@@ -73,10 +73,11 @@ const createHttpClient = (): AxiosInstance => {
       const originalRequest = error.config as typeof error.config & { _retry?: boolean };
       if (error.response?.status === 401 && !originalRequest?._retry) {
         const { useAuthStore } = await import('../../store/authStore');
-        const { refreshToken, refreshTokens, logout } = useAuthStore.getState();
+        const { refreshToken, refreshTokens, clearStaleSession } = useAuthStore.getState();
 
         if (!refreshToken) {
-          logout();
+          // No refresh token to retry with → clear any stale state and redirect.
+          clearStaleSession();
           if (window.location.pathname !== '/login') window.location.href = '/login';
           return Promise.reject(error);
         }
@@ -119,7 +120,9 @@ const createHttpClient = (): AxiosInstance => {
         } catch (refreshErr) {
           // WA-M5: Reject all queued requests so callers are not left hanging.
           drainQueueFailure(refreshErr);
-          logout();
+          // Refresh token was stale/invalid → clear it and stop hydrating so the
+          // app redirects to /login instead of hanging on the boot spinner.
+          clearStaleSession();
           if (window.location.pathname !== '/login') window.location.href = '/login';
           return Promise.reject(refreshErr);
         } finally {

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { isFeatureEnabled } from '../../features/flags/featureFlags';
 
 const BriefcaseIcon = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -50,7 +51,10 @@ const CoverOnesSidebar = () => {
   const location = useLocation();
   const user = useAuthStore((s) => s.user);
 
-  const handleOpenSettings = useCallback(() => navigate('/settings'), [navigate]);
+  const settingsEnabled = isFeatureEnabled('avatarSettings');
+  const handleOpenSettings = useCallback(() => {
+    if (settingsEnabled) navigate('/settings');
+  }, [navigate, settingsEnabled]);
 
   const isActive = (path: string) => location.pathname.startsWith(path);
 
@@ -227,11 +231,14 @@ const CoverOnesSidebar = () => {
       {/* Divider */}
       <div style={{ height: 1, background: 'var(--co-line)', margin: '8px 4px' }} aria-hidden="true" />
 
-      {/* Disabled/coming-soon: Settings */}
+      {/* Settings — gated as "Coming soon" until the settings backend ships (TBD). */}
       <div style={{ position: 'relative' }}>
         <button
           onClick={handleOpenSettings}
-          aria-current={isActive('/settings') ? 'page' : undefined}
+          disabled={!settingsEnabled}
+          aria-disabled={!settingsEnabled}
+          title={!settingsEnabled ? '即將推出 · Coming soon' : undefined}
+          aria-current={settingsEnabled && isActive('/settings') ? 'page' : undefined}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -240,27 +247,44 @@ const CoverOnesSidebar = () => {
             borderRadius: 8,
             fontSize: 13,
             fontWeight: 500,
-            color: isActive('/settings') ? '#fff' : 'var(--co-text-muted)',
-            background: isActive('/settings')
+            color: settingsEnabled && isActive('/settings') ? '#fff' : 'var(--co-text-muted)',
+            background: settingsEnabled && isActive('/settings')
               ? 'linear-gradient(90deg, rgba(99,102,241,0.18), rgba(99,102,241,0.04))'
               : 'transparent',
             border: 'none',
-            cursor: 'pointer',
+            cursor: settingsEnabled ? 'pointer' : 'not-allowed',
+            opacity: settingsEnabled ? 1 : 0.6,
             width: '100%',
             textAlign: 'left',
             transition: 'background 150ms ease-out, color 150ms ease-out',
           }}
           onMouseEnter={(e) => {
-            if (!isActive('/settings')) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)';
+            if (settingsEnabled && !isActive('/settings')) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)';
           }}
           onMouseLeave={(e) => {
-            if (!isActive('/settings')) (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+            if (settingsEnabled && !isActive('/settings')) (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
           }}
         >
           <span style={{ color: 'var(--co-text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }} aria-hidden="true">
             <SettingsIcon />
           </span>
           <span style={{ flex: 1 }}>Settings</span>
+          {!settingsEnabled && (
+            <span
+              style={{
+                fontSize: 9.5,
+                fontWeight: 600,
+                padding: '2px 6px',
+                borderRadius: 999,
+                background: 'rgba(245,158,11,0.15)',
+                color: 'var(--co-amber)',
+                border: '1px solid rgba(245,158,11,0.25)',
+                flexShrink: 0,
+              }}
+            >
+              TBD
+            </span>
+          )}
         </button>
       </div>
 
