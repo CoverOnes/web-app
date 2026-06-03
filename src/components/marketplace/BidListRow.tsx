@@ -27,14 +27,14 @@ export function BidListRow({
         alignItems: 'flex-start',
         gap: 12,
         padding: '12px 0',
-        borderBottom: '1px solid var(--color-main-border)',
+        borderBottom: '1px solid var(--co-line)',
       }}
     >
       <Avatar name={bid.bidderUserId.slice(0, 2)} size="sm" />
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-main-text)' }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--co-text)' }}>
             {bid.bidderUserId.slice(0, 8)}...
           </span>
           <StatusBadge status={bid.status} />
@@ -46,7 +46,7 @@ export function BidListRow({
           <p
             style={{
               fontSize: 12,
-              color: 'var(--color-main-text-dim)',
+              color: 'var(--co-text-dim)',
               overflow: 'hidden',
               whiteSpace: 'nowrap',
               textOverflow: 'ellipsis',

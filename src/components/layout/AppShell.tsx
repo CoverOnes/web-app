@@ -16,7 +16,7 @@ const AppShell = ({ children }: AppShellProps) => {
         display: 'flex',
         height: '100vh',
         overflow: 'hidden',
-        background: 'var(--color-main-bg)',
+        background: 'var(--co-bg)',
       }}
     >
       {children}

@@ -14,8 +14,8 @@ export function BidCard({ bid, listingTitle, onWithdraw, isWithdrawing }: BidCar
   return (
     <div
       style={{
-        background: 'var(--color-main-bg-2)',
-        border: '1px solid var(--color-main-border)',
+        background: 'var(--co-bg-card-2)',
+        border: '1px solid var(--co-line)',
         borderRadius: 'var(--radius-card)',
         padding: 16,
         display: 'flex',
@@ -42,7 +42,7 @@ export function BidCard({ bid, listingTitle, onWithdraw, isWithdrawing }: BidCar
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-main-text)' }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--co-text)' }}>
           {bid.currency} {bid.amount}
         </span>
       </div>
@@ -51,7 +51,7 @@ export function BidCard({ bid, listingTitle, onWithdraw, isWithdrawing }: BidCar
         <p
           style={{
             fontSize: 13,
-            color: 'var(--color-main-text-dim)',
+            color: 'var(--co-text-dim)',
             overflow: 'hidden',
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis',

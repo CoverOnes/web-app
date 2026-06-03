@@ -36,8 +36,8 @@ export function ListingCard({ listing }: ListingCardProps) {
         if (e.key === 'Enter' || e.key === ' ') navigate(`/jobs/${listing.id}`);
       }}
       style={{
-        background: 'var(--color-main-bg-2)',
-        border: '1px solid var(--color-main-border)',
+        background: 'var(--co-bg-card-2)',
+        border: '1px solid var(--co-line)',
         borderRadius: 'var(--radius-card)',
         padding: 16,
         cursor: 'pointer',
@@ -53,7 +53,7 @@ export function ListingCard({ listing }: ListingCardProps) {
           style={{
             fontSize: 14,
             fontWeight: 600,
-            color: 'var(--color-main-text)',
+            color: 'var(--co-text)',
             lineHeight: 1.4,
             flex: 1,
             overflow: 'hidden',
@@ -70,7 +70,7 @@ export function ListingCard({ listing }: ListingCardProps) {
       <p
         style={{
           fontSize: 13,
-          color: 'var(--color-main-text-dim)',
+          color: 'var(--co-text-dim)',
           lineHeight: 1.5,
           overflow: 'hidden',
           display: '-webkit-box',
@@ -86,7 +86,7 @@ export function ListingCard({ listing }: ListingCardProps) {
           {budgetLabel}
         </span>
         {relativeTime && (
-          <span style={{ fontSize: 11, color: 'var(--color-main-text-dim)' }}>
+          <span style={{ fontSize: 11, color: 'var(--co-text-dim)' }}>
             {relativeTime}
           </span>
         )}

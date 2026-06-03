@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Person } from '../../types';
 import { Avatar } from '../ui/Avatar';
 import { Icon } from '../ui/Icon';
-import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 
 interface TopNavbarProps {
   onOpenCreate?: () => void;
@@ -13,12 +13,13 @@ interface TopNavbarProps {
 
 const TopNavbar = ({ currentUser, totalUnread }: TopNavbarProps) => {
   const navigate = useNavigate();
-  const { logout } = useChatStore();
+  const logout = useAuthStore((s) => s.logout);
   const [menuHover, setMenuHover] = useState(false);
   const [bellHover, setBellHover] = useState(false);
 
   const handleLogout = () => {
     logout();
+    navigate('/login');
   };
 
   return (
@@ -28,8 +29,8 @@ const TopNavbar = ({ currentUser, totalUnread }: TopNavbarProps) => {
       alignItems: 'center',
       gap: 12,
       padding: '0 20px',
-      background: 'var(--color-main-bg-2)',
-      borderBottom: '1px solid var(--color-main-border)',
+      background: 'var(--co-bg-card-2)',
+      borderBottom: '1px solid var(--co-line)',
       flexShrink: 0,
       zIndex: 'var(--z-navbar)' as React.CSSProperties['zIndex'],
     }}>
@@ -42,13 +43,13 @@ const TopNavbar = ({ currentUser, totalUnread }: TopNavbarProps) => {
           width: '100%',
           height: 34,
           borderRadius: 8,
-          background: 'var(--color-main-bg)',
-          border: '1px solid var(--color-main-border)',
+          background: 'var(--co-bg)',
+          border: '1px solid var(--co-line)',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
           padding: '0 12px',
-          color: 'var(--color-main-text-dim)',
+          color: 'var(--co-text-dim)',
           fontSize: 13,
           margin: '0 auto',
           cursor: 'pointer',
@@ -63,9 +64,9 @@ const TopNavbar = ({ currentUser, totalUnread }: TopNavbarProps) => {
           fontSize: 10.5,
           padding: '1px 6px',
           borderRadius: 4,
-          background: 'var(--color-main-bg-2)',
-          border: '1px solid var(--color-main-border)',
-          color: 'var(--color-main-text-dim)',
+          background: 'var(--co-bg-card-2)',
+          border: '1px solid var(--co-line)',
+          color: 'var(--co-text-dim)',
           fontFamily: 'var(--font-mono)',
           flexShrink: 0,
         }}>
@@ -86,8 +87,8 @@ const TopNavbar = ({ currentUser, totalUnread }: TopNavbarProps) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'var(--color-main-text-dim)',
-          background: bellHover ? 'var(--color-main-bg)' : 'transparent',
+          color: 'var(--co-text-dim)',
+          background: bellHover ? 'var(--co-bg)' : 'transparent',
           border: 'none',
           cursor: 'pointer',
           position: 'relative',
@@ -106,7 +107,7 @@ const TopNavbar = ({ currentUser, totalUnread }: TopNavbarProps) => {
             height: 7,
             borderRadius: 999,
             background: 'var(--color-red)',
-            boxShadow: '0 0 0 2px var(--color-main-bg-2)',
+            boxShadow: '0 0 0 2px var(--co-bg-card-2)',
           }} aria-hidden="true" />
         )}
       </button>
@@ -124,7 +125,7 @@ const TopNavbar = ({ currentUser, totalUnread }: TopNavbarProps) => {
           gap: 6,
           padding: '4px 6px 4px 4px',
           borderRadius: 8,
-          background: menuHover ? 'var(--color-main-bg)' : 'transparent',
+          background: menuHover ? 'var(--co-bg)' : 'transparent',
           border: 'none',
           cursor: 'pointer',
           transition: 'background 150ms ease-out',
@@ -139,7 +140,7 @@ const TopNavbar = ({ currentUser, totalUnread }: TopNavbarProps) => {
           showDot
           status={currentUser.status}
         />
-        <Icon.ChevronDown size={14} style={{ color: 'var(--color-main-text-dim)' }} />
+        <Icon.ChevronDown size={14} style={{ color: 'var(--co-text-dim)' }} />
       </button>
     </div>
   );

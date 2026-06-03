@@ -57,8 +57,8 @@ const CoverOnesMobileBottomNav = () => {
         left: 0,
         right: 0,
         height: 72,
-        background: 'var(--color-main-bg-2)',
-        borderTop: '1px solid var(--color-main-border)',
+        background: 'var(--co-bg-card-2)',
+        borderTop: '1px solid var(--co-line)',
         display: 'flex',
         alignItems: 'stretch',
         zIndex: 5 as React.CSSProperties['zIndex'],
@@ -84,13 +84,13 @@ const CoverOnesMobileBottomNav = () => {
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              color: active ? 'var(--color-accent)' : 'var(--color-main-text-dim)',
+              color: active ? 'var(--color-accent)' : 'var(--co-text-dim)',
               minWidth: 44,
               minHeight: 44,
               transition: 'color 150ms ease-out',
             }}
           >
-            <span style={{ color: active ? 'var(--color-accent)' : 'var(--color-main-text-dim)' }}>
+            <span style={{ color: active ? 'var(--color-accent)' : 'var(--co-text-dim)' }}>
               {tab.icon}
             </span>
             <span style={{ fontSize: 10, fontWeight: 500, lineHeight: 1 }}>{tab.label}</span>

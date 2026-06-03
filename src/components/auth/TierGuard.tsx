@@ -34,8 +34,8 @@ export function TierGuard({ requiredTier, children, fullPage = false }: TierGuar
           style={{
             maxWidth: 480,
             width: '100%',
-            background: 'var(--color-main-bg-2)',
-            border: '1px solid var(--color-main-border)',
+            background: 'var(--co-bg-card-2)',
+            border: '1px solid var(--co-line-strong)',
             borderRadius: 16,
             padding: 32,
             display: 'flex',

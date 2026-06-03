@@ -43,8 +43,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           alignItems: 'center',
           justifyContent: 'center',
           height: '100vh',
-          background: 'var(--color-main-bg)',
-          color: 'var(--color-main-text-dim)',
+          background: 'var(--co-bg)',
+          color: 'var(--co-text-dim)',
           fontSize: 14,
           gap: 12,
         }}

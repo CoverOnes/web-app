@@ -46,7 +46,7 @@ export function BidForm({ onSubmit, isSubmitting, error }: BidFormProps) {
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-main-text)', marginBottom: 4 }}>
+      <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--co-text)', marginBottom: 4 }}>
         Place a Bid
       </h3>
 

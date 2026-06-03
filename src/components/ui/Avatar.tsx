@@ -98,7 +98,7 @@ export function Avatar({
               borderRadius,
               background: color
                 ? `linear-gradient(135deg, ${color[0]}, ${color[1]})`
-                : 'var(--color-main-text-dim)',
+                : 'var(--co-text-dim)',
               color: '#fff',
               display: 'flex',
               alignItems: 'center',

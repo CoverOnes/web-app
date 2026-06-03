@@ -45,8 +45,8 @@ function getRoomDisplayName(room: Room, currentUser: string): string {
 }
 
 const PANEL_STYLE: React.CSSProperties = {
-  background: 'var(--color-main-bg-2)',
-  border: '1px solid var(--color-main-border)',
+  background: 'var(--co-bg-card-2)',
+  border: '1px solid var(--co-line)',
   borderRadius: 12,
   padding: 16,
 };
@@ -126,8 +126,8 @@ const Home = () => {
       flex: 1,
       minWidth: 0,
       overflowY: 'auto',
-      background: 'var(--color-main-bg)',
-      color: 'var(--color-main-text)',
+      background: 'var(--co-bg)',
+      color: 'var(--co-text)',
     }}>
       <div style={{
         display: 'grid',
@@ -184,11 +184,11 @@ const Home = () => {
             </h1>
             <p style={{
               fontSize: 13.5,
-              color: 'var(--color-main-text-dim)',
+              color: 'var(--co-text-dim)',
               margin: 0,
               position: 'relative',
             }}>
-              共 <strong style={{ color: 'var(--color-main-text)' }}>{rooms.length}</strong> 個對話室，
+              共 <strong style={{ color: 'var(--co-text)' }}>{rooms.length}</strong> 個對話室，
               繼續與你的聯絡人保持連線
             </p>
             <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap', position: 'relative' }}>
@@ -251,10 +251,10 @@ const Home = () => {
                 +
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-main-text)', marginBottom: 3 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--co-text)', marginBottom: 3 }}>
                   開始新對話
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--color-main-text-dim)' }}>
+                <div style={{ fontSize: 12, color: 'var(--co-text-dim)' }}>
                   開始新的聊天
                 </div>
               </div>
@@ -271,8 +271,8 @@ const Home = () => {
                 gap: 14,
                 padding: '16px 18px',
                 borderRadius: 12,
-                background: 'var(--color-main-bg-2)',
-                border: '1px solid var(--color-main-border)',
+                background: 'var(--co-bg-card-2)',
+                border: '1px solid var(--co-line)',
                 cursor: 'pointer',
                 color: 'inherit',
                 textAlign: 'left',
@@ -287,10 +287,10 @@ const Home = () => {
                 #
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-main-text)', marginBottom: 3 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--co-text)', marginBottom: 3 }}>
                   新增群組
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--color-main-text-dim)' }}>
+                <div style={{ fontSize: 12, color: 'var(--co-text-dim)' }}>
                   建立群組對話
                 </div>
               </div>
@@ -307,7 +307,7 @@ const Home = () => {
                 onClick={() => navigate('/messages')}
                 className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded"
                 style={{
-                  fontSize: 12, color: 'var(--color-main-text-dim)',
+                  fontSize: 12, color: 'var(--co-text-dim)',
                   background: 'none', border: 'none', cursor: 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: 4,
                 }}
@@ -321,7 +321,7 @@ const Home = () => {
               <div style={{
                 borderRadius: 14, padding: 18, border: '1px solid rgba(148,163,184,0.18)',
                 minHeight: 160, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                background: 'radial-gradient(400px 200px at 100% 0%, rgba(34,211,238,0.2), transparent), linear-gradient(135deg, var(--color-main-bg-2), var(--color-main-bg-2))',
+                background: 'radial-gradient(400px 200px at 100% 0%, rgba(34,211,238,0.2), transparent), linear-gradient(135deg, var(--co-bg-card-2), var(--co-bg-card-2))',
                 position: 'relative', overflow: 'hidden',
               }}>
                 <div>
@@ -335,16 +335,16 @@ const Home = () => {
                   <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.4, margin: '10px 0 8px 0' }}>
                     {mostActive ? getRoomDisplayName(mostActive, currentUser) : '尚無對話'}
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--color-main-text-dim)', lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 12, color: 'var(--co-text-dim)', lineHeight: 1.5 }}>
                     {mostActive?.last_message
                       ? formatMessagePreview(mostActive.last_message)
                       : '還沒有訊息'}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--color-main-text-dim)', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--co-text-dim)', flexWrap: 'wrap' }}>
                   {mostActive && (
                     <>
-                      <span>類型 <strong style={{ color: 'var(--color-main-text)' }}>
+                      <span>類型 <strong style={{ color: 'var(--co-text)' }}>
                         {mostActive.type === 'group' ? '群組' : '私訊'}
                       </strong></span>
                       {mostActive.unread_count ? (
@@ -359,7 +359,7 @@ const Home = () => {
               <div style={{
                 borderRadius: 14, padding: 18, border: '1px solid rgba(148,163,184,0.18)',
                 minHeight: 160, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                background: 'radial-gradient(300px 200px at 100% 100%, rgba(139,92,246,0.18), transparent), linear-gradient(135deg, var(--color-main-bg-2), var(--color-main-bg-2))',
+                background: 'radial-gradient(300px 200px at 100% 100%, rgba(139,92,246,0.18), transparent), linear-gradient(135deg, var(--co-bg-card-2), var(--co-bg-card-2))',
               }}>
                 <div>
                   <span style={{
@@ -373,7 +373,7 @@ const Home = () => {
                     {latestRoom ? getRoomDisplayName(latestRoom, currentUser) : '尚無對話'}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--color-main-text-dim)' }}>
+                <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--co-text-dim)' }}>
                   {latestRoom?.last_message_time && (
                     <span>{formatMessageTime(latestRoom.last_message_time)}</span>
                   )}
@@ -384,7 +384,7 @@ const Home = () => {
               <div style={{
                 borderRadius: 14, padding: 18, border: '1px solid rgba(148,163,184,0.18)',
                 minHeight: 160, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                background: 'radial-gradient(300px 200px at 0% 0%, rgba(245,158,11,0.15), transparent), linear-gradient(135deg, var(--color-main-bg-2), var(--color-main-bg-2))',
+                background: 'radial-gradient(300px 200px at 0% 0%, rgba(245,158,11,0.15), transparent), linear-gradient(135deg, var(--co-bg-card-2), var(--co-bg-card-2))',
               }}>
                 <div>
                   <span style={{
@@ -398,8 +398,8 @@ const Home = () => {
                     {todayMsgs} 個對話有新消息
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--color-main-text-dim)' }}>
-                  <span>總計 <strong style={{ color: 'var(--color-main-text)' }}>{rooms.length}</strong> 個聊天室</span>
+                <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--co-text-dim)' }}>
+                  <span>總計 <strong style={{ color: 'var(--co-text)' }}>{rooms.length}</strong> 個聊天室</span>
                 </div>
               </div>
             </div>
@@ -417,7 +417,7 @@ const Home = () => {
                 <button
                   onClick={() => navigate('/messages')}
                   className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] rounded"
-                  style={{ fontSize: 12, color: 'var(--color-main-text-dim)', background: 'none', border: 'none', cursor: 'pointer' }}
+                  style={{ fontSize: 12, color: 'var(--co-text-dim)', background: 'none', border: 'none', cursor: 'pointer' }}
                 >
                   查看全部
                 </button>
@@ -437,12 +437,12 @@ const Home = () => {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 14,
                         padding: '12px 14px', borderRadius: 12,
-                        background: 'var(--color-main-bg-2)', border: '1px solid var(--color-main-border)',
+                        background: 'var(--co-bg-card-2)', border: '1px solid var(--co-line)',
                         cursor: 'pointer', textAlign: 'left', color: 'inherit',
                         transition: 'border-color 150ms', width: '100%',
                       }}
                       onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.4)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--color-main-border)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--co-line)'; }}
                     >
                       <div style={{
                         width: 42, height: 42, borderRadius: 10,
@@ -454,7 +454,7 @@ const Home = () => {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{
-                          fontSize: 13.5, fontWeight: 600, color: 'var(--color-main-text)',
+                          fontSize: 13.5, fontWeight: 600, color: 'var(--co-text)',
                           marginBottom: 3, display: 'flex', alignItems: 'center', gap: 6,
                         }}>
                           {name}
@@ -469,7 +469,7 @@ const Home = () => {
                           )}
                         </div>
                         <div style={{
-                          fontSize: 12, color: 'var(--color-main-text-dim)',
+                          fontSize: 12, color: 'var(--co-text-dim)',
                           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         }}>
                           {formatMessagePreview(room.last_message) || '開始對話...'}
@@ -477,7 +477,7 @@ const Home = () => {
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                         {room.last_message_time && (
-                          <span style={{ fontSize: 11, color: 'var(--color-main-text-dim)' }}>
+                          <span style={{ fontSize: 11, color: 'var(--co-text-dim)' }}>
                             {formatMessageTime(room.last_message_time)}
                           </span>
                         )}
@@ -513,8 +513,8 @@ const Home = () => {
                     <div
                       key={room.id}
                       style={{
-                        background: 'var(--color-main-bg-2)',
-                        border: '1px solid var(--color-main-border)',
+                        background: 'var(--co-bg-card-2)',
+                        border: '1px solid var(--co-line)',
                         borderRadius: 12,
                         padding: 16,
                       }}
@@ -533,21 +533,21 @@ const Home = () => {
                           <div style={{ fontSize: 13.5, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
                             {name}
                           </div>
-                          <div style={{ fontSize: 11, color: 'var(--color-main-text-dim)', marginTop: 1 }}>
+                          <div style={{ fontSize: 11, color: 'var(--co-text-dim)', marginTop: 1 }}>
                             {room.last_message_time ? formatMessageTime(room.last_message_time) : ''}
                           </div>
                         </div>
                       </div>
 
                       {/* Feed body */}
-                      <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--color-main-text)', margin: '12px 0' }}>
+                      <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--co-text)', margin: '12px 0' }}>
                         {formatMessagePreview(room.last_message) || '（無訊息）'}
                       </div>
 
                       {/* Feed actions */}
                       <div style={{
                         display: 'flex', gap: 4, paddingTop: 6,
-                        borderTop: '1px solid var(--color-main-border)',
+                        borderTop: '1px solid var(--co-line)',
                       }}>
                         <button
                           onClick={() => handleViewRoom(room)}
@@ -555,7 +555,7 @@ const Home = () => {
                           style={{
                             flex: 1, padding: 8, borderRadius: 8,
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                            fontSize: 12.5, color: 'var(--color-main-text-dim)',
+                            fontSize: 12.5, color: 'var(--co-text-dim)',
                             background: 'none', border: 'none', cursor: 'pointer',
                             transition: 'background 150ms',
                           }}
@@ -570,7 +570,7 @@ const Home = () => {
                           style={{
                             flex: 1, padding: 8, borderRadius: 8,
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                            fontSize: 12.5, color: 'var(--color-main-text-dim)',
+                            fontSize: 12.5, color: 'var(--co-text-dim)',
                             background: 'none', border: 'none', cursor: 'pointer',
                             transition: 'background 150ms',
                           }}
@@ -602,7 +602,7 @@ const Home = () => {
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div style={STAT_CELL_STYLE}>
-                <div style={{ fontSize: 10.5, color: 'var(--color-main-text-dim)' }}>總對話室</div>
+                <div style={{ fontSize: 10.5, color: 'var(--co-text-dim)' }}>總對話室</div>
                 <div style={{
                   fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', margin: '4px 0 2px 0',
                   background: 'linear-gradient(135deg, #67E8F9, #2563EB)',
@@ -612,7 +612,7 @@ const Home = () => {
                 </div>
               </div>
               <div style={STAT_CELL_STYLE}>
-                <div style={{ fontSize: 10.5, color: 'var(--color-main-text-dim)' }}>未讀訊息</div>
+                <div style={{ fontSize: 10.5, color: 'var(--co-text-dim)' }}>未讀訊息</div>
                 <div style={{
                   fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', margin: '4px 0 2px 0',
                   background: 'linear-gradient(135deg, #A78BFA, #EC4899)',
@@ -622,13 +622,13 @@ const Home = () => {
                 </div>
               </div>
               <div style={STAT_CELL_STYLE}>
-                <div style={{ fontSize: 10.5, color: 'var(--color-main-text-dim)' }}>今日活躍</div>
+                <div style={{ fontSize: 10.5, color: 'var(--co-text-dim)' }}>今日活躍</div>
                 <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', margin: '4px 0 2px 0', color: '#10B981' }}>
                   {todayMsgs}
                 </div>
               </div>
               <div style={STAT_CELL_STYLE}>
-                <div style={{ fontSize: 10.5, color: 'var(--color-main-text-dim)' }}>在線聯絡人</div>
+                <div style={{ fontSize: 10.5, color: 'var(--co-text-dim)' }}>在線聯絡人</div>
                 <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', margin: '4px 0 2px 0', color: '#F59E0B' }}>
                   {onlineContactIds.length}
                 </div>
@@ -702,7 +702,7 @@ const Home = () => {
               <div style={{ fontSize: 13, fontWeight: 600, color: '#22D3EE', marginBottom: 10 }}>
                 ● 即時活動
               </div>
-              <div style={{ fontSize: 13.5, color: 'var(--color-main-text)', lineHeight: 1.6, marginBottom: 12 }}>
+              <div style={{ fontSize: 13.5, color: 'var(--co-text)', lineHeight: 1.6, marginBottom: 12 }}>
                 {(activityRoom.unread_count || 0) > 0
                   ? `${getRoomDisplayName(activityRoom, currentUser)} 有新訊息`
                   : `你有 ${totalUnread} 則未讀訊息等待回覆`
