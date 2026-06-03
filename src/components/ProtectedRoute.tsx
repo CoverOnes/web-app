@@ -8,32 +8,58 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, isHydrating, accessToken, logout, setUser, setHydrating } = useAuthStore();
+  const {
+    isAuthenticated,
+    isHydrating,
+    accessToken,
+    refreshToken,
+    clearStaleSession,
+    setUser,
+    setHydrating,
+  } = useAuthStore();
+
+  // No session at all (no access token, no refresh token) → nothing to hydrate.
+  // Stop hydrating immediately so we never render the boot spinner indefinitely.
+  const hasNoSession = !accessToken && !refreshToken;
 
   useEffect(() => {
-    if (!accessToken) {
+    // Case 1: completely logged out — never hydrate, go straight to /login.
+    if (hasNoSession) {
       setHydrating(false);
       return;
     }
 
+    // Case 2: already authenticated in memory — done.
     if (isAuthenticated) {
       setHydrating(false);
       return;
     }
 
-    // Verify stored token and hydrate user (including fresh kycTier)
-    authApi.me()
+    // Case 3: we have a token (access and/or a persisted refresh token from a
+    // previous session). Validate it by hydrating the user. If the access token
+    // is missing/expired, the 401 interceptor will attempt a /v1/auth/refresh
+    // using the stored refresh token. If THAT fails (stale/invalid refresh
+    // token), me() rejects → we must clear the stale session and stop hydrating
+    // so the user is sent to /login instead of hanging on the spinner forever.
+    authApi
+      .me()
       .then((user) => {
         setUser(user);
-        // Ensure isAuthenticated=true — login() sets it, setUser doesn't
+        // Ensure isAuthenticated=true — login() sets it, setUser doesn't.
         useAuthStore.setState({ isAuthenticated: true, isHydrating: false });
       })
       .catch(() => {
-        logout();
-        setHydrating(false);
+        // Stale/invalid token: wipe it and bail out of hydrating.
+        clearStaleSession();
       });
+  // accessToken + refreshToken drive whether a session exists to validate.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken]);
+  }, [accessToken, refreshToken]);
+
+  // Both tokens null → no point showing the spinner; redirect immediately.
+  if (hasNoSession) {
+    return <Navigate to="/login" replace />;
+  }
 
   if (isHydrating) {
     return (

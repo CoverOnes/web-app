@@ -14,6 +14,7 @@ import Messages from './pages/Messages';
 import Contacts from './pages/Contacts';
 import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
+import { FeatureRoute } from './features/flags/FeatureRoute';
 import { useTheme } from './hooks/useTheme';
 import './App.css';
 
@@ -51,10 +52,34 @@ function App() {
             <Route path="contracts" element={<MyContractsPage />} />
             <Route path="contracts/:id" element={<ContractDetailPage />} />
 
-            {/* Parked: chat + legacy */}
-            <Route path="messages" element={<Messages />} />
-            <Route path="contacts" element={<Contacts />} />
-            <Route path="settings" element={<Settings />} />
+            {/* TBD: gated behind feature flags until the backend ships.
+                Components are preserved — only the route target is swapped to a
+                ComingSoon placeholder so a user cannot reach a screen that calls
+                a non-existent API and crashes. */}
+            <Route
+              path="messages"
+              element={
+                <FeatureRoute flag="chat" feature="聊天" description="即時通訊功能正在開發中，敬請期待。">
+                  <Messages />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="contacts"
+              element={
+                <FeatureRoute flag="contacts" feature="聯絡人" description="聯絡人功能正在開發中，敬請期待。">
+                  <Contacts />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <FeatureRoute flag="avatarSettings" feature="設定" description="個人設定功能正在開發中，敬請期待。">
+                  <Settings />
+                </FeatureRoute>
+              }
+            />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/jobs" replace />} />

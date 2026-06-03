@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { isFeatureEnabled } from '../../features/flags/featureFlags';
 
 interface TabItem {
   id: string;
@@ -35,12 +36,16 @@ const MessageSquareIcon = () => (
   </svg>
 );
 
-const TABS: TabItem[] = [
+const ALL_TABS: (TabItem & { flag?: Parameters<typeof isFeatureEnabled>[0] })[] = [
   { id: 'jobs',      path: '/jobs',      label: 'Jobs',      icon: <BriefcaseIcon /> },
   { id: 'bids',      path: '/bids',      label: 'Bids',      icon: <TagIcon /> },
   { id: 'contracts', path: '/contracts', label: 'Contracts', icon: <FileTextIcon /> },
-  { id: 'messages',  path: '/messages',  label: 'Chat',      icon: <MessageSquareIcon /> },
+  // Chat is TBD — only shown when the chat feature flag is enabled.
+  { id: 'messages',  path: '/messages',  label: 'Chat',      icon: <MessageSquareIcon />, flag: 'chat' },
 ];
+
+// Drop tabs whose feature flag is disabled so users can't navigate to a TBD page.
+const TABS: TabItem[] = ALL_TABS.filter((t) => !t.flag || isFeatureEnabled(t.flag));
 
 const CoverOnesMobileBottomNav = () => {
   const navigate = useNavigate();

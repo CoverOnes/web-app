@@ -26,6 +26,10 @@ interface AuthState {
 
   login: (accessToken: string, refreshToken: string, user: AuthUser) => void;
   logout: () => void;
+  // Clears a stale / invalid session (e.g. expired refresh token on app boot).
+  // Removes the persisted refresh token, resets auth state, and — critically —
+  // sets isHydrating=false so the app never gets stuck on the boot spinner.
+  clearStaleSession: () => void;
   setUser: (user: AuthUser) => void;
   refreshTokens: (newAccessToken: string, newRefreshToken: string) => void;
   setHydrating: (v: boolean) => void;
@@ -51,6 +55,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
+    localStorage.removeItem(REFRESH_KEY);
+    set({ accessToken: null, refreshToken: null, user: null, isAuthenticated: false, isHydrating: false });
+  },
+
+  clearStaleSession: () => {
+    // A stale/invalid refresh token in localStorage must NOT leave the app
+    // hanging on the hydrating spinner. Clear everything and stop hydrating so
+    // ProtectedRoute falls through to <Navigate to="/login" />.
     localStorage.removeItem(REFRESH_KEY);
     set({ accessToken: null, refreshToken: null, user: null, isAuthenticated: false, isHydrating: false });
   },
