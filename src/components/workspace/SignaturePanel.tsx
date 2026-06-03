@@ -12,17 +12,10 @@ interface SignaturePanelProps {
   isSigning: boolean;
 }
 
-async function computeSha256Hex(text: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
 export function SignaturePanel({ contract, signatures, onSign, isSigning }: SignaturePanelProps) {
   const user = useAuthStore((s) => s.user);
   const kycTier = user?.kycTier ?? 0;
+  const isHydrating = useAuthStore((s) => s.isHydrating);
   const [signingError, setSigningError] = useState('');
 
   const clientSig = signatures.find((s) => s.signerUserId === contract.clientUserId);
@@ -31,14 +24,16 @@ export function SignaturePanel({ contract, signatures, onSign, isSigning }: Sign
   const canSign = contract.status === 'PENDING_SIGNATURE' && !userAlreadySigned;
   const isParty = user?.id === contract.clientUserId || user?.id === contract.freelancerUserId;
 
-  const handleSign = async () => {
+  // 🔴-2: Sign with the backend-provided canonical contentHash. Recomputing a
+  // local sha256 over contract.terms produced a different digest → server 409
+  // on every sign attempt. The hash MUST come from the contract payload.
+  const handleSign = () => {
     setSigningError('');
-    try {
-      const hash = await computeSha256Hex(contract.terms);
-      onSign(hash);
-    } catch {
-      setSigningError('Failed to compute signature hash. Please try again.');
+    if (!contract.contentHash) {
+      setSigningError('Contract content hash is unavailable. Please refresh and try again.');
+      return;
     }
+    onSign(contract.contentHash);
   };
 
   if (!isParty) return null;
@@ -60,7 +55,9 @@ export function SignaturePanel({ contract, signatures, onSign, isSigning }: Sign
 
       {canSign && (
         <div>
-          {kycTier < 2 ? (
+          {/* 🟡-1: only surface the KYC gate once auth has hydrated — otherwise the
+              tier defaults to 0 mid-hydration and flashes a false "KYC required". */}
+          {!isHydrating && kycTier < 2 ? (
             <Tooltip content="KYC Tier 2 required to sign contracts">
               <Button variant="primary" size="md" disabled aria-label="Sign contract (KYC required)">
                 Sign Contract
@@ -70,7 +67,8 @@ export function SignaturePanel({ contract, signatures, onSign, isSigning }: Sign
             <Button
               variant="primary"
               size="md"
-              loading={isSigning}
+              loading={isSigning || isHydrating}
+              disabled={isHydrating}
               onClick={handleSign}
               aria-label="Sign contract"
             >

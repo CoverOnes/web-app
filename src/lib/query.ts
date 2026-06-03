@@ -3,6 +3,7 @@ import {
   marketplaceApi,
   workspaceApi,
   type ContractStatus,
+  type CreateContractRequest,
 } from './api/coverones';
 
 export const queryClient = new QueryClient({
@@ -105,6 +106,20 @@ export function useContracts(status?: ContractStatus) {
   return useQuery({
     queryKey: ['contracts', status],
     queryFn: () => workspaceApi.listContracts(status ? { status } : undefined),
+  });
+}
+
+export function useCreateContract() {
+  const qc = useQueryClient();
+  return useMutation({
+    // WA-fix: create the DRAFT contract, then submit it so it advances to
+    // PENDING_SIGNATURE and is immediately signable. Returns the submitted contract.
+    mutationFn: async (payload: CreateContractRequest) => {
+      const draft = await workspaceApi.createContract(payload);
+      return workspaceApi.submitContract(draft.id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['contracts'] }),
+    onError: (err) => { console.error('[useCreateContract]', err); },
   });
 }
 

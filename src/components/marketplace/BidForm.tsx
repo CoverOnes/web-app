@@ -20,12 +20,15 @@ const CURRENCY_OPTIONS = [
 
 export function BidForm({ onSubmit, isSubmitting, error }: BidFormProps) {
   const kycTier = useAuthStore((s) => s.user?.kycTier ?? 0);
+  const isHydrating = useAuthStore((s) => s.isHydrating);
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('TWD');
   const [message, setMessage] = useState('');
   const [formError, setFormError] = useState('');
 
-  if (kycTier < 1) {
+  // 🟡-1: don't flash the KYC banner while auth is still hydrating — user.kycTier
+  // is not yet known, so gate only once hydration completes.
+  if (!isHydrating && kycTier < 1) {
     return (
       <KycRequiredBanner
         requiredTier={1}

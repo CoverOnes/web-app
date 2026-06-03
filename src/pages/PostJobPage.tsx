@@ -31,6 +31,7 @@ const STEPS = ['基本資訊', '需求詳情', '發布設定'];
 const PostJobPage = () => {
   const navigate = useNavigate();
   const kycTier = useAuthStore((s) => s.user?.kycTier ?? 0);
+  const isHydrating = useAuthStore((s) => s.isHydrating);
   const createListing = useCreateListing();
 
   const [title, setTitle] = useState('');
@@ -40,6 +41,20 @@ const PostJobPage = () => {
   const [currency, setCurrency] = useState('TWD');
   const [category, setCategory] = useState('');
   const [error, setError] = useState('');
+
+  // 🟡-1: while auth is hydrating, kycTier is not yet known (defaults to 0).
+  // Render a neutral loading state instead of flashing the TierGuard banner.
+  if (isHydrating) {
+    return (
+      <div
+        role="status"
+        aria-busy="true"
+        style={{ padding: 40, textAlign: 'center', color: 'var(--co-text-muted)', fontSize: 14 }}
+      >
+        載入中…
+      </div>
+    );
+  }
 
   if (kycTier < 2) {
     return <TierGuard requiredTier={2} fullPage>{null}</TierGuard>;

@@ -86,7 +86,21 @@ export interface Contract {
   amount: string;
   currency: string;
   status: ContractStatus;
+  // WA-fix: backend-computed canonical hash of the contract content.
+  // The sign endpoint expects this exact value as signedContentHash — clients
+  // MUST NOT recompute it locally (mismatch → 409).
+  contentHash: string;
   createdAt: string;
+}
+
+export interface CreateContractRequest {
+  listingId: string;
+  acceptedBidId: string;
+  freelancerUserId: string;
+  title: string;
+  terms: string;
+  amount: string;
+  currency: string;
 }
 
 export interface Signature {
@@ -180,6 +194,12 @@ export const marketplaceApi = {
 export const workspaceApi = {
   listContracts: (params?: { status?: ContractStatus }) =>
     http.get<Contract[]>('/api/workspace/v1/contracts', { params }).then((r) => r.data),
+
+  createContract: (payload: CreateContractRequest) =>
+    http.post<Contract>('/api/workspace/v1/contracts', payload).then((r) => r.data),
+
+  submitContract: (id: string) =>
+    http.post<Contract>(`/api/workspace/v1/contracts/${id}/submit`).then((r) => r.data),
 
   getContract: (id: string) =>
     http.get<Contract>(`/api/workspace/v1/contracts/${id}`).then((r) => r.data),

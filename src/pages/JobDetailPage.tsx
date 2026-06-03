@@ -1,6 +1,6 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { useListing, useListingBids, useCreateBid, useAcceptBid, useRejectBid } from '../lib/query';
+import { useListing, useListingBids, useCreateBid, useAcceptBid, useRejectBid, useCreateContract } from '../lib/query';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { LoadingSkeleton } from '../components/ui/LoadingSkeleton';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -15,6 +15,7 @@ import { useState } from 'react';
 
 const JobDetailPage = () => {
   const { id = '' } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
 
   const { data: listing, isLoading, isError } = useListing(id);
@@ -24,11 +25,14 @@ const JobDetailPage = () => {
   const createBid = useCreateBid(id);
   const acceptBid = useAcceptBid(id);
   const rejectBid = useRejectBid(id);
+  const createContract = useCreateContract();
 
   const [bidError, setBidError] = useState('');
+  const [bidSubmitted, setBidSubmitted] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [acceptRejectError, setAcceptRejectError] = useState('');
+  const [contractError, setContractError] = useState('');
 
   if (isLoading) {
     return (
@@ -67,9 +71,36 @@ const JobDetailPage = () => {
     setBidError('');
     try {
       await createBid.mutateAsync(data);
+      // 🟠-2: switch the right rail to a confirmation block so the user can't
+      // resubmit (resubmit → 409 BID_ALREADY_EXISTS). No toast system in codebase.
+      setBidSubmitted(true);
     } catch (err) {
       const axErr = err as AxiosError<{ message?: string }>;
       setBidError(axErr.response?.data?.message ?? 'Failed to submit bid.');
+    }
+  };
+
+  const handleCreateContract = async () => {
+    setContractError('');
+    const acceptedBid = bids.find((b) => b.status === 'ACCEPTED');
+    if (!acceptedBid) {
+      setContractError('找不到已接受的投標，無法建立合約。');
+      return;
+    }
+    try {
+      const contract = await createContract.mutateAsync({
+        listingId: listing.id,
+        acceptedBidId: acceptedBid.id,
+        freelancerUserId: acceptedBid.bidderUserId,
+        title: listing.title,
+        terms: listing.description,
+        amount: acceptedBid.amount,
+        currency: acceptedBid.currency,
+      });
+      navigate(`/contracts/${contract.id}`);
+    } catch (err) {
+      const axErr = err as AxiosError<{ message?: string }>;
+      setContractError(axErr.response?.data?.message ?? '建立合約失敗，請重試。');
     }
   };
 
@@ -226,6 +257,52 @@ const JobDetailPage = () => {
                     />
                   ))
                 )}
+
+                {/* 🔴-1: once a bid is accepted (listing AWARDED), let the owner
+                    create the contract from the accepted bid. */}
+                {listing.status === 'AWARDED' && (
+                  <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--co-line)' }}>
+                    {contractError && (
+                      <div
+                        role="alert"
+                        style={{
+                          marginBottom: 12,
+                          padding: '10px 14px',
+                          background: 'rgba(239,68,68,0.12)',
+                          border: '1px solid rgba(239,68,68,0.3)',
+                          borderRadius: 8,
+                          fontSize: 13,
+                          color: '#FCA5A5',
+                        }}
+                      >
+                        {contractError}
+                      </div>
+                    )}
+                    <p style={{ fontSize: 13, color: 'var(--co-text-dim)', margin: '0 0 12px 0' }}>
+                      您已接受一筆投標。建立合約以進入簽署流程。
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleCreateContract}
+                      disabled={createContract.isPending}
+                      aria-label="建立合約"
+                      style={{
+                        height: 44,
+                        padding: '0 20px',
+                        borderRadius: 10,
+                        background: 'var(--co-accent)',
+                        border: 'none',
+                        color: '#fff',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: createContract.isPending ? 'not-allowed' : 'pointer',
+                        opacity: createContract.isPending ? 0.6 : 1,
+                      }}
+                    >
+                      {createContract.isPending ? '建立中…' : '建立合約'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -257,16 +334,34 @@ const JobDetailPage = () => {
                 <div style={{ height: 1, background: 'var(--co-line)' }} aria-hidden="true" />
 
                 {/* Bid form */}
-                {listing.status === 'OPEN' ? (
+                {listing.status !== 'OPEN' ? (
+                  <p style={{ fontSize: 13, color: 'var(--co-text-dim)', margin: 0 }}>
+                    此案件已{listing.status.toLowerCase()}，不再接受投標。
+                  </p>
+                ) : bidSubmitted ? (
+                  /* 🟠-2: confirmation after a successful bid; prevents resubmit (409). */
+                  <div
+                    role="status"
+                    style={{
+                      padding: '14px 16px',
+                      background: 'rgba(34,197,94,0.1)',
+                      border: '1px solid rgba(34,197,94,0.3)',
+                      borderRadius: 10,
+                    }}
+                  >
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#4ade80', marginBottom: 4 }}>
+                      已投標
+                    </div>
+                    <p style={{ fontSize: 13, color: 'var(--co-text-dim)', margin: 0, lineHeight: 1.5 }}>
+                      您的投標已送出，等待案主回覆。您可以在「我的投標」中追蹤狀態。
+                    </p>
+                  </div>
+                ) : (
                   <BidForm
                     onSubmit={handleBidSubmit}
                     isSubmitting={createBid.isPending}
                     error={bidError}
                   />
-                ) : (
-                  <p style={{ fontSize: 13, color: 'var(--co-text-dim)', margin: 0 }}>
-                    此案件已{listing.status.toLowerCase()}，不再接受投標。
-                  </p>
                 )}
               </div>
             </div>
