@@ -6,7 +6,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   displayName: string;
-  accountType: 'FREELANCER' | 'CLIENT';
+  accountType: 'PERSONAL' | 'COMPANY';
   companyName?: string;
 }
 

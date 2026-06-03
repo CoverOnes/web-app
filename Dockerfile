@@ -18,18 +18,13 @@ RUN npm ci --prefer-offline
 COPY . .
 RUN npm run build
 
-# ─── Runtime stage (nginx) ───────────────────────────────────────────────────
-FROM nginx:1.27-alpine AS runtime
+# ─── Runtime stage (nginx unprivileged) ─────────────────────────────────────
+# nginx:unprivileged listens on port 8080 and owns its cache dirs — no root needed.
+FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
 
-# Remove default nginx config
-RUN rm /etc/nginx/conf.d/default.conf
-
-# Minimal SPA-friendly nginx config
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# nginx config: serve index.html for unknown paths (React Router / SPA)
+# Minimal SPA-friendly nginx config on port 8080 (unprivileged default)
 RUN printf 'server {\n\
-    listen 80;\n\
+    listen 8080;\n\
     server_name _;\n\
     root /usr/share/nginx/html;\n\
     index index.html;\n\
@@ -38,11 +33,11 @@ RUN printf 'server {\n\
     }\n\
 }\n' > /etc/nginx/conf.d/default.conf
 
-USER nginx
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-EXPOSE 80
+EXPOSE 8080
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -qO- http://localhost:80/ || exit 1
+    CMD wget -qO- http://localhost:8080/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]

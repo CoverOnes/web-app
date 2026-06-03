@@ -5,7 +5,7 @@ import { authApi } from '../lib/api/coverones';
 import { AuthHeroPanel } from '../components/auth/AuthHeroPanel';
 import type { AxiosError } from 'axios';
 
-type AccountType = 'FREELANCER' | 'CLIENT';
+type AccountType = 'PERSONAL' | 'COMPANY';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [accountType, setAccountType] = useState<AccountType>('FREELANCER');
+  const [accountType, setAccountType] = useState<AccountType>('PERSONAL');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -216,8 +216,8 @@ const Register = () => {
                   disabled={isLoading}
                   style={{ ...fieldStyle, appearance: 'none', cursor: 'pointer' }}
                 >
-                  <option value="FREELANCER">Freelancer</option>
-                  <option value="CLIENT">Client</option>
+                  <option value="PERSONAL">Freelancer / Individual</option>
+                  <option value="COMPANY">Client / Company</option>
                 </select>
               </div>
 
