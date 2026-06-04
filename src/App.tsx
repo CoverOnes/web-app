@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyEmailSent from './pages/VerifyEmailSent';
 import VerifyEmail from './pages/VerifyEmail';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import JobBoardPage from './pages/JobBoardPage';
 import PostJobPage from './pages/PostJobPage';
 import JobDetailPage from './pages/JobDetailPage';
@@ -13,9 +14,10 @@ import MyBidsPage from './pages/MyBidsPage';
 import MyContractsPage from './pages/MyContractsPage';
 import ContractDetailPage from './pages/ContractDetailPage';
 import KycPage from './pages/KycPage';
-import Messages from './pages/Messages';
+import MessagesPlaceholderPage from './pages/MessagesPlaceholderPage';
 import Contacts from './pages/Contacts';
 import Settings from './pages/Settings';
+import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { FeatureRoute } from './features/flags/FeatureRoute';
 import { useTheme } from './hooks/useTheme';
@@ -28,15 +30,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          {/* Public */}
+          {/* Public auth routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          {/* auth Increment 1: post-register "check your email" screen */}
           <Route path="/register/verify-sent" element={<VerifyEmailSent />} />
-          {/* auth Increment 1: email verification deep link (?token=...) */}
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-          {/* Protected */}
+          {/* Protected app routes */}
           <Route
             path="/"
             element={
@@ -45,6 +46,7 @@ function App() {
               </ProtectedRoute>
             }
           >
+            {/* / redirects to /jobs; Homepage dashboard is P2 */}
             <Route index element={<Navigate to="/jobs" replace />} />
 
             {/* Marketplace */}
@@ -55,25 +57,23 @@ function App() {
             {/* Bids */}
             <Route path="bids" element={<MyBidsPage />} />
 
-            {/* KYC onboarding (Increment 2) — climb to tier-2 to unlock 發案/投標 */}
+            {/* KYC onboarding */}
             <Route path="kyc" element={<KycPage />} />
 
             {/* Contracts */}
             <Route path="contracts" element={<MyContractsPage />} />
             <Route path="contracts/:id" element={<ContractDetailPage />} />
 
-            {/* TBD: gated behind feature flags until the backend ships.
-                Components are preserved — only the route target is swapped to a
-                ComingSoon placeholder so a user cannot reach a screen that calls
-                a non-existent API and crashes. */}
-            <Route
-              path="messages"
-              element={
-                <FeatureRoute flag="chat" feature="聊天" description="即時通訊功能正在開發中，敬請期待。">
-                  <Messages />
-                </FeatureRoute>
-              }
-            />
+            {/*
+             * 訊息 — routes to placeholder page (chat deferred, backend not built).
+             * Locked decision 2026-06-04: DO NOT un-park chat here.
+             * When chat flag is false the FeatureRoute shows the placeholder anyway,
+             * but we bypass it by rendering MessagesPlaceholderPage directly since
+             * the placeholder IS the intended UX for this phase.
+             */}
+            <Route path="messages" element={<MessagesPlaceholderPage />} />
+
+            {/* Contacts (gated — no backend yet) */}
             <Route
               path="contacts"
               element={
@@ -82,6 +82,8 @@ function App() {
                 </FeatureRoute>
               }
             />
+
+            {/* Settings (gated) */}
             <Route
               path="settings"
               element={
@@ -91,9 +93,12 @@ function App() {
               }
             />
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/jobs" replace />} />
+            {/* 404 within the app shell */}
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
+
+          {/* Top-level 404 catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

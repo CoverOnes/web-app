@@ -1,13 +1,14 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { isFeatureEnabled } from '../../features/flags/featureFlags';
 
-interface TabItem {
-  id: string;
-  path: string;
-  label: string;
-  icon: React.ReactNode;
-}
+/* --- Icons (22×22, 1.75 stroke) --- */
+
+const HomeIcon = () => (
+  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
 
 const BriefcaseIcon = () => (
   <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -36,38 +37,56 @@ const MessageSquareIcon = () => (
   </svg>
 );
 
-const ALL_TABS: (TabItem & { flag?: Parameters<typeof isFeatureEnabled>[0] })[] = [
-  { id: 'jobs',      path: '/jobs',      label: 'Jobs',      icon: <BriefcaseIcon /> },
-  { id: 'bids',      path: '/bids',      label: 'Bids',      icon: <TagIcon /> },
-  { id: 'contracts', path: '/contracts', label: 'Contracts', icon: <FileTextIcon /> },
-  // Chat is TBD — only shown when the chat feature flag is enabled.
-  { id: 'messages',  path: '/messages',  label: 'Chat',      icon: <MessageSquareIcon />, flag: 'chat' },
-];
+/* --- Tab definition --- */
 
-// Drop tabs whose feature flag is disabled so users can't navigate to a TBD page.
-const TABS: TabItem[] = ALL_TABS.filter((t) => !t.flag || isFeatureEnabled(t.flag));
+interface TabItem {
+  id: string;
+  path: string;
+  label: string;
+  icon: React.ReactNode;
+  badge?: number;
+}
+
+/*
+ * 5 LOCKED TABS (user directive 2026-06-04):
+ *   首頁 · 案件 · 招標 · 合約 · 訊息
+ * 訊息 routes to the placeholder page (chat deferred).
+ * Unread badges are zero-initialized; future: connect to notification store.
+ */
+const TABS: TabItem[] = [
+  { id: 'home',      path: '/',          label: '首頁', icon: <HomeIcon /> },
+  { id: 'jobs',      path: '/jobs',      label: '案件', icon: <BriefcaseIcon /> },
+  { id: 'bids',      path: '/bids',      label: '招標', icon: <TagIcon /> },
+  { id: 'contracts', path: '/contracts', label: '合約', icon: <FileTextIcon /> },
+  { id: 'messages',  path: '/messages',  label: '訊息', icon: <MessageSquareIcon />, badge: 0 },
+];
 
 const CoverOnesMobileBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
+  // "/" (index) only matches the root exactly; others use startsWith
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <nav
-      aria-label="Main navigation"
+      aria-label="モバイル主要ナビゲーション"
       style={{
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
         height: 72,
+        /* paddingBottom accounts for iPhone safe-area-inset-bottom */
+        paddingBottom: 'env(safe-area-inset-bottom)',
         background: 'var(--co-bg-card-2)',
         borderTop: '1px solid var(--co-line)',
         display: 'flex',
         alignItems: 'stretch',
-        zIndex: 5 as React.CSSProperties['zIndex'],
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        zIndex: 5,
       }}
     >
       {TABS.map((tab) => {
@@ -86,19 +105,53 @@ const CoverOnesMobileBottomNav = () => {
               alignItems: 'center',
               justifyContent: 'center',
               gap: 3,
+              padding: '4px 0',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              color: active ? 'var(--color-accent)' : 'var(--co-text-dim)',
+              color: active ? 'var(--co-accent)' : 'var(--co-text-dim)',
+              /* Minimum touch target 44×44px per WCAG 2.5.5 */
               minWidth: 44,
               minHeight: 44,
+              fontSize: 10,
+              fontWeight: 500,
               transition: 'color 150ms ease-out',
             }}
           >
-            <span style={{ color: active ? 'var(--color-accent)' : 'var(--co-text-dim)' }}>
-              {tab.icon}
-            </span>
-            <span style={{ fontSize: 10, fontWeight: 500, lineHeight: 1 }}>{tab.label}</span>
+            {/* Icon wrapper with optional unread badge */}
+            <div style={{ position: 'relative' }}>
+              <span
+                style={{ color: active ? 'var(--co-accent)' : 'var(--co-text-dim)' }}
+                aria-hidden="true"
+              >
+                {tab.icon}
+              </span>
+              {/* Unread badge — shared.css .icon-btn .num pattern */}
+              {tab.badge != null && tab.badge > 0 && (
+                <span
+                  aria-label={`${tab.badge} 則未讀訊息`}
+                  style={{
+                    position: 'absolute',
+                    top: -4,
+                    right: -8,
+                    fontSize: 9.5,
+                    fontWeight: 700,
+                    padding: '0 4px',
+                    minWidth: 14,
+                    height: 14,
+                    lineHeight: '14px',
+                    borderRadius: 999,
+                    background: 'var(--co-red)',
+                    color: '#fff',
+                    textAlign: 'center',
+                    boxShadow: '0 0 0 2px var(--co-bg-card-2)',
+                  }}
+                >
+                  {tab.badge > 99 ? '99+' : tab.badge}
+                </span>
+              )}
+            </div>
+            <span>{tab.label}</span>
           </button>
         );
       })}

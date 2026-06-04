@@ -55,7 +55,7 @@ const CoverOnesTopbar = () => {
   return (
     <header
       style={{
-        height: 60,
+        height: 'var(--co-topbar-h)',
         background: 'rgba(11,18,32,0.85)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
@@ -70,7 +70,7 @@ const CoverOnesTopbar = () => {
         flexShrink: 0,
       }}
     >
-      {/* Search box */}
+      {/* Search box — shared.css .search */}
       <div
         role="search"
         style={{
@@ -83,7 +83,7 @@ const CoverOnesTopbar = () => {
           borderRadius: 10,
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 10,
           color: 'var(--co-text-dim)',
         }}
       >
@@ -102,6 +102,7 @@ const CoverOnesTopbar = () => {
             cursor: 'not-allowed',
           }}
         />
+        {/* Keyboard shortcut badge — shared.css .search .kbd */}
         <kbd
           style={{
             fontSize: 10.5,
@@ -118,38 +119,41 @@ const CoverOnesTopbar = () => {
         </kbd>
       </div>
 
-      {/* Right actions */}
+      {/* Right actions — shared.css .top-actions */}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
-        {/* Bell */}
-        <button
-          aria-label="Notifications"
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 9,
-            color: 'var(--co-text-dim)',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'background 150ms',
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
-        >
-          <BellIcon />
-        </button>
+        {/* Bell icon-btn — shared.css .icon-btn */}
+        <div style={{ position: 'relative' }}>
+          <button
+            aria-label="通知"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 9,
+              color: 'var(--co-text-dim)',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              transition: 'background 150ms',
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--co-text)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--co-text-dim)'; }}
+          >
+            <BellIcon />
+          </button>
+        </div>
 
         {/* Separator */}
         <div style={{ width: 1, height: 24, background: 'var(--co-line)', margin: '0 4px' }} aria-hidden="true" />
 
-        {/* Me-pill */}
+        {/* Me-pill — shared.css .me-pill */}
         <div ref={menuRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setMenuOpen((o) => !o)}
-            aria-label="User menu"
+            aria-label="使用者選單"
             aria-expanded={menuOpen}
             aria-haspopup="true"
             style={{
@@ -163,7 +167,7 @@ const CoverOnesTopbar = () => {
               cursor: 'pointer',
             }}
           >
-            {/* Avatar */}
+            {/* Avatar — shared.css .me-pill .av */}
             <div
               style={{
                 width: 28,
@@ -182,21 +186,37 @@ const CoverOnesTopbar = () => {
             >
               {initial}
             </div>
-            {/* Name + role */}
+            {/* Name + role — shared.css .me-pill .nm / .role */}
             <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--co-text)', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+              <div
+                style={{
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  color: 'var(--co-text)',
+                  lineHeight: 1.2,
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {user?.displayName ?? 'User'}
               </div>
-              <div style={{ fontSize: 10.5, color: 'var(--co-text-dim)', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+              <div
+                style={{
+                  fontSize: 10.5,
+                  color: 'var(--co-text-dim)',
+                  lineHeight: 1.2,
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {user?.accountType ?? ''}
               </div>
             </div>
             <ChevronDownIcon />
           </button>
 
-          {/* Dropdown */}
+          {/* Dropdown menu */}
           {menuOpen && (
             <div
+              role="menu"
               style={{
                 position: 'absolute',
                 top: 'calc(100% + 6px)',
@@ -211,6 +231,7 @@ const CoverOnesTopbar = () => {
               }}
             >
               <button
+                role="menuitem"
                 onClick={handleSettings}
                 style={{
                   width: '100%',
@@ -227,10 +248,11 @@ const CoverOnesTopbar = () => {
                 onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
               >
-                Settings
+                設定
               </button>
               <div style={{ height: 1, background: 'var(--co-line)', margin: '4px 0' }} aria-hidden="true" />
               <button
+                role="menuitem"
                 onClick={handleLogout}
                 style={{
                   width: '100%',
@@ -247,7 +269,7 @@ const CoverOnesTopbar = () => {
                 onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.08)'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
               >
-                Sign out
+                登出
               </button>
             </div>
           )}

@@ -8,6 +8,7 @@ import CoverOnesMobileBottomNav from './CoverOnesMobileBottomNav';
 import MobileDrawer from './MobileDrawer';
 import ChatPopup from '../chat/ChatPopup';
 import { UnverifiedBanner } from '../auth/UnverifiedBanner';
+import MobileFABProvider from './MobileFABProvider';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -26,6 +27,7 @@ const CoverOnesLayout = () => {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+  /* Left-edge swipe to open drawer on mobile */
   useEffect(() => {
     if (!isMobile) return;
     let startX = 0;
@@ -53,43 +55,57 @@ const CoverOnesLayout = () => {
   }, [isMobile]);
 
   return (
-    <AppShell>
-      {!isMobile && <CoverOnesSidebar />}
+    <MobileFABProvider>
+      <AppShell>
+        {/* Desktop sidebar — hidden on mobile (provided via MobileDrawer) */}
+        {!isMobile && <CoverOnesSidebar />}
 
-      <main
-        style={{
-          flex: 1,
-          minWidth: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          paddingBottom: isMobile ? 72 : 0,
-          background: 'var(--co-bg)',
-        }}
-      >
-        {/* Topbar — sticky at top of main content column */}
-        <CoverOnesTopbar />
+        {/* Main column */}
+        <main
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            minWidth: 0,
+            overflow: 'hidden',
+            /* Bottom padding reserves space for mobile bottom-nav (72px) */
+            paddingBottom: isMobile ? 72 : 0,
+            background: 'var(--co-bg)',
+            /* Main column fills the grid cell height on desktop */
+            height: '100dvh',
+          }}
+        >
+          {/* Topbar — sticky within the main column */}
+          <CoverOnesTopbar />
 
-        {/* auth Increment 1: persistent unverified-email banner (per-session dismiss) */}
-        <UnverifiedBanner />
+          {/* Email verification banner */}
+          <UnverifiedBanner />
 
-        {/* Scrollable outlet area */}
-        <div style={{ flex: 1, overflowY: 'auto', background: 'var(--co-bg)' }}>
-          <Outlet />
-        </div>
-      </main>
+          {/* Scrollable outlet */}
+          <div
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              background: 'var(--co-bg)',
+            }}
+          >
+            <Outlet />
+          </div>
+        </main>
 
-      {isMobile && (
-        <>
-          <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-          <CoverOnesMobileBottomNav />
-        </>
-      )}
+        {/* Mobile overlay chrome */}
+        {isMobile && (
+          <>
+            <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+            <CoverOnesMobileBottomNav />
+          </>
+        )}
 
-      {openPopups.map((room, index) => (
-        <ChatPopup key={room.id} room={room} index={index} />
-      ))}
-    </AppShell>
+        {/* Desktop chat popups */}
+        {openPopups.map((room, index) => (
+          <ChatPopup key={room.id} room={room} index={index} />
+        ))}
+      </AppShell>
+    </MobileFABProvider>
   );
 };
 
