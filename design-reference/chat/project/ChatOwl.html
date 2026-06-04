@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ChatOwl — 即時加密通訊平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Defaults — rewritten from TWEAK_DEFAULTS on load */
+    --accent: #2563EB;
+    --accent-hover: #1D4ED8;
+    --accent-soft: rgba(37,99,235,0.14);
+    --indigo: #6366F1;
+    --green: #059669;
+    --cyan: #22D3EE;
+    --red: #EF4444;
+    --amber: #F59E0B;
+
+    --sb-bg: #0B1220;
+    --sb-bg-2: #0F172A;
+    --sb-hover: rgba(255,255,255,0.04);
+    --sb-active: rgba(255,255,255,0.06);
+    --sb-border: rgba(255,255,255,0.06);
+    --sb-text: #E2E8F0;
+    --sb-text-dim: #94A3B8;
+    --sb-tint: rgba(255,255,255,0.04);
+    --sb-tint-2: rgba(255,255,255,0.06);
+
+    --main-bg: #111827;
+    --main-bg-2: #1E293B;
+    --main-text: #E5E7EB;
+    --main-text-dim: #94A3B8;
+    --main-border: rgba(255,255,255,0.08);
+    --bubble-other: #1E293B;
+    --bubble-other-text: #E5E7EB;
+    --input-bg: #0F172A;
+
+    --radius-card: 12px;
+    --radius-bubble: 10px;
+    --radius-input: 8px;
+    --radius-chip: 999px;
+
+    --density-row: 52px;
+    --density-gap: 10px;
+    --density-pad: 16px;
+
+    --shadow-pop: 0 10px 30px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.2);
+    --shadow-modal: 0 40px 80px -20px rgba(0,0,0,0.6), 0 2px 10px rgba(0,0,0,0.3);
+
+    --navbar-h: 56px;
+    --sidebar-w: 280px;
+  }
+
+  [data-panel="light"] {
+    --main-bg: #F8FAFC;
+    --main-bg-2: #FFFFFF;
+    --main-text: #0F172A;
+    --main-text-dim: #64748B;
+    --main-border: rgba(15,23,42,0.08);
+    --bubble-other: #F1F5F9;
+    --bubble-other-text: #0F172A;
+    --input-bg: #FFFFFF;
+
+    /* Sidebar also goes light */
+    --sb-bg: #FFFFFF;
+    --sb-bg-2: #F8FAFC;
+    --sb-hover: rgba(15,23,42,0.04);
+    --sb-active: rgba(37,99,235,0.08);
+    --sb-border: rgba(15,23,42,0.08);
+    --sb-text: #0F172A;
+    --sb-text-dim: #64748B;
+    --sb-tint: rgba(15,23,42,0.04);
+    --sb-tint-2: rgba(15,23,42,0.06);
+  }
+
+  [data-density="compact"] {
+    --density-row: 44px;
+    --density-gap: 6px;
+    --density-pad: 12px;
+  }
+  [data-density="spacious"] {
+    --density-row: 60px;
+    --density-gap: 14px;
+    --density-pad: 20px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: "cv11","ss01","ss03";
+    font-variant-numeric: tabular-nums;
+    background: #000;
+    color: var(--main-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+  }
+
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; border: none; background: none; }
+  input, textarea { outline: none; border: none; background: none; }
+  ::selection { background: var(--accent-soft); color: inherit; }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.15); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.3); border: 2px solid transparent; background-clip: content-box; }
+
+  #app { width: 100vw; height: 100vh; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<!-- TWEAKS: keep one JSON block, rewritten on disk when user edits -->
+<script>
+  window.TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "accent": "blue",
+    "panel": "dark",
+    "density": "comfortable",
+    "variant": "desktop"
+  }/*EDITMODE-END*/;
+</script>
+
+<!-- React -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="src/icons.jsx"></script>
+<script type="text/babel" src="src/data.jsx"></script>
+<script type="text/babel" src="src/sidebar.jsx"></script>
+<script type="text/babel" src="src/chat.jsx"></script>
+<script type="text/babel" src="src/modal.jsx"></script>
+<script type="text/babel" src="src/mobile.jsx"></script>
+<script type="text/babel" src="src/tweaks.jsx"></script>
+<script type="text/babel" src="src/app.jsx"></script>
+
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 台積電子</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .cover { height:200px; background: linear-gradient(135deg,#0F172A 0%,#1E293B 50%,#312E81 100%); position:relative; overflow:hidden; }
+  .cover::before { content:""; position:absolute; inset:0; background: radial-gradient(800px 300px at 30% 100%, rgba(99,102,241,.4), transparent 70%), radial-gradient(600px 200px at 80% 0%, rgba(34,211,238,.3), transparent 70%); }
+  .cover .grid-bg { position:absolute; inset:0; background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%); }
+  .header { padding: 0 28px; margin-top:-60px; position:relative; z-index:2; }
+  .header .row { display:flex; gap:20px; align-items:flex-end; }
+  .header .lg { width:120px; height:120px; border-radius:18px; font-size:42px; border:4px solid var(--bg); box-shadow: 0 12px 40px rgba(0,0,0,.5); }
+  .header h1 { font-size:28px; font-weight:700; letter-spacing:-.02em; margin:0 0 4px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .header .tagline { font-size:14px; color:var(--text-dim); margin:2px 0 8px 0; }
+  .header .meta { display:flex; gap:16px; font-size:12.5px; color:var(--text-dim); flex-wrap:wrap; }
+  .header .meta b { color:var(--text); }
+  .header .actions { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+
+  .stat-strip { display:grid; grid-template-columns: repeat(5,1fr); gap:14px; padding:22px 28px; }
+  .ss { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:12px; padding:16px; }
+  .ss .l { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em; }
+  .ss .v { font-size:22px; font-weight:700; letter-spacing:-.02em; margin:4px 0 2px 0; }
+  .ss .v.cyan { background:linear-gradient(135deg,#67E8F9,#2563EB); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .ss .v.green { color:var(--green); }
+  .ss .d { font-size:11px; color:var(--green); }
+
+  .body { display:grid; grid-template-columns: 220px minmax(0,1fr) 320px; gap:20px; padding:0 28px 40px; }
+  .side-nav { position:sticky; top:80px; height:fit-content; display:flex; flex-direction:column; gap:2px; }
+  .side-nav a { padding:8px 12px; border-radius:8px; font-size:13px; color:var(--text-dim); display:flex; align-items:center; gap:8px; }
+  .side-nav a.active { background:rgba(99,102,241,.15); color:#C7D2FE; font-weight:600; }
+  .side-nav a:hover { background:rgba(255,255,255,.04); color:var(--text); }
+  .side-nav .ct { margin-left:auto; font-size:11px; color:var(--text-muted); }
+
+  .sec { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:14px; padding:20px; margin-bottom:18px; }
+  .sec h2 { font-size:15px; font-weight:600; margin:0 0 14px 0; display:flex; align-items:center; gap:8px; }
+  .sec h2 .more { margin-left:auto; font-size:11.5px; color:var(--text-dim); font-weight:400; }
+  .sec p { font-size:13.5px; line-height:1.75; color:var(--text-dim); margin:0 0 10px 0; }
+
+  /* Capability radar / brain map (inspired by ref image 1) */
+  .cap-map { position:relative; height:340px; display:flex; align-items:center; justify-content:center; margin: 8px 0; }
+  .cap-map svg { width:100%; height:100%; max-width:520px; }
+  .cap-list { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:14px; }
+  .cap-item { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:10px; }
+  .cap-item .dot { width:10px; height:10px; border-radius:999px; flex-shrink:0; }
+  .cap-item .t { font-size:12.5px; font-weight:600; }
+  .cap-item .v { margin-left:auto; font-size:13px; font-weight:700; color:var(--cyan); }
+
+  /* Active projects */
+  .ap-grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+  .ap { padding:14px; background:rgba(15,23,42,.4); border:1px solid var(--line); border-radius:10px; }
+  .ap .ti { font-size:13.5px; font-weight:600; line-height:1.4; }
+  .ap .me { font-size:11.5px; color:var(--text-dim); margin-top:4px; }
+  .ap .ft { display:flex; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
+  .ap .b { font-size:13px; font-weight:700; color:var(--green); }
+  .ap .due { font-size:11px; color:var(--text-dim); }
+
+  /* Team */
+  .team { display:grid; grid-template-columns: repeat(4,1fr); gap:12px; }
+  .tm { display:flex; flex-direction:column; align-items:center; padding:12px; background:rgba(15,23,42,.4); border:1px solid var(--line); border-radius:10px; }
+  .tm .av { width:54px; height:54px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:18px; }
+  .tm .n { font-size:13px; font-weight:600; margin-top:8px; }
+  .tm .r { font-size:11px; color:var(--text-dim); margin-top:1px; }
+
+  /* Reviews */
+  .rev { padding:14px 0; border-top:1px solid var(--line); display:grid; grid-template-columns: 40px 1fr; gap:12px; }
+  .rev:first-of-type { border-top:none; padding-top:0; }
+  .rev .av { width:40px; height:40px; border-radius:10px; }
+  .rev .h { display:flex; align-items:center; gap:8px; }
+  .rev .h .n { font-size:13px; font-weight:600; }
+  .rev .h .s { font-size:11px; color:var(--text-dim); margin-left:auto; }
+  .rev .stars { color:#F59E0B; font-size:13px; letter-spacing:1px; }
+  .rev .body { font-size:13px; color:var(--text-dim); line-height:1.65; margin-top:6px; }
+
+  /* Right rail */
+  .pin { background:linear-gradient(135deg,rgba(34,211,238,.1),rgba(99,102,241,.05)); border:1px solid rgba(34,211,238,.25); border-radius:12px; padding:14px; margin-bottom:14px; }
+  .pin .l { font-size:11px; color:#67E8F9; font-weight:600; display:flex; align-items:center; gap:6px; }
+  .pin .v { font-size:14px; font-weight:600; margin-top:6px; }
+  .pin .d { font-size:11.5px; color:var(--text-dim); margin-top:2px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+
+    <div class="cover"><div class="grid-bg"></div></div>
+
+    <div class="header">
+      <div class="row">
+        <div class="lg lg-blue">台</div>
+        <div style="flex:1; min-width:0; padding-bottom:6px;">
+          <h1>台積電子 <span class="v-tick"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span><span class="bdg bdg-green" style="font-size:11px;">官方認證</span><span class="bdg bdg-amber" style="font-size:11px;">⭐ 鑽石採購</span></h1>
+          <p class="tagline">全球領先的半導體晶圓代工廠，專注於先進製程研發與智慧製造解決方案。</p>
+          <div class="meta">
+            <span>🏢 半導體</span>
+            <span>👥 <b>12,400</b> 員工</span>
+            <span>📍 新竹科學園區</span>
+            <span>🌐 tsmc-electronics.com</span>
+            <span>📅 成立於 1987 年</span>
+            <span>👁 <b>248,920</b> 瀏覽</span>
+          </div>
+        </div>
+        <div class="actions" style="padding-bottom:6px;">
+          <button class="btn btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>追蹤公司</button>
+          <a href="ChatOwl.html" class="btn btn-secondary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>私訊洽談</a>
+          <button class="btn btn-secondary">⋯</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-strip">
+      <div class="ss"><div class="l">追蹤者</div><div class="v cyan">12,420</div><div class="d">▲ 218 本週</div></div>
+      <div class="ss"><div class="l">已發案</div><div class="v">142</div><div class="d">本月新增 8</div></div>
+      <div class="ss"><div class="l">準時付款率</div><div class="v green">98.4%</div><div class="d">業界 Top 5%</div></div>
+      <div class="ss"><div class="l">合作廠商</div><div class="v">86</div><div class="d">▲ 12 本月</div></div>
+      <div class="ss"><div class="l">綜合評分</div><div class="v" style="color:var(--amber);">⭐ 4.9</div><div class="d" style="color:var(--text-dim);">基於 218 則評價</div></div>
+    </div>
+
+    <div class="body">
+
+      <!-- Side nav -->
+      <nav class="side-nav">
+        <a class="active" href="#about">關於</a>
+        <a href="#capability">能力地圖</a>
+        <a href="#projects">公開招標 <span class="ct">12</span></a>
+        <a href="#team">核心團隊</a>
+        <a href="#partners">合作夥伴 <span class="ct">86</span></a>
+        <a href="#reviews">評價 <span class="ct">218</span></a>
+        <a href="#feed">動態</a>
+      </nav>
+
+      <!-- Main -->
+      <div style="min-width:0;">
+
+        <div class="sec" id="about">
+          <h2>關於台積電子</h2>
+          <p>台積電子（TSME）成立於 1987 年，總部位於新竹科學園區，為全球頂尖的半導體晶圓代工廠之一，深耕先進製程超過 35 年。我們專精於 <b>3nm 至 28nm</b> 製程節點，服務客戶涵蓋 AI 加速器、車用電子、5G 通訊及高效能運算等領域。</p>
+          <p>近年積極投入智慧製造與 AI 視覺檢測領域，每年於 ChatOwl 平台發布超過 <b>140 件</b> 技術接案需求，總委外金額達 <b style="color:var(--green);">NT$ 4.2 億</b>。我們重視長期合作關係，與平台上 <b>86 家</b> 在地夥伴建立穩定供應鏈。</p>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+            <span class="bdg bdg-cyan">半導體</span>
+            <span class="bdg bdg-dev">智慧製造</span>
+            <span class="bdg bdg-design">AI 視覺檢測</span>
+            <span class="bdg bdg-mfg">先進製程</span>
+            <span class="bdg bdg-grey">ESG 永續</span>
+          </div>
+        </div>
+
+        <!-- Capability brain map (inspired by ref) -->
+        <div class="sec" id="capability">
+          <h2>能力地圖 <span class="more">過往發案類別權重分布</span></h2>
+          <div class="cap-map">
+            <svg viewBox="0 0 520 340">
+              <!-- connecting lines -->
+              <g stroke-width="2.5" fill="none" opacity=".7">
+                <path d="M 260 170 Q 180 100 120 80" stroke="#F59E0B"/>
+                <path d="M 260 170 Q 340 90 400 70" stroke="#EF4444"/>
+                <path d="M 260 170 Q 380 200 440 220" stroke="#22D3EE"/>
+                <path d="M 260 170 Q 200 250 130 270" stroke="#8B5CF6"/>
+                <path d="M 260 170 Q 280 250 320 290" stroke="#10B981"/>
+                <path d="M 260 170 Q 160 180 80 180" stroke="#EC4899"/>
+              </g>
+              <!-- core node -->
+              <circle cx="260" cy="170" r="48" fill="url(#coreG)" stroke="#fff" stroke-width="2"/>
+              <text x="260" y="166" text-anchor="middle" font-family="Inter" font-weight="800" font-size="20" fill="#fff">智慧</text>
+              <text x="260" y="186" text-anchor="middle" font-family="Inter" font-weight="800" font-size="20" fill="#fff">製造</text>
+              <!-- satellite nodes -->
+              <g>
+                <circle cx="120" cy="80" r="32" fill="rgba(245,158,11,.15)" stroke="#F59E0B" stroke-width="2.5"/>
+                <text x="120" y="78" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#FCD34D">42</text>
+                <text x="120" y="92" text-anchor="middle" font-family="Inter" font-size="9" fill="#FCD34D">案</text>
+                <text x="120" y="125" text-anchor="middle" font-family="Inter" font-weight="600" font-size="11" fill="#E5E7EB">後端開發</text>
+              </g>
+              <g>
+                <circle cx="400" cy="70" r="36" fill="rgba(239,68,68,.15)" stroke="#EF4444" stroke-width="2.5"/>
+                <text x="400" y="68" text-anchor="middle" font-family="Inter" font-weight="700" font-size="14" fill="#FCA5A5">38</text>
+                <text x="400" y="83" text-anchor="middle" font-family="Inter" font-size="9" fill="#FCA5A5">案</text>
+                <text x="400" y="118" text-anchor="middle" font-family="Inter" font-weight="600" font-size="11" fill="#E5E7EB">AI 視覺檢測</text>
+              </g>
+              <g>
+                <circle cx="440" cy="220" r="28" fill="rgba(34,211,238,.15)" stroke="#22D3EE" stroke-width="2.5"/>
+                <text x="440" y="225" text-anchor="middle" font-family="Inter" font-weight="700" font-size="12" fill="#67E8F9">26</text>
+                <text x="440" y="262" text-anchor="middle" font-family="Inter" font-weight="600" font-size="11" fill="#E5E7EB">資料分析</text>
+              </g>
+              <g>
+                <circle cx="130" cy="270" r="30" fill="rgba(139,92,246,.15)" stroke="#8B5CF6" stroke-width="2.5"/>
+                <text x="130" y="275" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#A78BFA">19</text>
+                <text x="130" y="312" text-anchor="middle" font-family="Inter" font-weight="600" font-size="11" fill="#E5E7EB">硬體製造</text>
+              </g>
+              <g>
+                <circle cx="320" cy="290" r="22" fill="rgba(16,185,129,.15)" stroke="#10B981" stroke-width="2.5"/>
+                <text x="320" y="295" text-anchor="middle" font-family="Inter" font-weight="700" font-size="11" fill="#6EE7B7">11</text>
+                <text x="320" y="328" text-anchor="middle" font-family="Inter" font-weight="600" font-size="11" fill="#E5E7EB">資安服務</text>
+              </g>
+              <g>
+                <circle cx="80" cy="180" r="20" fill="rgba(236,72,153,.15)" stroke="#EC4899" stroke-width="2.5"/>
+                <text x="80" y="184" text-anchor="middle" font-family="Inter" font-weight="700" font-size="10" fill="#F9A8D4">6</text>
+                <text x="60" y="218" text-anchor="start" font-family="Inter" font-weight="600" font-size="11" fill="#E5E7EB">UI/UX</text>
+              </g>
+              <defs>
+                <linearGradient id="coreG" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#6366F1"/>
+                  <stop offset="100%" stop-color="#8B5CF6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="cap-list">
+            <div class="cap-item"><span class="dot" style="background:#F59E0B"></span><span class="t">後端開發</span><span class="v">42 案</span></div>
+            <div class="cap-item"><span class="dot" style="background:#EF4444"></span><span class="t">AI 視覺檢測</span><span class="v">38 案</span></div>
+            <div class="cap-item"><span class="dot" style="background:#22D3EE"></span><span class="t">資料分析</span><span class="v">26 案</span></div>
+            <div class="cap-item"><span class="dot" style="background:#8B5CF6"></span><span class="t">硬體製造</span><span class="v">19 案</span></div>
+            <div class="cap-item"><span class="dot" style="background:#10B981"></span><span class="t">資安服務</span><span class="v">11 案</span></div>
+            <div class="cap-item"><span class="dot" style="background:#EC4899"></span><span class="t">UI/UX 設計</span><span class="v">6 案</span></div>
+          </div>
+        </div>
+
+        <!-- Active projects -->
+        <div class="sec" id="projects">
+          <h2>進行中公開招標 <span class="more">12 個 · 全部 →</span></h2>
+          <div class="ap-grid">
+            <a href="ProjectDetail.html" class="ap">
+              <div class="ti">EDA 工具 API Gateway 微服務化重構</div>
+              <div class="me">後端開發 · 12 個月 · 已 11 家投標</div>
+              <div class="ft"><span class="b">NT$ 1.2M</span><span class="due">截標 5/12</span></div>
+            </a>
+            <div class="ap">
+              <div class="ti">3nm 製程缺陷檢測 AI 模型開發</div>
+              <div class="me">AI / 視覺 · 6 個月 · 已 7 家投標</div>
+              <div class="ft"><span class="b">NT$ 980K</span><span class="due">截標 5/18</span></div>
+            </div>
+            <div class="ap">
+              <div class="ti">5G 中繼設備 PCB 板代工 (5,000 套)</div>
+              <div class="me">硬體製造 · 3 個月 · 已 12 家投標</div>
+              <div class="ft"><span class="b">NT$ 4.5M</span><span class="due">截標 5/20</span></div>
+            </div>
+            <div class="ap">
+              <div class="ti">內部 BI Dashboard 視覺化重構</div>
+              <div class="me">資料分析 · 4 個月 · 已 4 家投標</div>
+              <div class="ft"><span class="b">NT$ 540K</span><span class="due">截標 5/25</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team -->
+        <div class="sec" id="team">
+          <h2>核心採購窗口 <span class="more">5 位</span></h2>
+          <div class="team">
+            <div class="tm"><div class="av lg-blue">林</div><div class="n">林俊宏</div><div class="r">採購副總</div></div>
+            <div class="tm"><div class="av lg-purple">陳</div><div class="n">陳怡君</div><div class="r">技術窗口</div></div>
+            <div class="tm"><div class="av lg-green">王</div><div class="n">王志明</div><div class="r">資訊長</div></div>
+            <div class="tm"><div class="av lg-orange">蔡</div><div class="n">蔡佩玲</div><div class="r">合約專員</div></div>
+          </div>
+        </div>
+
+        <!-- Reviews -->
+        <div class="sec" id="reviews">
+          <h2>合作夥伴評價 <span class="more">⭐ 4.9 · 218 則</span></h2>
+          <div class="rev">
+            <div class="lg lg-purple av">奇</div>
+            <div>
+              <div class="h"><span class="n">奇點科技</span><span class="stars">★★★★★</span><span class="s">2 個月前 · 完成案件</span></div>
+              <div class="body">付款流程順暢、需求文件清晰，技術窗口配合度極高。每個里程碑驗收都有明確 checklist，從 Kickoff 到結案全程透明。期待下次合作。</div>
+            </div>
+          </div>
+          <div class="rev">
+            <div class="lg lg-cyan av">沛</div>
+            <div>
+              <div class="h"><span class="n">沛星互動</span><span class="stars">★★★★★</span><span class="s">3 個月前</span></div>
+              <div class="body">大型企業少有的高效決策節奏，平均回應時間 4 小時以內。NDA 流程嚴謹但合理，完整保護雙方利益。</div>
+            </div>
+          </div>
+          <div class="rev">
+            <div class="lg lg-green av">綠</div>
+            <div>
+              <div class="h"><span class="n">綠源資安</span><span class="stars">★★★★☆</span><span class="s">5 個月前</span></div>
+              <div class="body">合作體驗整體良好。唯一建議是：採購流程偶有跨部門延宕，建議加入專案 SLA 機制。但團隊專業度毋庸置疑。</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right rail -->
+      <div style="min-width:0;">
+        <div class="pin">
+          <div class="l"><span style="width:6px; height:6px; border-radius:999px; background:#67E8F9; box-shadow:0 0 8px #67E8F9;"></span>採購活躍訊號</div>
+          <div class="v">本月已發布 8 件新案</div>
+          <div class="d">12 件進行中 · 平均審核 2.4 天</div>
+          <div class="d" style="margin-top:6px;">最近 3 次決標時間：2.1 / 1.8 / 3.4 天</div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h3 class="card-h">合作關係</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div style="padding:10px; background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:8px;">
+              <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">你的合作數</div>
+              <div style="font-size:20px; font-weight:700; color:var(--cyan); margin-top:2px;">3</div>
+              <div style="font-size:10.5px; color:var(--text-dim);">已完成案</div>
+            </div>
+            <div style="padding:10px; background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:8px;">
+              <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">共同人脈</div>
+              <div style="font-size:20px; font-weight:700; margin-top:2px;">12</div>
+              <div style="font-size:10.5px; color:var(--text-dim);">家共同合作</div>
+            </div>
+          </div>
+          <div style="margin-top:12px; font-size:11.5px; color:var(--text-dim);">
+            🤝 <b style="color:var(--text);">沛星互動、綠源資安、Appier</b> 等 12 家公司也與台積電子合作中
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h3 class="card-h">最近動態</h3>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="font-size:12px;"><b style="color:var(--cyan);">2 小時前</b> 發布新 RFP「AI 視覺檢測平台開發」</div>
+            <div style="font-size:12px;"><b style="color:var(--cyan);">1 天前</b> 與奇點科技完成「會員系統升級」案件結案</div>
+            <div style="font-size:12px;"><b style="color:var(--cyan);">3 天前</b> 更新公司認證資訊與 ESG 報告</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-h">類似公司</h3>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; gap:10px; align-items:center;">
+              <div class="lg lg-orange" style="width:36px; height:36px; font-size:13px;">鴻</div>
+              <div style="flex:1;"><div style="font-size:12.5px; font-weight:600;">鴻海精密</div><div style="font-size:10.5px; color:var(--text-dim);">電子製造 · 200K+ 員工</div></div>
+              <button class="connect-btn" style="padding:4px 10px; border-radius:7px; border:1px solid var(--accent); color:#C7D2FE; font-size:11px;">+追蹤</button>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <div class="lg lg-cyan" style="width:36px; height:36px; font-size:13px;">聯</div>
+              <div style="flex:1;"><div style="font-size:12.5px; font-weight:600;">聯發科技</div><div style="font-size:10.5px; color:var(--text-dim);">IC 設計 · 18,000 員工</div></div>
+              <button class="connect-btn" style="padding:4px 10px; border-radius:7px; border:1px solid var(--accent); color:#C7D2FE; font-size:11px;">+追蹤</button>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <div class="lg lg-green" style="width:36px; height:36px; font-size:13px;">日</div>
+              <div style="flex:1;"><div style="font-size:12.5px; font-weight:600;">日月光投控</div><div style="font-size:10.5px; color:var(--text-dim);">半導體封測 · 50K 員工</div></div>
+              <button class="connect-btn" style="padding:4px 10px; border-radius:7px; border:1px solid var(--accent); color:#C7D2FE; font-size:11px;">+追蹤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+<script src="chrome.js"></script>
+<script>renderChrome({active:'discover', searchPlaceholder:'搜尋公司、產業...'});</script>
+</body>
+</html>

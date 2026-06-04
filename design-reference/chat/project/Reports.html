@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 產業報告</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .body { padding:24px 28px; }
+  .ph { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; }
+  .ph h1 { font-size:24px; font-weight:800; letter-spacing:-.02em; margin:0; }
+  .ph .sub { font-size:12.5px; color:var(--text-dim); margin-top:3px; }
+  .ph-actions { display:flex; gap:8px; }
+
+  .filter-bar { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+  .chip { padding:7px 14px; font-size:12.5px; background:var(--bg-3); border:1px solid var(--line-strong); border-radius:999px; color:var(--text-dim); cursor:pointer; }
+  .chip.on { background:rgba(99,102,241,.18); border-color:rgba(99,102,241,.5); color:#C7D2FE; font-weight:600; }
+
+  .hero-rep { background:linear-gradient(135deg,#1E1B4B 0%, #312E81 50%, #4338CA 100%); border:1px solid rgba(99,102,241,.4); border-radius:14px; padding:28px 32px; display:grid; grid-template-columns:auto 1fr auto; gap:24px; align-items:center; margin-bottom:18px; position:relative; overflow:hidden; }
+  .hero-rep::after { content:""; position:absolute; right:-30px; top:-40px; width:280px; height:280px; border-radius:50%; background: radial-gradient(circle, rgba(34,211,238,.25), transparent 70%); }
+  .hero-cover { width:140px; height:180px; border-radius:10px; background:linear-gradient(135deg,#22D3EE,#6366F1); display:flex; align-items:center; justify-content:center; flex-direction:column; color:#fff; padding:14px; box-shadow:0 14px 36px rgba(0,0,0,.4); position:relative; z-index:1; }
+  .hero-cover .yr { font-size:11px; opacity:.85; letter-spacing:.05em; }
+  .hero-cover .ti { font-size:18px; font-weight:800; line-height:1.2; margin-top:8px; }
+  .hero-cover .src { font-size:9.5px; opacity:.85; margin-top:auto; padding-top:14px; border-top:1px solid rgba(255,255,255,.2); width:100%; }
+  .hero-info { position:relative; z-index:1; }
+  .hero-info .badge { display:inline-block; padding:3px 10px; background:rgba(245,158,11,.2); border:1px solid rgba(245,158,11,.4); border-radius:5px; color:#FCD34D; font-size:11px; font-weight:700; margin-bottom:9px; }
+  .hero-info h2 { font-size:24px; font-weight:800; letter-spacing:-.02em; margin:0 0 7px; line-height:1.25; }
+  .hero-info p { font-size:13.5px; color:rgba(255,255,255,.75); line-height:1.6; margin:0 0 11px; max-width:560px; }
+  .hero-meta { display:flex; gap:18px; font-size:11.5px; color:rgba(255,255,255,.6); }
+  .hero-meta b { color:#fff; }
+  .hero-actions { position:relative; z-index:1; display:flex; flex-direction:column; gap:8px; }
+  .hero-actions .btn { padding:10px 18px; }
+
+  .layout { display:grid; grid-template-columns:1fr 320px; gap:18px; }
+
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  .rep-card { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:13px; overflow:hidden; cursor:pointer; transition:all 200ms; display:flex; flex-direction:column; }
+  .rep-card:hover { border-color:rgba(99,102,241,.4); transform:translateY(-2px); }
+  .rep-cover { height:120px; padding:16px; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden; }
+  .rep-cover.fin { background:linear-gradient(135deg,#10B981,#22D3EE); }
+  .rep-cover.tech { background:linear-gradient(135deg,#6366F1,#A78BFA); }
+  .rep-cover.mfg { background:linear-gradient(135deg,#F59E0B,#EF4444); }
+  .rep-cover.ret { background:linear-gradient(135deg,#EC4899,#8B5CF6); }
+  .rep-cover.med { background:linear-gradient(135deg,#06B6D4,#3B82F6); }
+  .rep-cover.ai { background:linear-gradient(135deg,#7C3AED,#EC4899); }
+  .rep-cover .badge { display:inline-block; padding:2px 8px; background:rgba(0,0,0,.3); backdrop-filter:blur(8px); border-radius:5px; font-size:10px; color:#fff; font-weight:700; align-self:flex-start; }
+  .rep-cover .pat { position:absolute; right:-20px; bottom:-20px; width:140px; height:140px; opacity:.2; background-image:radial-gradient(rgba(255,255,255,.6) 1.5px, transparent 1.5px); background-size:14px 14px; }
+  .rep-cover .icon { font-size:40px; opacity:.85; }
+  .rep-meta { padding:14px 16px; flex:1; display:flex; flex-direction:column; }
+  .rep-meta .ind { font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; font-weight:600; }
+  .rep-meta .ti { font-size:14px; font-weight:700; line-height:1.4; margin-top:5px; }
+  .rep-meta .desc { font-size:12px; color:var(--text-dim); line-height:1.55; margin-top:7px; }
+  .rep-meta .foot { display:flex; justify-content:space-between; margin-top:11px; padding-top:10px; border-top:1px solid var(--line); font-size:11px; color:var(--text-muted); }
+  .rep-meta .foot .free { color:#6EE7B7; font-weight:600; }
+  .rep-meta .foot .pro { color:#FCD34D; font-weight:600; }
+
+  /* Right side */
+  .side { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:13px; padding:18px; margin-bottom:14px; }
+  .side h3 { font-size:13px; font-weight:700; margin:0 0 12px; }
+  .top-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--line); cursor:pointer; }
+  .top-row:first-of-type { border:none; padding-top:0; }
+  .top-row .rk { font-size:18px; font-weight:800; color:var(--text-muted); width:22px; }
+  .top-row .rk.t { color:#FCD34D; }
+  .top-row .info { flex:1; }
+  .top-row .ti { font-size:12.5px; font-weight:600; line-height:1.4; }
+  .top-row .meta { font-size:10.5px; color:var(--text-dim); margin-top:2px; }
+  .top-row .dl { font-size:10.5px; color:#67E8F9; }
+
+  .stat-row { display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid var(--line); font-size:12.5px; }
+  .stat-row:first-of-type { border:none; padding-top:0; }
+  .stat-row .v { font-weight:700; font-feature-settings:"tnum"; }
+  .stat-row .v.g { color:#6EE7B7; }
+  .stat-row .v.c { color:#67E8F9; }
+
+  .pro-cta { background:linear-gradient(135deg, rgba(245,158,11,.12), rgba(236,72,153,.06)); border:1px solid rgba(245,158,11,.3); padding:18px; border-radius:13px; }
+  .pro-cta h3 { font-size:13px; color:#FCD34D; }
+  .pro-cta p { font-size:12px; color:var(--text-dim); line-height:1.6; margin:0 0 12px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+    <div class="body">
+      <div class="ph">
+        <div>
+          <h1>📊 產業報告</h1>
+          <div class="sub">定期更新的產業洞察、市場趨勢、競爭分析。本月共有 <b style="color:var(--text);">42</b> 篇新報告。</div>
+        </div>
+        <div class="ph-actions">
+          <button class="btn btn-secondary">📧 訂閱週報</button>
+          <button class="btn btn-secondary">📥 我的下載</button>
+          <button class="btn btn-primary">🔍 進階篩選</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="chip on">全部</div>
+        <div class="chip">金融科技</div>
+        <div class="chip">AI / LLM</div>
+        <div class="chip">製造業</div>
+        <div class="chip">零售 / 電商</div>
+        <div class="chip">醫療生技</div>
+        <div class="chip">能源</div>
+        <div class="chip">物流</div>
+        <div class="chip">教育</div>
+        <div style="flex:1;"></div>
+        <div class="chip">📅 2025</div>
+        <div class="chip">⭐ 已收藏</div>
+      </div>
+
+      <div class="hero-rep">
+        <div class="hero-cover">
+          <div class="yr">2025 年度旗艦</div>
+          <div class="ti">台灣 B2B SaaS 市場白皮書</div>
+          <div class="src">奇點科技 + 資策會 MIC</div>
+        </div>
+        <div class="hero-info">
+          <span class="badge">🔥 本週最熱</span>
+          <h2>2025 台灣 B2B SaaS 採購行為深度報告</h2>
+          <p>追蹤 1,840 家中大型企業 18 個月的採購決策資料，揭露 SaaS 採購流程縮短 32%、AI 工具導入率衝至 67%，5 大產業數位轉型路徑與預算分配。168 頁深度分析。</p>
+          <div class="hero-meta">
+            <span>📅 2025/05/28</span>
+            <span>📄 168 頁 · PDF</span>
+            <span>👁 已下載 <b>8,420</b> 次</span>
+            <span>💬 <b>142</b> 則討論</span>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-primary">📥 免費下載</button>
+          <button class="btn btn-secondary">📖 線上閱讀</button>
+          <button class="btn btn-ghost">⭐ 收藏</button>
+        </div>
+      </div>
+
+      <div class="layout">
+        <div class="grid">
+          <div class="rep-card">
+            <div class="rep-cover ai"><span class="badge">PRO</span><span class="icon">🤖</span><div class="pat"></div></div>
+            <div class="rep-meta">
+              <div class="ind">AI / LLM</div>
+              <div class="ti">企業 LLM 應用落地報告：47 個案例研究</div>
+              <div class="desc">從 PoC 到上線的關鍵決策節點，包含 5 大失敗陷阱與 3 種成功模式。</div>
+              <div class="foot"><span>2025/05 · 92 頁</span><span class="pro">PRO 專屬</span></div>
+            </div>
+          </div>
+          <div class="rep-card">
+            <div class="rep-cover fin"><span class="badge">FREE</span><span class="icon">💰</span><div class="pat"></div></div>
+            <div class="rep-meta">
+              <div class="ind">金融科技</div>
+              <div class="ti">2025 數位金融服務市場規模預測</div>
+              <div class="desc">行動支付、純網銀、數位身份驗證三大主軸，CAGR 23.4% 持續走強。</div>
+              <div class="foot"><span>2025/05 · 64 頁</span><span class="free">免費</span></div>
+            </div>
+          </div>
+          <div class="rep-card">
+            <div class="rep-cover mfg"><span class="badge">FREE</span><span class="icon">🏭</span><div class="pat"></div></div>
+            <div class="rep-meta">
+              <div class="ind">製造業</div>
+              <div class="ti">智慧工廠 ROI 分析：300 家中小製造業</div>
+              <div class="desc">設備聯網、AOI 視覺檢測、產線預測維護的回收期實測。</div>
+              <div class="foot"><span>2025/04 · 78 頁</span><span class="free">免費</span></div>
+            </div>
+          </div>
+          <div class="rep-card">
+            <div class="rep-cover ret"><span class="badge">PRO</span><span class="icon">🛍️</span><div class="pat"></div></div>
+            <div class="rep-meta">
+              <div class="ind">零售 / 電商</div>
+              <div class="ti">全通路零售技術成熟度評估</div>
+              <div class="desc">OMO、會員 360、AI 個人化推薦三大領域標竿企業案例。</div>
+              <div class="foot"><span>2025/04 · 86 頁</span><span class="pro">PRO 專屬</span></div>
+            </div>
+          </div>
+          <div class="rep-card">
+            <div class="rep-cover med"><span class="badge">FREE</span><span class="icon">⚕️</span><div class="pat"></div></div>
+            <div class="rep-meta">
+              <div class="ind">醫療生技</div>
+              <div class="ti">智慧醫療採購趨勢：120 家醫院調研</div>
+              <div class="desc">遠距醫療、AI 影像辨識、HIS 雲端化的預算與導入時程。</div>
+              <div class="foot"><span>2025/03 · 56 頁</span><span class="free">免費</span></div>
+            </div>
+          </div>
+          <div class="rep-card">
+            <div class="rep-cover tech"><span class="badge">PRO</span><span class="icon">⚡</span><div class="pat"></div></div>
+            <div class="rep-meta">
+              <div class="ind">資訊服務</div>
+              <div class="ti">DevOps 與 Platform Engineering 採購趨勢</div>
+              <div class="desc">SRE 工具鏈、可觀測性平台、IaC 的市場份額與企業選型。</div>
+              <div class="foot"><span>2025/03 · 72 頁</span><span class="pro">PRO 專屬</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="side">
+            <h3>🔥 本週熱門</h3>
+            <div class="top-row"><div class="rk t">1</div><div class="info"><div class="ti">台灣 B2B SaaS 採購行為深度報告</div><div class="meta">8,420 下載</div></div><div class="dl">↓</div></div>
+            <div class="top-row"><div class="rk t">2</div><div class="info"><div class="ti">企業 LLM 應用落地：47 案例</div><div class="meta">5,180 下載</div></div><div class="dl">↓</div></div>
+            <div class="top-row"><div class="rk t">3</div><div class="info"><div class="ti">智慧工廠 ROI 分析</div><div class="meta">3,742 下載</div></div><div class="dl">↓</div></div>
+            <div class="top-row"><div class="rk">4</div><div class="info"><div class="ti">2025 數位金融市場規模預測</div><div class="meta">2,948 下載</div></div><div class="dl">↓</div></div>
+            <div class="top-row"><div class="rk">5</div><div class="info"><div class="ti">智慧醫療採購趨勢調研</div><div class="meta">2,184 下載</div></div><div class="dl">↓</div></div>
+          </div>
+          <div class="side">
+            <h3>📈 平台數據</h3>
+            <div class="stat-row"><span>累計報告數</span><span class="v c">428</span></div>
+            <div class="stat-row"><span>本月新增</span><span class="v g">+ 42</span></div>
+            <div class="stat-row"><span>合作研究機構</span><span class="v">28</span></div>
+            <div class="stat-row"><span>累計下載</span><span class="v c">182K</span></div>
+            <div class="stat-row"><span>您本月已讀</span><span class="v g">12 / 42</span></div>
+          </div>
+          <div class="side pro-cta">
+            <h3>🏆 升級 PRO 解鎖全部</h3>
+            <p>無限下載所有 PRO 報告、提早 7 天看到新報告、客製產業簡報。</p>
+            <button class="btn btn-primary" style="width:100%;">升級 PRO · NT$ 1,580 / 月</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>window.__active='reports'; window.__searchPlaceholder='搜尋報告、產業關鍵字...';</script>
+<script src="chrome.js"></script>
+</body>
+</html>

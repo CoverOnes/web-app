@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 登入</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #060A14;
+    --bg-2: #0B1220;
+    --bg-3: #0F172A;
+    --line: rgba(148,163,184,0.12);
+    --line-strong: rgba(148,163,184,0.2);
+    --text: #E5E7EB;
+    --text-dim: #94A3B8;
+    --text-muted: #64748B;
+    --accent: #6366F1;
+    --accent-2: #8B5CF6;
+    --accent-blue: #2563EB;
+    --cyan: #22D3EE;
+    --green: #10B981;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #000; color: var(--text);
+    font-family: 'Inter', 'Noto Sans TC', -apple-system, sans-serif;
+    font-feature-settings: "cv11","ss01"; -webkit-font-smoothing: antialiased; }
+  button { cursor: pointer; border: none; background: none; color: inherit; font: inherit; }
+  input { font: inherit; color: inherit; outline: none; border: none; background: none; }
+  a { color: inherit; text-decoration: none; }
+
+  .page {
+    width: 1440px; min-height: 1024px;
+    background:
+      radial-gradient(1200px 700px at 20% 30%, rgba(99,102,241,0.18), transparent 60%),
+      radial-gradient(1000px 600px at 90% 80%, rgba(139,92,246,0.14), transparent 60%),
+      radial-gradient(800px 600px at 50% 100%, rgba(34,211,238,0.06), transparent 50%),
+      var(--bg);
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 560px;
+  }
+
+  /* Subtle grid texture */
+  .page::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(148,163,184,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148,163,184,0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse at center, #000 30%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ---------- LEFT: hero ---------- */
+  .hero { position: relative; padding: 36px 56px; display: flex; flex-direction: column; min-height: 1024px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 40px; height: 40px; border-radius: 11px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(99,102,241,0.35), 0 0 0 1px rgba(255,255,255,0.06) inset;
+  }
+  .brand-name { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; }
+  .brand-sub { font-size: 12px; color: var(--text-dim); margin-top: 1px; letter-spacing: 0.02em; }
+
+  .hero-body { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 640px; position: relative; z-index: 2; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 11px 5px 6px; border-radius: 999px;
+    background: rgba(99,102,241,0.12);
+    border: 1px solid rgba(99,102,241,0.3);
+    font-size: 12px; color: #C7D2FE; width: fit-content; margin-bottom: 22px;
+  }
+  .eyebrow .dot {
+    width: 18px; height: 18px; border-radius: 999px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 11px; font-weight: 600;
+  }
+  .tagline {
+    font-family: 'Noto Sans TC', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 64px;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    margin: 0 0 20px 0;
+    background: linear-gradient(180deg, #FFFFFF 0%, #C7D2FE 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .tagline .dot-sep { color: var(--accent); -webkit-text-fill-color: var(--accent); margin: 0 4px; }
+  .sub-tagline {
+    font-size: 17px; line-height: 1.65; color: var(--text-dim);
+    max-width: 520px; margin: 0 0 36px 0; font-weight: 400;
+  }
+  .stats { display: flex; gap: 36px; margin-top: 16px; padding-top: 28px; border-top: 1px solid var(--line); }
+  .stat-num { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: #fff;
+    background: linear-gradient(180deg, #fff, #C7D2FE); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat-lbl { font-size: 12px; color: var(--text-dim); margin-top: 2px; letter-spacing: 0.02em; }
+
+  /* ---------- Hero illustration ---------- */
+  .scene {
+    position: absolute;
+    right: -80px; top: 80px;
+    width: 720px; height: 720px;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* ---------- RIGHT: login card ---------- */
+  .right { padding: 36px 56px 36px 0; display: flex; flex-direction: column; align-items: stretch; }
+  .top-actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .lang-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px;
+    background: rgba(15,23,42,0.6);
+    border: 1px solid var(--line);
+    font-size: 12px; color: var(--text-dim);
+    backdrop-filter: blur(10px);
+  }
+
+  .card-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .card {
+    width: 480px;
+    background: linear-gradient(180deg, rgba(15,23,42,0.85) 0%, rgba(11,18,32,0.85) 100%);
+    border: 1px solid rgba(148,163,184,0.16);
+    border-radius: 20px;
+    padding: 36px 36px 28px 36px;
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.6),
+      0 0 0 1px rgba(255,255,255,0.04) inset,
+      0 -1px 0 rgba(255,255,255,0.06) inset;
+    position: relative;
+  }
+  .card::before {
+    content: ""; position: absolute; inset: -1px; border-radius: 21px; padding: 1px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.5), transparent 40%, transparent 70%, rgba(139,92,246,0.4));
+    -webkit-mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .card-title { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px 0; }
+  .card-sub { font-size: 13.5px; color: var(--text-dim); margin: 0 0 26px 0; }
+
+  .field { margin-bottom: 14px; }
+  .label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-dim); margin-bottom: 7px; font-weight: 500; }
+  .input-wrap {
+    display: flex; align-items: center; gap: 10px;
+    height: 46px; padding: 0 14px;
+    background: rgba(6,10,20,0.6);
+    border: 1px solid var(--line-strong);
+    border-radius: 11px;
+    transition: border-color 150ms, box-shadow 150ms, background 150ms;
+  }
+  .input-wrap.focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(99,102,241,0.16); background: rgba(6,10,20,0.8); }
+  .input-wrap input { flex: 1; font-size: 14px; }
+  .input-wrap .ico { color: var(--text-muted); display: flex; }
+  .input-wrap .toggle { color: var(--text-muted); font-size: 12px; }
+
+  .row { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 22px 0; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); }
+  .check .box { width: 16px; height: 16px; border-radius: 5px; background: var(--accent); display: flex; align-items: center; justify-content: center; color: #fff; }
+  .link { font-size: 13px; color: #C7D2FE; }
+
+  .primary-btn {
+    width: 100%; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent) 50%, var(--accent-2) 100%);
+    color: #fff; font-weight: 600; font-size: 15px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow:
+      0 10px 24px rgba(99,102,241,0.4),
+      0 0 0 1px rgba(255,255,255,0.1) inset,
+      0 -2px 0 rgba(0,0,0,0.15) inset;
+    letter-spacing: 0.02em;
+  }
+
+  .divider { display: flex; align-items: center; gap: 12px; margin: 22px 0 16px 0; color: var(--text-muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  .sso-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .sso {
+    height: 42px; border-radius: 10px;
+    background: rgba(15,23,42,0.5); border: 1px solid var(--line-strong);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    transition: background 150ms, border-color 150ms;
+  }
+  .sso:hover { background: rgba(15,23,42,0.8); border-color: rgba(148,163,184,0.3); }
+  .sso-wide {
+    grid-column: span 2;
+    background: linear-gradient(180deg, rgba(99,102,241,0.1), rgba(139,92,246,0.06));
+    border-color: rgba(99,102,241,0.3);
+  }
+
+  .footer-line {
+    text-align: center; font-size: 13px; color: var(--text-dim);
+    margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line);
+  }
+  .footer-line a { color: #C7D2FE; font-weight: 600; margin-left: 4px; }
+
+  .legal { padding: 16px 0 0 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+  .legal a { color: var(--text-dim); margin: 0 6px; }
+  .legal .lock { display: inline-flex; align-items: center; gap: 4px; color: var(--cyan); margin-right: 8px; }
+
+  .badges { display: flex; gap: 14px; margin-top: 18px; align-items: center; justify-content: center; }
+  .badges .b { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--text-muted); letter-spacing: 0.04em; }
+
+  /* Floating cards on hero */
+  .float-card {
+    position: absolute;
+    background: rgba(15,23,42,0.85);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 12px 14px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    font-size: 12px;
+  }
+  @keyframes float1 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes float2 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+  @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  @keyframes dash { to { stroke-dashoffset: -40; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- LEFT: Hero -->
+  <section class="hero">
+    <div class="brand">
+      <div class="brand-mark">
+        <!-- Owl mark -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="9" cy="10" r="2.4" fill="#fff"/>
+          <circle cx="15" cy="10" r="2.4" fill="#fff"/>
+          <circle cx="9" cy="10" r="1" fill="#0B1220"/>
+          <circle cx="15" cy="10" r="1" fill="#0B1220"/>
+          <path d="M11 14.5 L12 16 L13 14.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M12 4 L13.6 5.6 M12 4 L10.4 5.6" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">ChatOwl</div>
+        <div class="brand-sub">企業即時通訊・接案媒合平台</div>
+      </div>
+    </div>
+
+    <div class="hero-body">
+      <div class="eyebrow">
+        <span class="dot">B2B</span>
+        <span>專為台灣企業打造的合作網絡</span>
+      </div>
+      <h1 class="tagline">連結企業<span class="dot-sep">．</span>媒合專案<span class="dot-sep">．</span>共創商機</h1>
+      <p class="sub-tagline">
+        從上市公司到新創團隊，超過 12,000 家企業在 ChatOwl 上發掘合作夥伴、發布專案需求，並以加密通訊安心協作。
+      </p>
+
+      <div class="stats">
+        <div>
+          <div class="stat-num">12,400+</div>
+          <div class="stat-lbl">已認證企業</div>
+        </div>
+        <div>
+          <div class="stat-num">86,200</div>
+          <div class="stat-lbl">本月新發專案</div>
+        </div>
+        <div>
+          <div class="stat-num">NT$ 4.8B</div>
+          <div class="stat-lbl">累計媒合金額</div>
+        </div>
+        <div>
+          <div class="stat-num">98.6%</div>
+          <div class="stat-lbl">合作完成率</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Illustration -->
+    <svg class="scene" viewBox="0 0 720 720" fill="none">
+      <defs>
+        <radialGradient id="globeG" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#1E293B" stop-opacity="0.9"/>
+          <stop offset="60%" stop-color="#0F172A" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="#0B1220" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="lineG" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#6366F1" stop-opacity="0"/>
+          <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#22D3EE" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="cardG1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1E293B"/>
+          <stop offset="100%" stop-color="#0B1220"/>
+        </linearGradient>
+        <radialGradient id="nodeG">
+          <stop offset="0%" stop-color="#A78BFA"/>
+          <stop offset="100%" stop-color="#6366F1"/>
+        </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Outer glow disc -->
+      <circle cx="360" cy="360" r="320" fill="url(#globeG)"/>
+
+      <!-- Concentric orbits -->
+      <circle cx="360" cy="360" r="280" stroke="rgba(148,163,184,0.12)" stroke-width="1" fill="none"/>
+      <circle cx="360" cy="360" r="220" stroke="rgba(148,163,184,0.16)" stroke-width="1" fill="none" stroke-dasharray="2 6"/>
+      <circle cx="360" cy="360" r="160" stroke="rgba(148,163,184,0.2)" stroke-width="1" fill="none"/>
+      <circle cx="360" cy="360" r="100" stroke="rgba(99,102,241,0.3)" stroke-width="1" fill="none"/>
+
+      <!-- City skyline silhouette inside lower half -->
+      <g opacity="0.55">
+        <path d="M120 460 L120 420 L140 420 L140 380 L160 380 L160 410 L185 410 L185 360 L210 360 L210 340 L225 340 L225 320 L245 320 L245 380 L265 380 L265 350 L290 350 L290 330 L315 330 L315 290 L335 290 L335 270 L355 270 L355 250 L380 250 L380 290 L405 290 L405 320 L425 320 L425 280 L450 280 L450 350 L475 350 L475 310 L500 310 L500 360 L525 360 L525 330 L550 330 L550 380 L575 380 L575 410 L600 410 L600 460 Z"
+          fill="#0B1220" stroke="rgba(99,102,241,0.4)" stroke-width="0.8"/>
+        <!-- Window dots -->
+        <g fill="#6366F1" opacity="0.7">
+          <rect x="130" y="430" width="2" height="3"/><rect x="135" y="430" width="2" height="3"/>
+          <rect x="148" y="395" width="2" height="3"/><rect x="148" y="400" width="2" height="3"/>
+          <rect x="195" y="380" width="2" height="3"/><rect x="195" y="390" width="2" height="3"/><rect x="200" y="380" width="2" height="3"/>
+          <rect x="252" y="395" width="2" height="3"/><rect x="258" y="395" width="2" height="3"/>
+          <rect x="320" y="305" width="2" height="3"/><rect x="325" y="310" width="2" height="3"/>
+          <rect x="365" y="265" width="2" height="3"/><rect x="370" y="270" width="2" height="3"/>
+          <rect x="412" y="305" width="2" height="3"/>
+          <rect x="460" y="295" width="2" height="3"/><rect x="465" y="300" width="2" height="3"/>
+          <rect x="510" y="345" width="2" height="3"/>
+          <rect x="555" y="395" width="2" height="3"/><rect x="560" y="400" width="2" height="3"/>
+        </g>
+        <!-- Taipei 101 hint -->
+        <g transform="translate(320 200)">
+          <rect x="-8" y="0" width="16" height="14" fill="#0F172A" stroke="rgba(139,92,246,0.6)" stroke-width="0.6"/>
+          <rect x="-9" y="14" width="18" height="14" fill="#0F172A" stroke="rgba(139,92,246,0.6)" stroke-width="0.6"/>
+          <rect x="-10" y="28" width="20" height="14" fill="#0F172A" stroke="rgba(139,92,246,0.6)" stroke-width="0.6"/>
+          <rect x="-11" y="42" width="22" height="14" fill="#0F172A" stroke="rgba(139,92,246,0.6)" stroke-width="0.6"/>
+          <rect x="-12" y="56" width="24" height="14" fill="#0F172A" stroke="rgba(139,92,246,0.6)" stroke-width="0.6"/>
+          <line x1="0" y1="-20" x2="0" y2="0" stroke="rgba(139,92,246,0.6)" stroke-width="1"/>
+          <circle cx="0" cy="-22" r="2" fill="#A78BFA"/>
+        </g>
+      </g>
+
+      <!-- Connection lines between company nodes (animated dashes) -->
+      <g stroke-linecap="round" fill="none">
+        <path d="M180 250 Q 360 100 540 220" stroke="url(#lineG)" stroke-width="1.5" stroke-dasharray="4 6" style="animation: dash 3s linear infinite"/>
+        <path d="M120 380 Q 250 320 420 380" stroke="url(#lineG)" stroke-width="1.5" stroke-dasharray="4 6" style="animation: dash 4s linear infinite"/>
+        <path d="M540 220 Q 580 350 460 460" stroke="url(#lineG)" stroke-width="1.5" stroke-dasharray="4 6" style="animation: dash 5s linear infinite"/>
+        <path d="M180 250 Q 230 380 340 460" stroke="url(#lineG)" stroke-width="1.2" stroke-dasharray="3 5" style="animation: dash 6s linear infinite"/>
+        <path d="M460 460 Q 380 490 340 460" stroke="rgba(99,102,241,0.3)" stroke-width="1" stroke-dasharray="2 4"/>
+      </g>
+
+      <!-- Company nodes (briefcase/office icons in circles) -->
+      <g filter="url(#glow)">
+        <!-- Node 1 -->
+        <g transform="translate(180 250)">
+          <circle r="26" fill="url(#cardG1)" stroke="rgba(99,102,241,0.5)" stroke-width="1.5"/>
+          <rect x="-9" y="-6" width="18" height="13" rx="2" fill="none" stroke="#A78BFA" stroke-width="1.5"/>
+          <path d="M-5 -6 V-9 H5 V-6" stroke="#A78BFA" stroke-width="1.5" fill="none"/>
+        </g>
+        <!-- Node 2 -->
+        <g transform="translate(540 220)">
+          <circle r="30" fill="url(#cardG1)" stroke="rgba(139,92,246,0.6)" stroke-width="1.5"/>
+          <path d="M-10 8 V-6 L-2 -10 L-2 -2 L8 -6 V8 Z" fill="none" stroke="#C4B5FD" stroke-width="1.5"/>
+          <rect x="0" y="3" width="4" height="5" fill="#C4B5FD"/>
+        </g>
+        <!-- Node 3 -->
+        <g transform="translate(120 380)">
+          <circle r="22" fill="url(#cardG1)" stroke="rgba(34,211,238,0.5)" stroke-width="1.5"/>
+          <circle cx="-3" cy="-2" r="3.5" fill="none" stroke="#67E8F9" stroke-width="1.4"/>
+          <circle cx="4" cy="-2" r="3.5" fill="none" stroke="#67E8F9" stroke-width="1.4"/>
+          <path d="M-7 7 Q 0 12 7 7" stroke="#67E8F9" stroke-width="1.4" fill="none"/>
+        </g>
+        <!-- Node 4 (handshake) -->
+        <g transform="translate(420 380)">
+          <circle r="34" fill="url(#cardG1)" stroke="rgba(99,102,241,0.6)" stroke-width="1.5"/>
+          <path d="M-14 0 L-6 -8 L0 -2 L6 -8 L14 0 L8 6 L4 2 L-4 10 L-10 4 Z"
+            fill="none" stroke="#A78BFA" stroke-width="1.5" stroke-linejoin="round"/>
+          <line x1="-10" y1="2" x2="-14" y2="0" stroke="#A78BFA" stroke-width="1.5"/>
+          <line x1="14" y1="0" x2="10" y2="2" stroke="#A78BFA" stroke-width="1.5"/>
+        </g>
+        <!-- Node 5 -->
+        <g transform="translate(340 460)">
+          <circle r="20" fill="url(#cardG1)" stroke="rgba(139,92,246,0.5)" stroke-width="1.5"/>
+          <rect x="-8" y="-6" width="16" height="12" rx="1.5" fill="none" stroke="#C4B5FD" stroke-width="1.4"/>
+          <line x1="-5" y1="-2" x2="5" y2="-2" stroke="#C4B5FD" stroke-width="1.2"/>
+          <line x1="-5" y1="1" x2="5" y2="1" stroke="#C4B5FD" stroke-width="1.2"/>
+          <line x1="-5" y1="4" x2="2" y2="4" stroke="#C4B5FD" stroke-width="1.2"/>
+        </g>
+        <!-- Node 6 -->
+        <g transform="translate(540 460)">
+          <circle r="18" fill="url(#cardG1)" stroke="rgba(99,102,241,0.4)" stroke-width="1.4"/>
+          <circle cx="0" cy="-3" r="3" fill="none" stroke="#A78BFA" stroke-width="1.3"/>
+          <path d="M-6 6 Q 0 0 6 6" fill="none" stroke="#A78BFA" stroke-width="1.3"/>
+        </g>
+      </g>
+
+      <!-- Pulsing data points -->
+      <g>
+        <circle cx="280" cy="180" r="3" fill="#A78BFA" style="animation: pulse 2s ease-in-out infinite"/>
+        <circle cx="460" cy="150" r="2.5" fill="#67E8F9" style="animation: pulse 2.5s ease-in-out infinite"/>
+        <circle cx="600" cy="340" r="2.5" fill="#A78BFA" style="animation: pulse 3s ease-in-out infinite"/>
+        <circle cx="240" cy="500" r="3" fill="#67E8F9" style="animation: pulse 2.2s ease-in-out infinite"/>
+        <circle cx="500" cy="540" r="2.5" fill="#A78BFA" style="animation: pulse 2.8s ease-in-out infinite"/>
+      </g>
+    </svg>
+
+    <!-- Floating cards over scene -->
+    <div class="float-card" style="right: 80px; top: 180px; width: 220px; animation: float1 6s ease-in-out infinite">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <div style="width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg, #2563EB, #6366F1); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff">台</div>
+        <div>
+          <div style="font-weight: 600; font-size: 12.5px;">台積電子</div>
+          <div style="font-size: 10.5px; color: var(--text-muted)">已驗證 · 半導體</div>
+        </div>
+        <span style="margin-left: auto; width: 16px; height: 16px; border-radius: 50%; background: rgba(16,185,129,0.2); color: #10B981; display: flex; align-items: center; justify-content: center; font-size: 10px;">✓</span>
+      </div>
+      <div style="font-size: 11.5px; color: var(--text-dim); line-height: 1.5;">徵求 PCB 後段組裝合作夥伴 · 預算 NT$ 2.4M</div>
+    </div>
+
+    <div class="float-card" style="right: 320px; top: 540px; width: 240px; animation: float2 7s ease-in-out infinite">
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--cyan); margin-bottom: 8px;">
+        <span style="width: 6px; height: 6px; border-radius: 999px; background: var(--cyan); box-shadow: 0 0 8px var(--cyan)"></span>
+        即時媒合 · 3 家企業正在洽談
+      </div>
+      <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+        <div style="width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, #F59E0B, #EF4444); border: 2px solid #0F172A; font-size: 11px; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center">鴻</div>
+        <div style="width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, #10B981, #059669); border: 2px solid #0F172A; margin-left: -10px; font-size: 11px; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center">新</div>
+        <div style="width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, #8B5CF6, #EC4899); border: 2px solid #0F172A; margin-left: -10px; font-size: 11px; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center">奇</div>
+      </div>
+      <div style="font-size: 11.5px; font-weight: 500;">智慧製造 ERP 系統開發案</div>
+      <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px;">預算 NT$ 850K · 截標 4/28</div>
+    </div>
+
+    <div class="float-card" style="left: 60px; top: 480px; width: 200px; animation: float1 8s ease-in-out infinite">
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(34,211,238,0.15); color: var(--cyan); display: flex; align-items: center; justify-content: center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: 12px; font-weight: 600;">端對端加密</div>
+          <div style="font-size: 10.5px; color: var(--text-muted)">商業機密安全傳輸</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Login -->
+  <section class="right">
+    <div class="top-actions">
+      <a class="lang-pill" href="#"><span style="font-size: 13px;">🌐</span> 繁體中文 ▾</a>
+      <a class="lang-pill" href="#">需要協助？</a>
+    </div>
+
+    <div class="card-wrap">
+      <div class="card">
+        <h2 class="card-title">登入企業帳號</h2>
+        <p class="card-sub">使用您的公司 Email 登入，開始探索合作機會。</p>
+
+        <div class="field">
+          <div class="label"><span>電子郵件</span></div>
+          <div class="input-wrap">
+            <span class="ico">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            </span>
+            <input type="email" value="alex.chen@chatowl.com.tw" />
+            <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--green);">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.5 10 17l9-10"/></svg>
+              已驗證
+            </span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label"><span>密碼</span></div>
+          <div class="input-wrap focus">
+            <span class="ico">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            </span>
+            <input type="password" value="••••••••••••" />
+            <button class="toggle">顯示</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="check">
+            <span class="box">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12.5 10 17l9-10"/></svg>
+            </span>
+            記住此裝置 30 天
+          </div>
+          <a href="#" class="link">忘記密碼？</a>
+        </div>
+
+        <button class="primary-btn">
+          登入 ChatOwl
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </button>
+
+        <div class="divider">或使用 SSO 登入</div>
+
+        <div class="sso-grid">
+          <button class="sso">
+            <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 1 1-3.3-12.6l5.7-5.7A20 20 0 1 0 44 24a20 20 0 0 0-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8A12 12 0 0 1 24 12a12 12 0 0 1 7.7 2.8l5.7-5.7A20 20 0 0 0 6.3 14.7z"/><path fill="#4CAF50" d="M24 44a20 20 0 0 0 13.5-5.2l-6.2-5.3A12 12 0 0 1 12.7 28l-6.5 5A20 20 0 0 0 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.5l6.2 5.3C37 39.8 44 34 44 24a20 20 0 0 0-.4-3.5z"/></svg>
+            Google
+          </button>
+          <button class="sso">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M17 12.5c0-2.6 2.1-3.8 2.2-3.9-1.2-1.7-3-2-3.7-2-1.6-.2-3 .9-3.8.9s-2-.9-3.3-.9c-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.5 1.3 0 1.8-.8 3.4-.8s2 .8 3.4.8c1.4 0 2.3-1.2 3.1-2.4.6-.9 1.1-1.8 1.4-2.8-1.5-.6-3-2.2-3-4.1zM14.5 4.7c.7-.8 1.2-2 1-3.2-1 0-2.3.7-3 1.5-.7.7-1.2 1.9-1.1 3.1 1.1 0 2.3-.6 3.1-1.4z"/></svg>
+            Apple
+          </button>
+          <button class="sso">
+            <svg width="16" height="16" viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" rx="5" fill="#06C755"/><path d="M19 10.7c0-3.1-3.1-5.7-7-5.7s-7 2.6-7 5.7c0 2.8 2.5 5.2 5.9 5.6.2 0 .5.1.6.3.1.2.1.5 0 .7l-.1.5c0 .2-.2.7.6.4 1-.4 4.7-3 4.9-3.1 1.3-1.1 2.1-2.6 2.1-4.4z" fill="#fff"/></svg>
+            LINE
+          </button>
+          <button class="sso sso-wide">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="1.75"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>
+            <span>企業單一登入 (SAML 2.0 / OIDC)</span>
+            <span style="font-size: 10px; color: var(--text-muted); margin-left: 4px;">為大型企業設計</span>
+          </button>
+        </div>
+
+        <div class="footer-line">
+          還沒有公司帳號？<a href="#">立即註冊企業</a>
+        </div>
+
+        <div class="legal">
+          <span class="lock">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            SOC 2 Type II · ISO 27001
+          </span>
+          <a href="#">服務條款</a>·<a href="#">隱私政策</a>·<a href="#">企業合約</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

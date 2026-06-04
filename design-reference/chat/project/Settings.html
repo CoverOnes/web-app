@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 設定</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .body { display:grid; grid-template-columns: 220px minmax(0,1fr); gap:24px; padding:22px 28px 40px; }
+  .nav-side { position:sticky; top:80px; height:fit-content; }
+  .nav-title { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; padding:0 12px 8px; font-weight:600; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; font-size:13px; color:var(--text-dim); cursor:pointer; margin-bottom:1px; }
+  .nav-item:hover { background:rgba(255,255,255,.04); color:var(--text); }
+  .nav-item.active { background:rgba(99,102,241,.15); color:#C7D2FE; font-weight:600; }
+
+  .sec { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:14px; padding:24px; margin-bottom:18px; }
+  .sec h2 { font-size:17px; font-weight:700; margin:0 0 4px 0; }
+  .sec .sub { font-size:12.5px; color:var(--text-dim); margin-bottom:18px; }
+
+  .row { display:grid; grid-template-columns: 200px 1fr auto; gap:18px; align-items:center; padding:16px 0; border-top:1px solid var(--line); }
+  .row:first-of-type { border-top:none; padding-top:6px; }
+  .row .lbl { font-size:13px; font-weight:600; }
+  .row .lbl .d { font-size:11.5px; color:var(--text-dim); font-weight:400; margin-top:3px; }
+  .row .val { font-size:13px; color:var(--text-dim); }
+  .row .val b { color:var(--text); font-weight:600; }
+  .input { background:var(--bg-3); border:1px solid var(--line); color:var(--text); padding:9px 12px; border-radius:8px; font-size:13px; width:100%; }
+
+  .toggle { width:42px; height:24px; border-radius:999px; background:var(--bg-3); border:1px solid var(--line); position:relative; cursor:pointer; transition:all 200ms; }
+  .toggle::after { content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:999px; background:var(--text-dim); transition:all 200ms; }
+  .toggle.on { background:linear-gradient(135deg,var(--accent-blue),var(--accent-2)); border-color:transparent; }
+  .toggle.on::after { left:20px; background:#fff; }
+
+  .verify-card { display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:18px; }
+  .vc { padding:16px; border-radius:12px; border:1px solid var(--line); background:rgba(15,23,42,.4); }
+  .vc.done { border-color:rgba(16,185,129,.4); background:linear-gradient(135deg, rgba(16,185,129,.08), rgba(16,185,129,.02)); }
+  .vc .h { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .vc .h .ico { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; }
+  .vc.done .h .ico { background:rgba(16,185,129,.15); color:var(--green); }
+  .vc:not(.done) .h .ico { background:rgba(245,158,11,.15); color:#FCD34D; }
+  .vc .t { font-size:14px; font-weight:700; }
+  .vc .s { font-size:11.5px; }
+  .vc.done .s { color:var(--green); }
+  .vc:not(.done) .s { color:#FCD34D; }
+  .vc .d { font-size:12px; color:var(--text-dim); margin-top:8px; line-height:1.55; }
+
+  .member-row { display:grid; grid-template-columns: 44px 1fr 140px 120px 36px; gap:14px; align-items:center; padding:12px 0; border-top:1px solid var(--line); }
+  .member-row:first-of-type { border-top:none; padding-top:0; }
+  .member-row .av { width:44px; height:44px; border-radius:11px; }
+  .member-row .nm { font-size:13.5px; font-weight:600; }
+  .member-row .em { font-size:11.5px; color:var(--text-dim); margin-top:2px; }
+  .role-pill { padding:5px 10px; border-radius:6px; font-size:11.5px; font-weight:600; text-align:center; }
+  .role-owner { background:rgba(245,158,11,.15); color:#FCD34D; border:1px solid rgba(245,158,11,.3); }
+  .role-admin { background:rgba(99,102,241,.15); color:#A78BFA; border:1px solid rgba(99,102,241,.3); }
+  .role-member { background:rgba(148,163,184,.15); color:var(--text-dim); border:1px solid var(--line); }
+
+  .plan-card { background:linear-gradient(135deg, rgba(99,102,241,.18), rgba(139,92,246,.1)); border:1px solid rgba(139,92,246,.4); border-radius:12px; padding:20px; }
+  .plan-card .pl-name { font-size:13px; color:#C7D2FE; font-weight:600; }
+  .plan-card .pl-price { font-size:32px; font-weight:800; letter-spacing:-.03em; margin-top:2px; }
+  .plan-card .pl-price .u { font-size:13px; color:var(--text-dim); font-weight:500; }
+  .pl-features { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+  .pl-features .f { font-size:12px; color:var(--text); display:flex; align-items:center; gap:6px; }
+  .pl-features .f::before { content:"✓"; color:var(--green); font-weight:700; }
+
+  .api-key { display:flex; gap:10px; align-items:center; padding:12px 14px; background:rgba(15,23,42,.6); border:1px solid var(--line); border-radius:10px; font-family:'Menlo',monospace; font-size:12.5px; }
+  .api-key .key { flex:1; color:var(--text-dim); letter-spacing:.05em; }
+  .api-key .key b { color:var(--cyan); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+
+    <div class="page-head">
+      <div>
+        <h1 style="font-size:22px; font-weight:700; letter-spacing:-.02em; margin:0;">設定</h1>
+        <p style="font-size:13px; color:var(--text-dim); margin:4px 0 0;">奇點科技 · 管理員權限</p>
+      </div>
+    </div>
+
+    <div class="body">
+      <!-- Side nav -->
+      <aside class="nav-side">
+        <div class="nav-title">企業</div>
+        <div class="nav-item active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>公司資料</div>
+        <div class="nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg>認證與資格</div>
+        <div class="nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>團隊成員</div>
+        <div class="nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>方案與付款</div>
+
+        <div class="nav-title" style="padding-top:14px;">帳號</div>
+        <div class="nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>個人檔案</div>
+        <div class="nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>安全與密碼</div>
+        <div class="nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/></svg>通知偏好</div>
+
+        <div class="nav-title" style="padding-top:14px;">開發者</div>
+        <div class="nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>API 金鑰</div>
+        <div class="nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l4-4a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-4 4a5 5 0 0 0 7 7l1-1"/></svg>Webhook</div>
+        <div class="nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>整合</div>
+      </aside>
+
+      <!-- Content -->
+      <div style="min-width:0;">
+
+        <!-- 公司資料 -->
+        <div class="sec">
+          <h2>公司資料</h2>
+          <div class="sub">這些資訊會顯示在您的公開公司頁，並影響系統媒合。</div>
+
+          <div class="row">
+            <div class="lbl">公司 LOGO</div>
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div class="lg lg-purple" style="width:64px; height:64px; font-size:22px;">奇</div>
+              <div>
+                <button class="btn btn-secondary">上傳新 LOGO</button>
+                <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">PNG/SVG · 至少 256×256 · 透明背景佳</div>
+              </div>
+            </div>
+            <div></div>
+          </div>
+
+          <div class="row">
+            <div class="lbl">公司名稱<div class="d">公開顯示名稱</div></div>
+            <input class="input" value="奇點科技股份有限公司" />
+            <div></div>
+          </div>
+
+          <div class="row">
+            <div class="lbl">統一編號<div class="d">稅務識別</div></div>
+            <input class="input" value="24561289" style="max-width:240px;" />
+            <span class="bdg bdg-green"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg>已驗證</span>
+          </div>
+
+          <div class="row">
+            <div class="lbl">產業分類</div>
+            <select class="input"><option>軟體開發 / SaaS</option><option>硬體製造</option><option>顧問服務</option></select>
+            <div></div>
+          </div>
+
+          <div class="row">
+            <div class="lbl">公司簡介<div class="d">最多 300 字</div></div>
+            <textarea class="input" style="min-height:80px; font-family:inherit;">奇點科技為新創技術服務團隊，專精於微服務架構、AI 工程化與雲端原生轉型。團隊核心 35 人，已協助逾 30 家企業完成數位轉型。</textarea>
+            <div></div>
+          </div>
+        </div>
+
+        <!-- 認證 -->
+        <div class="sec">
+          <h2>企業認證</h2>
+          <div class="sub">認證可顯著提升媒合精準度與買方信任。完成所有認證可獲得「鑽石認證」徽章。</div>
+
+          <div class="verify-card">
+            <div class="vc done">
+              <div class="h">
+                <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div><div class="t">公司登記證明</div><div class="s">已驗證 · 2026/3/12</div></div>
+              </div>
+              <div class="d">經濟部商業司線上 API 自動驗證通過。下次效期至 2027/3/12。</div>
+            </div>
+            <div class="vc done">
+              <div class="h">
+                <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div><div class="t">負責人身分證明</div><div class="s">已驗證</div></div>
+              </div>
+              <div class="d">陳俊宇 · 自然人憑證 OAuth 完成驗證。</div>
+            </div>
+            <div class="vc">
+              <div class="h">
+                <div class="ico">⚠</div>
+                <div><div class="t">財務狀況證明</div><div class="s">未上傳 · 建議補件</div></div>
+              </div>
+              <div class="d">上傳近 1 年財報或在職人數證明可獲得「財務透明」標章，提升大型採購方信任度。</div>
+            </div>
+            <div class="vc">
+              <div class="h">
+                <div class="ico">⚠</div>
+                <div><div class="t">ISO / 資安認證</div><div class="s">未上傳</div></div>
+              </div>
+              <div class="d">ISO 27001 / 9001 等國際認證可解鎖大型企業招標資格（如台積電子、玉山銀行）。</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 團隊成員 -->
+        <div class="sec">
+          <h2>團隊成員 <span style="font-size:13px; color:var(--text-dim); font-weight:400; margin-left:8px;">5 / 10 席</span>
+          <button class="btn btn-primary" style="float:right;">＋ 邀請成員</button></h2>
+          <div class="sub">可邀請最多 10 名團隊成員協作管理公司帳號。</div>
+
+          <div class="member-row">
+            <div class="av lg-purple">陳</div>
+            <div><div class="nm">陳俊宇 (你)</div><div class="em">chen@singularity.tw</div></div>
+            <div class="role-pill role-owner">擁有者</div>
+            <div style="font-size:11.5px; color:var(--text-dim);">2024 加入</div>
+            <div></div>
+          </div>
+          <div class="member-row">
+            <div class="av lg-cyan">林</div>
+            <div><div class="nm">林雅婷</div><div class="em">lin@singularity.tw</div></div>
+            <div class="role-pill role-admin">管理員</div>
+            <div style="font-size:11.5px; color:var(--text-dim);">2024 加入</div>
+            <button class="del" style="background:transparent; border:1px solid var(--line); color:var(--text-dim); width:32px; height:32px; border-radius:7px;">⋯</button>
+          </div>
+          <div class="member-row">
+            <div class="av lg-green">王</div>
+            <div><div class="nm">王志明</div><div class="em">wang@singularity.tw</div></div>
+            <div class="role-pill role-admin">管理員</div>
+            <div style="font-size:11.5px; color:var(--text-dim);">2025 加入</div>
+            <button class="del" style="background:transparent; border:1px solid var(--line); color:var(--text-dim); width:32px; height:32px; border-radius:7px;">⋯</button>
+          </div>
+          <div class="member-row">
+            <div class="av lg-orange">張</div>
+            <div><div class="nm">張怡君</div><div class="em">zhang@singularity.tw</div></div>
+            <div class="role-pill role-member">一般成員</div>
+            <div style="font-size:11.5px; color:var(--text-dim);">2025 加入</div>
+            <button class="del" style="background:transparent; border:1px solid var(--line); color:var(--text-dim); width:32px; height:32px; border-radius:7px;">⋯</button>
+          </div>
+          <div class="member-row">
+            <div class="av lg-pink">蔡</div>
+            <div><div class="nm">蔡文豪</div><div class="em">tsai@singularity.tw</div><div style="font-size:10.5px; color:#FCD34D; margin-top:2px;">⏳ 邀請待接受</div></div>
+            <div class="role-pill role-member">一般成員</div>
+            <div style="font-size:11.5px; color:var(--text-dim);">3 天前</div>
+            <button class="del" style="background:transparent; border:1px solid var(--line); color:var(--text-dim); width:32px; height:32px; border-radius:7px;">⋯</button>
+          </div>
+        </div>
+
+        <!-- 方案 -->
+        <div class="sec">
+          <h2>方案與付款</h2>
+          <div class="sub">下次計費日 2026/5/15 · 自動續訂</div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="plan-card">
+              <div class="pl-name">目前方案 · BUSINESS PRO</div>
+              <div class="pl-price">NT$ 9,900<span class="u"> / 月</span></div>
+              <div class="pl-features">
+                <div class="f">無限發布需求</div>
+                <div class="f">10 名團隊成員</div>
+                <div class="f">優先媒合演算法</div>
+                <div class="f">完整投標分析</div>
+                <div class="f">API 存取</div>
+                <div class="f">7×24 客服</div>
+              </div>
+              <button class="btn btn-secondary" style="width:100%; margin-top:14px; justify-content:center;">升級至 ENTERPRISE</button>
+            </div>
+            <div>
+              <div style="background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:10px;">
+                <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em;">付款方式</div>
+                <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                  <div style="width:42px; height:28px; border-radius:5px; background:linear-gradient(135deg,#1E3A8A,#1D4ED8); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:800; color:#fff;">VISA</div>
+                  <div><div style="font-size:13px; font-weight:600;">**** **** **** 4827</div><div style="font-size:11px; color:var(--text-dim);">陳俊宇 · 06/28 到期</div></div>
+                  <button class="btn btn-ghost" style="margin-left:auto;">變更</button>
+                </div>
+              </div>
+              <div style="background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:12px; padding:16px;">
+                <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em;">本月用量</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+                  <div><div style="font-size:11px; color:var(--text-dim);">已發布需求</div><div style="font-size:18px; font-weight:700;">8</div></div>
+                  <div><div style="font-size:11px; color:var(--text-dim);">API 呼叫</div><div style="font-size:18px; font-weight:700; color:var(--cyan);">12,408</div></div>
+                </div>
+                <a style="font-size:12px; color:#A78BFA; margin-top:10px; display:block;">查看完整帳單與發票 →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- API -->
+        <div class="sec">
+          <h2>API 金鑰 <span style="font-size:13px; color:var(--text-dim); font-weight:400; margin-left:8px;">透過 ChatOwl API 整合自家 ERP / CRM</span>
+            <button class="btn btn-secondary" style="float:right;">＋ 建立金鑰</button></h2>
+
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div class="api-key">
+              <div style="width:7px; height:7px; border-radius:999px; background:var(--green);"></div>
+              <div style="flex:none; font-size:13px; font-weight:600; min-width:100px;">Production</div>
+              <div class="key">co_live_<b>••••••••••••</b>4f29</div>
+              <button class="btn btn-ghost">📋 複製</button>
+              <button class="btn btn-ghost">⋯</button>
+            </div>
+            <div class="api-key">
+              <div style="width:7px; height:7px; border-radius:999px; background:var(--amber);"></div>
+              <div style="flex:none; font-size:13px; font-weight:600; min-width:100px;">Sandbox</div>
+              <div class="key">co_test_<b>••••••••••••</b>a721</div>
+              <button class="btn btn-ghost">📋 複製</button>
+              <button class="btn btn-ghost">⋯</button>
+            </div>
+          </div>
+
+          <div style="margin-top:14px; padding:14px; background:rgba(34,211,238,.06); border:1px solid rgba(34,211,238,.2); border-radius:10px; font-size:12.5px; color:var(--text-dim);">
+            📚 <b style="color:#67E8F9;">開發者文件</b> · 完整 API 規範、Webhook 事件清單、SDK（Node / Python / Go）下載
+          </div>
+        </div>
+
+        <!-- 通知 -->
+        <div class="sec">
+          <h2>通知偏好</h2>
+          <div class="row">
+            <div class="lbl">新需求媒合<div class="d">符合您能力的新案件</div></div>
+            <div class="val">即時推播 · Email · 平台內</div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="row">
+            <div class="lbl">投標進度更新<div class="d">採購方審核狀態變更</div></div>
+            <div class="val">即時推播 · Email</div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="row">
+            <div class="lbl">截標倒數提醒</div>
+            <div class="val">3 天前 / 1 天前</div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="row">
+            <div class="lbl">私訊與洽談</div>
+            <div class="val">所有訊息</div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="row">
+            <div class="lbl">人脈動態<div class="d">追蹤者、推薦、貼文回應</div></div>
+            <div class="val">每日摘要</div>
+            <div class="toggle"></div>
+          </div>
+          <div class="row">
+            <div class="lbl">產品更新與促銷</div>
+            <div class="val">關閉</div>
+            <div class="toggle"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+<script src="chrome.js"></script>
+<script>renderChrome({active:'profile', searchPlaceholder:'搜尋設定...'});</script>
+<script>
+  document.querySelectorAll('.toggle').forEach(t=>t.addEventListener('click',()=>t.classList.toggle('on')));
+</script>
+</body>
+</html>

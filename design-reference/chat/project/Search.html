@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 搜尋結果</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  /* Big search header */
+  .search-hero { padding:30px 28px 18px; background:linear-gradient(180deg, rgba(99,102,241,.08), transparent); border-bottom:1px solid var(--line); }
+  .search-bar-big { display:flex; align-items:center; gap:14px; padding:18px 22px; background:var(--bg-card); border:1.5px solid rgba(99,102,241,.4); border-radius:14px; box-shadow:0 0 0 5px rgba(99,102,241,.08); max-width:880px; }
+  .search-bar-big svg { color:#A78BFA; flex-shrink:0; }
+  .search-bar-big input { flex:1; background:transparent; font-size:18px; color:var(--text); outline:none; border:none; }
+  .search-bar-big .x { width:26px; height:26px; border-radius:6px; background:var(--bg-3); display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:14px; cursor:pointer; }
+  .search-bar-big .submit { padding:9px 18px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); border-radius:8px; color:#fff; font-weight:600; font-size:13px; }
+  .search-meta { font-size:12.5px; color:var(--text-dim); margin-top:14px; display:flex; gap:14px; align-items:center; }
+  .search-meta .sm-tag { padding:3px 9px; background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.3); border-radius:5px; color:#C7D2FE; font-weight:600; font-size:11px; }
+
+  .search-tabs { padding:0 28px; border-bottom:1px solid var(--line); display:flex; gap:0; background:var(--bg-2); }
+  .stab { padding:13px 18px; font-size:13px; color:var(--text-dim); border-bottom:2px solid transparent; margin-bottom:-1px; display:flex; align-items:center; gap:7px; cursor:pointer; }
+  .stab.active { color:var(--text); border-color:var(--accent); font-weight:600; }
+  .stab .ct { font-size:11px; padding:1px 7px; border-radius:999px; background:rgba(148,163,184,.12); color:var(--text-dim); font-weight:500; }
+  .stab.active .ct { background:rgba(99,102,241,.2); color:#C7D2FE; }
+
+  .body { padding:22px 28px 40px; display:grid; grid-template-columns: 240px minmax(0,1fr) 300px; gap:22px; }
+
+  /* Filters */
+  .filters { display:flex; flex-direction:column; gap:14px; position:sticky; top:80px; align-self:flex-start; }
+  .filter-card { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:11px; padding:14px; }
+  .filter-h { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); margin-bottom:10px; }
+  .ck { display:flex; align-items:center; gap:9px; font-size:12.5px; padding:5px 0; cursor:pointer; }
+  .ck input { width:14px; height:14px; accent-color:var(--accent); }
+  .ck .ct { margin-left:auto; font-size:11px; color:var(--text-muted); }
+  .range { display:flex; gap:6px; }
+  .range input { flex:1; padding:7px 9px; background:var(--bg-3); border:1px solid var(--line); border-radius:6px; font-size:12px; }
+
+  /* Result groups */
+  .group-h { display:flex; align-items:center; gap:10px; margin:6px 0 12px; }
+  .group-h .ic { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+  .group-h.co .ic { background:rgba(99,102,241,.18); color:#A78BFA; }
+  .group-h.pj .ic { background:rgba(34,211,238,.18); color:#67E8F9; }
+  .group-h.pp .ic { background:rgba(16,185,129,.18); color:#6EE7B7; }
+  .group-h.dc .ic { background:rgba(245,158,11,.18); color:#FCD34D; }
+  .group-h .t { font-size:14px; font-weight:700; }
+  .group-h .ct { font-size:11.5px; color:var(--text-muted); }
+  .group-h .lk { margin-left:auto; font-size:12px; color:#A78BFA; }
+  .group-h.collapsed { opacity:.6; }
+
+  .res-card { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:11px; padding:14px 16px; margin-bottom:10px; display:grid; grid-template-columns: 44px 1fr auto; gap:13px; align-items:flex-start; cursor:pointer; transition:all 150ms; }
+  .res-card:hover { border-color:rgba(99,102,241,.4); background:rgba(99,102,241,.04); transform:translateX(2px); }
+  .res-card .lg { width:44px; height:44px; font-size:15px; }
+  .res-card .ti { font-size:14px; font-weight:600; line-height:1.4; }
+  .res-card .ti em { background:rgba(252,211,77,.18); color:#FCD34D; font-style:normal; padding:1px 4px; border-radius:3px; font-weight:700; }
+  .res-card .meta { font-size:11.5px; color:var(--text-dim); display:flex; gap:9px; margin-top:5px; flex-wrap:wrap; }
+  .res-card .meta .v { color:var(--cyan); }
+  .res-card .desc { font-size:12px; color:var(--text-dim); margin-top:7px; line-height:1.55; }
+  .res-card .right-meta { text-align:right; flex-shrink:0; font-size:11.5px; color:var(--text-muted); }
+  .res-card .right-meta .strong { font-size:13px; font-weight:700; color:var(--text); display:block; }
+
+  /* Project specific */
+  .res-card.pj .desc { background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:8px; padding:9px 11px; margin-top:9px; font-size:11.5px; }
+  .res-card.pj .bdg-row { display:flex; gap:6px; margin-top:8px; }
+
+  /* Person card */
+  .res-card.person { grid-template-columns: 44px 1fr auto auto; align-items:center; }
+  .res-card.person .av { width:44px; height:44px; border-radius:999px; }
+  .res-card.person .role { font-size:11.5px; color:var(--text-dim); }
+  .res-card.person .btn { padding:7px 14px; font-size:12px; }
+
+  /* Doc card */
+  .res-card.doc { background:rgba(15,23,42,.6); }
+  .res-card.doc .lg { background:rgba(245,158,11,.18); color:#FCD34D; font-size:18px; border:1px solid rgba(245,158,11,.3); }
+
+  /* AI suggestion */
+  .ai-card { background:linear-gradient(135deg, rgba(139,92,246,.12), rgba(34,211,238,.06)); border:1px solid rgba(139,92,246,.4); border-radius:14px; padding:18px; margin-bottom:18px; }
+  .ai-h { display:flex; align-items:center; gap:9px; margin-bottom:10px; font-size:12px; font-weight:700; }
+  .ai-h .ic { width:24px; height:24px; border-radius:6px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; }
+  .ai-h .glow { color:#C7D2FE; }
+  .ai-body { font-size:13px; color:var(--text); line-height:1.65; }
+  .ai-body b { color:#C7D2FE; }
+  .ai-actions { display:flex; gap:8px; margin-top:12px; }
+  .ai-pill { padding:6px 12px; background:rgba(15,23,42,.6); border:1px solid var(--line-strong); border-radius:999px; font-size:11.5px; cursor:pointer; }
+  .ai-pill:hover { border-color:rgba(139,92,246,.4); }
+
+  /* Right column */
+  .related-card, .recent-card { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:12px; padding:16px; margin-bottom:14px; }
+  .rl-h { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); margin-bottom:11px; }
+  .rl-row { display:flex; align-items:center; gap:9px; padding:7px 0; font-size:12.5px; cursor:pointer; }
+  .rl-row .lg { width:24px; height:24px; font-size:11px; }
+  .rl-row .t { flex:1; }
+  .rl-row .m { font-size:10.5px; color:var(--text-muted); }
+
+  .syn-row { display:flex; flex-wrap:wrap; gap:6px; }
+  .syn-pill { padding:5px 10px; background:rgba(99,102,241,.08); border:1px solid rgba(99,102,241,.25); border-radius:999px; font-size:11.5px; color:#C7D2FE; cursor:pointer; }
+  .syn-pill .x { color:var(--text-muted); margin-left:4px; }
+
+  .recent-row { display:grid; grid-template-columns: 14px 1fr auto; gap:8px; padding:6px 0; font-size:12px; color:var(--text-dim); cursor:pointer; align-items:center; }
+  .recent-row .ic { color:var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+
+    <div class="search-hero">
+      <div class="search-bar-big">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input value="LLM 客服 自動化" />
+        <span class="x">✕</span>
+        <button class="submit">搜尋</button>
+      </div>
+      <div class="search-meta">
+        <span>搜尋「<b style="color:var(--text);">LLM 客服 自動化</b>」共找到 <b style="color:var(--text);">142 筆</b> 結果 · 0.18 秒</span>
+        <span class="sm-tag">⚡ AI 語意搜尋</span>
+        <span class="sm-tag">🇹🇼 限定台灣</span>
+        <span style="margin-left:auto; color:var(--text-muted);">⌘K 快速搜尋 · 試試「<b style="color:#A78BFA;">"金融業 RAG"</b>」</span>
+      </div>
+    </div>
+
+    <div class="search-tabs">
+      <div class="stab active">全部 <span class="ct">142</span></div>
+      <div class="stab">公司 <span class="ct">28</span></div>
+      <div class="stab">專案 <span class="ct">36</span></div>
+      <div class="stab">人脈 <span class="ct">14</span></div>
+      <div class="stab">文件 <span class="ct">52</span></div>
+      <div class="stab">案例 <span class="ct">8</span></div>
+      <div class="stab">產業報告 <span class="ct">4</span></div>
+      <div style="flex:1;"></div>
+      <div class="stab" style="color:var(--text-muted);">排序：<b style="color:var(--text); margin-left:4px;">最相關 ▾</b></div>
+    </div>
+
+    <div class="body">
+
+      <!-- LEFT FILTERS -->
+      <aside class="filters">
+        <div class="filter-card">
+          <div class="filter-h">類型</div>
+          <label class="ck"><input type="checkbox" checked />公司 <span class="ct">28</span></label>
+          <label class="ck"><input type="checkbox" checked />專案 / RFP <span class="ct">36</span></label>
+          <label class="ck"><input type="checkbox" checked />人脈 <span class="ct">14</span></label>
+          <label class="ck"><input type="checkbox" />文件 <span class="ct">52</span></label>
+          <label class="ck"><input type="checkbox" />案例 <span class="ct">8</span></label>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-h">產業</div>
+          <label class="ck"><input type="checkbox" checked />軟體 / SaaS <span class="ct">42</span></label>
+          <label class="ck"><input type="checkbox" checked />金融 <span class="ct">31</span></label>
+          <label class="ck"><input type="checkbox" />電商 / 零售 <span class="ct">28</span></label>
+          <label class="ck"><input type="checkbox" />製造 <span class="ct">19</span></label>
+          <label class="ck"><input type="checkbox" />醫療 <span class="ct">12</span></label>
+          <label class="ck" style="color:#A78BFA;"><span style="margin-left:23px;">+ 顯示更多 (8)</span></label>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-h">公司規模</div>
+          <label class="ck"><input type="checkbox" />1–10 人 <span class="ct">18</span></label>
+          <label class="ck"><input type="checkbox" checked />11–50 人 <span class="ct">35</span></label>
+          <label class="ck"><input type="checkbox" checked />51–200 人 <span class="ct">26</span></label>
+          <label class="ck"><input type="checkbox" />200+ 人 <span class="ct">14</span></label>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-h">預算範圍</div>
+          <div class="range">
+            <input value="100K" />
+            <input value="5M" />
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">NT$ · 含尾款</div>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-h">驗證狀態</div>
+          <label class="ck"><input type="checkbox" checked />已實名認證 <span class="ct">112</span></label>
+          <label class="ck"><input type="checkbox" />金牌會員 <span class="ct">38</span></label>
+        </div>
+      </aside>
+
+      <!-- MAIN RESULTS -->
+      <div>
+
+        <!-- AI summary -->
+        <div class="ai-card">
+          <div class="ai-h">
+            <div class="ic">⚡</div>
+            <div class="glow">ChatOwl AI 為您整理</div>
+            <span style="margin-left:auto; font-size:10.5px; color:var(--text-muted); font-weight:400;">基於 142 筆結果 · 不可作為決策依據</span>
+          </div>
+          <div class="ai-body">
+            目前台灣有 <b>28 家</b>公司有 LLM 客服自動化能力，其中 <b>9 家</b>具備金融業合規經驗。最熱門的技術組合是 <b>RAG + Function Calling + 中文 fine-tuning</b>，平均專案規模 <b>NT$ 1.2M – 3.8M</b>，週期約 <b>10–14 週</b>。建議優先聯繫實名認證且有銀行業案例的 3 家：<b style="color:#67E8F9;">沛星互動、奇異點、超對稱</b>。
+          </div>
+          <div class="ai-actions">
+            <span class="ai-pill">🎯 自動發起精準媒合</span>
+            <span class="ai-pill">📊 比較這 9 家</span>
+            <span class="ai-pill">📥 下載市場分析</span>
+          </div>
+        </div>
+
+        <!-- COMPANIES -->
+        <div class="group-h co">
+          <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg></div>
+          <span class="t">公司</span><span class="ct">28 筆 · 顯示前 3 筆</span>
+          <span class="lk">查看全部 →</span>
+        </div>
+
+        <div class="res-card">
+          <div class="lg lg-purple">沛</div>
+          <div>
+            <div class="ti">沛星互動 Appier — 亞洲領先的 <em>AI</em> 行銷與<em>客服</em>解決方案</div>
+            <div class="meta">
+              <span>🇹🇼 台北 內湖</span><span>·</span>
+              <span>軟體 / SaaS · 200+ 人</span><span>·</span>
+              <span>已上市 (TSE: 4180)</span><span>·</span>
+              <span class="v">★ 4.8 (32 評)</span>
+              <span>·</span>
+              <span style="color:var(--green);">✓ 實名認證</span>
+            </div>
+            <div class="desc">提供 <em>LLM</em> 驅動的多通道<em>客服自動化</em>，內建金融業 RAG 模板、PII 遮罩，平均回應時間 0.8 秒。已服務玉山銀行、國泰金控、富邦人壽等。</div>
+            <div style="display:flex; gap:6px; margin-top:9px;">
+              <span class="bdg bdg-dev">LLM</span>
+              <span class="bdg bdg-cyan">RAG</span>
+              <span class="bdg bdg-green">金融合規</span>
+              <span class="bdg bdg-grey">+ 8</span>
+            </div>
+          </div>
+          <div class="right-meta">
+            <span class="strong">3 度連結</span>
+            5 位共同人脈<br>
+            <button class="btn btn-outline" style="margin-top:8px; font-size:11px; padding:5px 11px;">+ 連結</button>
+          </div>
+        </div>
+
+        <div class="res-card">
+          <div class="lg lg-cyan">奇</div>
+          <div>
+            <div class="ti">奇異點 AI — <em>LLM</em> 對話式<em>自動化</em>專家</div>
+            <div class="meta">
+              <span>🇹🇼 新竹</span><span>·</span>
+              <span>軟體 · 28 人</span><span>·</span>
+              <span class="v">★ 4.9 (18 評)</span><span>·</span>
+              <span style="color:var(--green);">✓ 實名認證</span>
+              <span>·</span><span style="color:#FCD34D;">🏆 金牌會員</span>
+            </div>
+            <div class="desc">專注於繁體中文 LLM fine-tuning，曾為中華電信、台新銀行打造客服 AI。技術棧：Llama 3.1、Mistral、自有評估框架。</div>
+            <div style="display:flex; gap:6px; margin-top:9px;">
+              <span class="bdg bdg-dev">Fine-tuning</span>
+              <span class="bdg bdg-cyan">繁中模型</span>
+              <span class="bdg bdg-mfg">Llama 3</span>
+            </div>
+          </div>
+          <div class="right-meta">
+            <span class="strong">2 度連結</span>
+            張小明 → 介紹<br>
+            <button class="btn btn-primary" style="margin-top:8px; font-size:11px; padding:5px 11px;">📩 詢問</button>
+          </div>
+        </div>
+
+        <div class="res-card">
+          <div class="lg lg-rose">超</div>
+          <div>
+            <div class="ti">超對稱科技 — 企業級<em>客服</em> AI 平台</div>
+            <div class="meta">
+              <span>🇹🇼 台北</span><span>·</span>
+              <span>軟體 · 65 人</span><span>·</span>
+              <span class="v">★ 4.6 (25 評)</span>
+              <span>·</span><span style="color:var(--green);">✓ 實名認證</span>
+            </div>
+            <div class="desc">擁有自研 RAG 架構與多語系支援，為玉山銀行、國泰世華建置內部知識庫客服機器人。</div>
+          </div>
+          <div class="right-meta">
+            <span class="strong">未連結</span>
+            6 位共同人脈
+          </div>
+        </div>
+
+        <!-- PROJECTS -->
+        <div class="group-h pj" style="margin-top:24px;">
+          <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4h8v2"/></svg></div>
+          <span class="t">專案 / RFP</span><span class="ct">36 筆 · 24 件可投標</span>
+          <span class="lk">查看全部 →</span>
+        </div>
+
+        <div class="res-card pj">
+          <div class="lg lg-blue">玉</div>
+          <div>
+            <div class="ti">玉山銀行 — 私行客戶 <em>LLM 客服</em>機器人 PoC</div>
+            <div class="meta">
+              <span>📅 投標截止 4/30</span><span>·</span>
+              <span class="v">NT$ 1.2M – 1.8M</span><span>·</span>
+              <span>10 週</span><span>·</span>
+              <span>已 7 家投標</span><span>·</span>
+              <span style="color:var(--green);">✓ 預算已驗證</span>
+            </div>
+            <div class="desc">需具備繁中 LLM 經驗、金融業合規能力（個資法、金管會雲端規範）。優先考慮已有銀行業客戶之團隊，必要時可現場常駐 2 週。</div>
+            <div class="bdg-row">
+              <span class="bdg bdg-dev">LLM</span>
+              <span class="bdg bdg-cyan">RAG</span>
+              <span class="bdg bdg-green">金融</span>
+              <span class="bdg bdg-amber">PoC</span>
+            </div>
+          </div>
+          <div class="right-meta">
+            <span class="strong" style="color:var(--green);">95% 匹配</span>
+            您符合所有條件<br>
+            <button class="btn btn-primary" style="margin-top:8px; font-size:11px; padding:5px 11px;">立即投標 →</button>
+          </div>
+        </div>
+
+        <div class="res-card pj">
+          <div class="lg lg-amber">屈</div>
+          <div>
+            <div class="ti">屈臣氏 — 全通路<em>客服自動化</em>升級案</div>
+            <div class="meta">
+              <span>📅 截止 5/12</span><span>·</span>
+              <span class="v">NT$ 800K – 1.5M</span><span>·</span>
+              <span>16 週</span><span>·</span>
+              <span>已 12 家投標</span>
+            </div>
+            <div class="desc">整合 Line 官方帳號、APP 聊天室、客服中心。需處理日均 8,000+ 對話。LLM 部分接受 OpenAI 或自架方案。</div>
+            <div class="bdg-row">
+              <span class="bdg bdg-dev">客服整合</span>
+              <span class="bdg bdg-mkt">零售</span>
+              <span class="bdg bdg-cyan">Line API</span>
+            </div>
+          </div>
+          <div class="right-meta">
+            <span class="strong" style="color:#FCD34D;">72% 匹配</span>
+            缺少零售業案例
+          </div>
+        </div>
+
+        <!-- PEOPLE -->
+        <div class="group-h pp" style="margin-top:24px;">
+          <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg></div>
+          <span class="t">人脈</span><span class="ct">14 位 · 8 位 1 度連結</span>
+          <span class="lk">查看全部 →</span>
+        </div>
+
+        <div class="res-card person">
+          <div class="lg lg-indigo av">王</div>
+          <div>
+            <div class="ti">王允中 · <em>LLM</em> 工程經理 @ 沛星互動</div>
+            <div class="role">前玉山銀行 AI 研究員 · 11 年經驗 · 1 度連結（劉俊宏 介紹）</div>
+          </div>
+          <div style="font-size:11px; color:var(--text-dim); text-align:right;">
+            互動：<b style="color:var(--text);">3 次</b><br>共同人脈 8
+          </div>
+          <button class="btn btn-secondary">💬 訊息</button>
+        </div>
+
+        <div class="res-card person">
+          <div class="lg lg-pink av">陳</div>
+          <div>
+            <div class="ti">陳怡君 · <em>客服</em> AI 產品總監 @ 奇異點</div>
+            <div class="role">前 LINE Bank · 8 年經驗 · 2 度連結 · 上週看過您的公司</div>
+          </div>
+          <div style="font-size:11px; color:var(--text-dim); text-align:right;">
+            互動：<b style="color:var(--text);">0</b><br>共同 4
+          </div>
+          <button class="btn btn-outline">+ 連結</button>
+        </div>
+
+        <!-- DOCS -->
+        <div class="group-h dc" style="margin-top:24px;">
+          <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg></div>
+          <span class="t">文件 / 案例</span><span class="ct">52 筆 · 含您可存取的內部文件</span>
+          <span class="lk">查看全部 →</span>
+        </div>
+
+        <div class="res-card doc">
+          <div class="lg">📄</div>
+          <div>
+            <div class="ti">2025 年台灣<em>金融業 LLM 客服</em>白皮書</div>
+            <div class="meta"><span>來源：iThome × ChatOwl</span><span>·</span><span>PDF · 32 頁</span><span>·</span><span>2025/12 發布</span><span>·</span><span style="color:#FCD34D;">🏆 PRO 獨家</span></div>
+            <div class="desc">收錄 14 家銀行的 LLM 客服佈局策略、合規挑戰、ROI 計算模型...</div>
+          </div>
+          <div class="right-meta"><span class="strong">142 次下載</span></div>
+        </div>
+
+        <div style="text-align:center; margin-top:18px; font-size:13px; color:var(--text-dim);">
+          顯示 1–10 / 142 筆 · <a style="color:#A78BFA;">查看下一頁 →</a>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <aside>
+        <div class="related-card">
+          <div class="rl-h">相關搜尋</div>
+          <div class="syn-row">
+            <span class="syn-pill">RAG 開發</span>
+            <span class="syn-pill">繁中 LLM fine-tuning</span>
+            <span class="syn-pill">金融業 AI 合規</span>
+            <span class="syn-pill">客服機器人</span>
+            <span class="syn-pill">Function Calling</span>
+            <span class="syn-pill">+ Line 整合</span>
+            <span class="syn-pill">中文 NLP</span>
+          </div>
+        </div>
+
+        <div class="related-card">
+          <div class="rl-h">熱門搜尋的人也找</div>
+          <div class="rl-row">
+            <div class="lg lg-purple">沛</div>
+            <div class="t">沛星互動 Appier</div>
+            <div class="m">↑ 18%</div>
+          </div>
+          <div class="rl-row">
+            <div class="lg lg-cyan">奇</div>
+            <div class="t">奇異點 AI</div>
+            <div class="m">↑ 32%</div>
+          </div>
+          <div class="rl-row">
+            <div class="lg lg-rose">超</div>
+            <div class="t">超對稱科技</div>
+            <div class="m">↑ 12%</div>
+          </div>
+          <div class="rl-row">
+            <div class="lg lg-blue">玉</div>
+            <div class="t">玉山銀行 LLM 客服 RFP</div>
+            <div class="m">熱門</div>
+          </div>
+        </div>
+
+        <div class="recent-card">
+          <div class="rl-h">您最近的搜尋</div>
+          <div class="recent-row"><span class="ic">🕘</span><span>AI 文件處理</span><span style="color:var(--text-muted);">2 天前</span></div>
+          <div class="recent-row"><span class="ic">🕘</span><span>金融 RAG 案例</span><span style="color:var(--text-muted);">3 天前</span></div>
+          <div class="recent-row"><span class="ic">🕘</span><span>製造業 數位轉型</span><span style="color:var(--text-muted);">1 週前</span></div>
+          <div class="recent-row"><span class="ic">🕘</span><span>玉山銀行</span><span style="color:var(--text-muted);">1 週前</span></div>
+          <div style="text-align:center; margin-top:10px; font-size:11px; color:#A78BFA;">清除搜尋紀錄</div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+</div>
+<script src="chrome.js"></script>
+<script>renderChrome({ active:'home', searchPlaceholder:'LLM 客服 自動化' });</script>
+</body></html>

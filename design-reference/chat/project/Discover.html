@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 探索企業</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .filter-bar { display: flex; gap: 8px; padding: 14px 28px; border-bottom: 1px solid var(--line); flex-wrap: wrap; align-items: center; }
+  .filter-chip { padding: 6px 12px; border-radius: 999px; background: var(--bg-3); border: 1px solid var(--line-strong); font-size: 12.5px; color: var(--text-dim); display: inline-flex; align-items: center; gap: 6px; }
+  .filter-chip.active { background: rgba(99,102,241,0.18); border-color: var(--accent); color: #C7D2FE; }
+  .filter-chip .x { color: var(--text-muted); }
+  .filter-chip .v { font-weight: 600; color: var(--text); }
+  .body { padding: 24px 28px 40px 28px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+  .left { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .right { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .co-card { background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: 12px; overflow: hidden; transition: border-color 150ms; display: flex; flex-direction: column; }
+  .co-card:hover { border-color: rgba(99,102,241,0.4); }
+  .co-banner { height: 64px; position: relative; }
+  .co-banner.b1 { background: linear-gradient(135deg, #2563EB, #6366F1, #8B5CF6); }
+  .co-banner.b2 { background: linear-gradient(135deg, #0EA5E9, #22D3EE); }
+  .co-banner.b3 { background: linear-gradient(135deg, #F59E0B, #EF4444); }
+  .co-banner.b4 { background: linear-gradient(135deg, #10B981, #059669); }
+  .co-banner.b5 { background: linear-gradient(135deg, #EC4899, #8B5CF6); }
+  .co-banner.b6 { background: linear-gradient(135deg, #F97316, #F59E0B); }
+  .co-banner::after { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.5; }
+  .co-body { padding: 14px; padding-top: 30px; position: relative; flex: 1; display: flex; flex-direction: column; }
+  .co-logo { position: absolute; top: -22px; left: 14px; width: 48px; height: 48px; border-radius: 11px; border: 3px solid var(--bg-card); font-size: 17px; font-weight: 700; }
+  .co-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+  .co-meta { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .co-tagline { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 10px 0; flex: 1; }
+  .co-stats { display: flex; gap: 12px; padding: 8px 0; border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line); margin-bottom: 10px; }
+  .co-stats .s { flex: 1; }
+  .co-stats .lbl { font-size: 9.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .co-stats .v { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .co-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+  .co-tag { font-size: 10px; padding: 2px 7px; border-radius: 999px; background: rgba(148,163,184,0.1); color: var(--text-dim); }
+  .co-foot { display: flex; gap: 6px; }
+  .co-foot .btn { flex: 1; justify-content: center; }
+  .ind-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .ind-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .ind-row:first-of-type { padding-top: 0; }
+  .ind-row .icn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .ind-row .nm { font-size: 12.5px; font-weight: 500; flex: 1; }
+  .ind-row .ct { font-size: 11px; color: var(--text-dim); }
+  .map-card { background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: 12px; padding: 16px; }
+  .map-pill { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12.5px; }
+  .map-pill .dot { width: 8px; height: 8px; border-radius: 999px; }
+  .map-pill .nm { flex: 1; }
+  .map-pill .ct { font-size: 11px; color: var(--text-dim); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+<div class="page-head">
+    <div class="head-row">
+      <div>
+        <div class="crumb">主選單 / 探索企業</div>
+        <h1>探索企業 <span style="font-size: 16px; color: var(--text-dim); font-weight: 500;">12,400 家認證企業</span></h1>
+        <p class="desc">發掘潛在合作夥伴 · 已根據你的產業偏好排序</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+          排序：相關度
+        </button>
+        <button class="btn btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          網格
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-chip active">產業：<span class="v" style="margin-left: 4px;">科技 / AI</span> <span class="x">×</span></span>
+    <span class="filter-chip active">地區：<span class="v" style="margin-left: 4px;">大台北</span> <span class="x">×</span></span>
+    <span class="filter-chip">公司規模 ▾</span>
+    <span class="filter-chip">資本額 ▾</span>
+    <span class="filter-chip">已認證 ✓</span>
+    <span class="filter-chip">最近活躍 ▾</span>
+    <span style="margin-left: auto; font-size: 12px; color: var(--text-muted);">找到 <b style="color: var(--text);">2,184</b> 家符合條件</span>
+  </div>
+
+  <div class="body">
+    <div class="left">
+      <div class="grid">
+
+        <div class="co-card">
+          <div class="co-banner b1"></div>
+          <div class="co-body">
+            <div class="co-logo lg lg-cyan">沛</div>
+            <div class="co-name">沛星互動 (Appier) <span class="v-tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="co-meta"><span>AI / SaaS</span><span>·</span><span>📍 台北</span><span>·</span><span>500-1000 人</span></div>
+            <div class="co-tagline">企業 AI 決策平台領導者，協助品牌精準觸及消費者。最近發布 8 個跨境合作機會。</div>
+            <div class="co-stats">
+              <div class="s"><div class="lbl">追蹤</div><div class="v">8.4K</div></div>
+              <div class="s"><div class="lbl">本月專案</div><div class="v" style="color: var(--cyan);">12</div></div>
+              <div class="s"><div class="lbl">合作率</div><div class="v" style="color: var(--green);">96%</div></div>
+            </div>
+            <div class="co-tags">
+              <span class="co-tag">#AI</span>
+              <span class="co-tag">#行銷科技</span>
+              <span class="co-tag">#上市櫃</span>
+            </div>
+            <div class="co-foot">
+              <button class="btn btn-secondary">查看</button>
+              <button class="btn btn-primary">＋ 連結</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-card">
+          <div class="co-banner b3"></div>
+          <div class="co-body">
+            <div class="co-logo lg lg-orange">鴻</div>
+            <div class="co-name">鴻海精密 <span class="v-tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="co-meta"><span>電子製造</span><span>·</span><span>📍 新北土城</span><span>·</span><span>10K+ 人</span></div>
+            <div class="co-tagline">全球最大電子製造服務商。本週發布 8 個 EMS 接案需求。</div>
+            <div class="co-stats">
+              <div class="s"><div class="lbl">追蹤</div><div class="v">42K</div></div>
+              <div class="s"><div class="lbl">本月專案</div><div class="v" style="color: var(--cyan);">38</div></div>
+              <div class="s"><div class="lbl">合作率</div><div class="v" style="color: var(--green);">98%</div></div>
+            </div>
+            <div class="co-tags">
+              <span class="co-tag">#EMS</span>
+              <span class="co-tag">#半導體</span>
+              <span class="co-tag">#上市櫃</span>
+            </div>
+            <div class="co-foot">
+              <button class="btn btn-secondary">查看</button>
+              <button class="btn btn-primary">＋ 連結</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-card">
+          <div class="co-banner b5"></div>
+          <div class="co-body">
+            <div class="co-logo lg lg-pink">誠</div>
+            <div class="co-name">誠品文創 <span class="v-tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="co-meta"><span>零售 / 文創</span><span>·</span><span>📍 台北</span><span>·</span><span>1K-5K 人</span></div>
+            <div class="co-tagline">人文、藝術、創意、生活的閱讀空間。徵求品牌設計與數位行銷夥伴。</div>
+            <div class="co-stats">
+              <div class="s"><div class="lbl">追蹤</div><div class="v">8.2K</div></div>
+              <div class="s"><div class="lbl">本月專案</div><div class="v" style="color: var(--cyan);">5</div></div>
+              <div class="s"><div class="lbl">合作率</div><div class="v" style="color: var(--green);">94%</div></div>
+            </div>
+            <div class="co-tags">
+              <span class="co-tag">#零售</span>
+              <span class="co-tag">#文創</span>
+              <span class="co-tag">#品牌</span>
+            </div>
+            <div class="co-foot">
+              <button class="btn btn-secondary">查看</button>
+              <button class="btn btn-primary">＋ 連結</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-card">
+          <div class="co-banner b4"></div>
+          <div class="co-body">
+            <div class="co-logo lg lg-green">玉</div>
+            <div class="co-name">玉山銀行 <span class="v-tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="co-meta"><span>金融 / 銀行</span><span>·</span><span>📍 台北</span><span>·</span><span>5K-10K 人</span></div>
+            <div class="co-tagline">領先的數位金融服務銀行。徵求 Fintech、API 開發與資安顧問合作。</div>
+            <div class="co-stats">
+              <div class="s"><div class="lbl">追蹤</div><div class="v">12K</div></div>
+              <div class="s"><div class="lbl">本月專案</div><div class="v" style="color: var(--cyan);">9</div></div>
+              <div class="s"><div class="lbl">合作率</div><div class="v" style="color: var(--green);">99%</div></div>
+            </div>
+            <div class="co-tags">
+              <span class="co-tag">#Fintech</span>
+              <span class="co-tag">#銀行</span>
+              <span class="co-tag">#上市櫃</span>
+            </div>
+            <div class="co-foot">
+              <button class="btn btn-secondary">查看</button>
+              <button class="btn btn-primary">＋ 連結</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-card">
+          <div class="co-banner b1"></div>
+          <div class="co-body">
+            <div class="co-logo lg lg-blue">台</div>
+            <div class="co-name">台積電子 <span class="v-tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="co-meta"><span>半導體</span><span>·</span><span>📍 新竹</span><span>·</span><span>10K+ 人</span></div>
+            <div class="co-tagline">全球領導晶圓代工企業，徵求 EDA、自動化測試與 AI 視覺檢測合作夥伴。</div>
+            <div class="co-stats">
+              <div class="s"><div class="lbl">追蹤</div><div class="v">128K</div></div>
+              <div class="s"><div class="lbl">本月專案</div><div class="v" style="color: var(--cyan);">24</div></div>
+              <div class="s"><div class="lbl">合作率</div><div class="v" style="color: var(--green);">99%</div></div>
+            </div>
+            <div class="co-tags">
+              <span class="co-tag">#半導體</span>
+              <span class="co-tag">#AI</span>
+              <span class="co-tag">#上市櫃</span>
+            </div>
+            <div class="co-foot">
+              <button class="btn btn-secondary">查看</button>
+              <button class="btn btn-primary">＋ 連結</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-card">
+          <div class="co-banner b6"></div>
+          <div class="co-body">
+            <div class="co-logo lg lg-amber">統</div>
+            <div class="co-name">統一超商 <span class="v-tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="co-meta"><span>零售 / 連鎖</span><span>·</span><span>📍 全台</span><span>·</span><span>10K+ 人</span></div>
+            <div class="co-tagline">最大連鎖通路，徵求 POS 系統、行銷代操、物流優化合作。</div>
+            <div class="co-stats">
+              <div class="s"><div class="lbl">追蹤</div><div class="v">36K</div></div>
+              <div class="s"><div class="lbl">本月專案</div><div class="v" style="color: var(--cyan);">14</div></div>
+              <div class="s"><div class="lbl">合作率</div><div class="v" style="color: var(--green);">97%</div></div>
+            </div>
+            <div class="co-tags">
+              <span class="co-tag">#零售</span>
+              <span class="co-tag">#物流</span>
+              <span class="co-tag">#上市櫃</span>
+            </div>
+            <div class="co-foot">
+              <button class="btn btn-secondary">查看</button>
+              <button class="btn btn-primary">＋ 連結</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-card">
+          <div class="co-banner b2"></div>
+          <div class="co-body">
+            <div class="co-logo lg lg-cyan">中</div>
+            <div class="co-name">中華電信 <span class="v-tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="co-meta"><span>電信 / 5G</span><span>·</span><span>📍 全台</span><span>·</span><span>10K+ 人</span></div>
+            <div class="co-tagline">電信業領導者，正在徵求 5G 設備代工、雲端、AIoT 應用合作。</div>
+            <div class="co-stats">
+              <div class="s"><div class="lbl">追蹤</div><div class="v">45K</div></div>
+              <div class="s"><div class="lbl">本月專案</div><div class="v" style="color: var(--cyan);">16</div></div>
+              <div class="s"><div class="lbl">合作率</div><div class="v" style="color: var(--green);">98%</div></div>
+            </div>
+            <div class="co-tags">
+              <span class="co-tag">#5G</span>
+              <span class="co-tag">#雲端</span>
+              <span class="co-tag">#上市櫃</span>
+            </div>
+            <div class="co-foot">
+              <button class="btn btn-secondary">查看</button>
+              <button class="btn btn-primary">＋ 連結</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-card">
+          <div class="co-banner b5"></div>
+          <div class="co-body">
+            <div class="co-logo lg lg-purple">巨</div>
+            <div class="co-name">巨大機械 (Giant) <span class="v-tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="co-meta"><span>運動 / 製造</span><span>·</span><span>📍 台中</span><span>·</span><span>5K-10K 人</span></div>
+            <div class="co-tagline">全球最大自行車品牌之一，徵求 IoT、智慧製造、品牌行銷合作。</div>
+            <div class="co-stats">
+              <div class="s"><div class="lbl">追蹤</div><div class="v">22K</div></div>
+              <div class="s"><div class="lbl">本月專案</div><div class="v" style="color: var(--cyan);">7</div></div>
+              <div class="s"><div class="lbl">合作率</div><div class="v" style="color: var(--green);">95%</div></div>
+            </div>
+            <div class="co-tags">
+              <span class="co-tag">#製造</span>
+              <span class="co-tag">#IoT</span>
+              <span class="co-tag">#上市櫃</span>
+            </div>
+            <div class="co-foot">
+              <button class="btn btn-secondary">查看</button>
+              <button class="btn btn-primary">＋ 連結</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-card">
+          <div class="co-banner b1"></div>
+          <div class="co-body">
+            <div class="co-logo lg lg-indigo">緯</div>
+            <div class="co-name">緯創資通 <span class="v-tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="co-meta"><span>ICT / 系統整合</span><span>·</span><span>📍 新竹</span><span>·</span><span>10K+ 人</span></div>
+            <div class="co-tagline">伺服器設計與雲端基礎建設龍頭，徵求 GPU 散熱、AI 應用合作。</div>
+            <div class="co-stats">
+              <div class="s"><div class="lbl">追蹤</div><div class="v">28K</div></div>
+              <div class="s"><div class="lbl">本月專案</div><div class="v" style="color: var(--cyan);">11</div></div>
+              <div class="s"><div class="lbl">合作率</div><div class="v" style="color: var(--green);">96%</div></div>
+            </div>
+            <div class="co-tags">
+              <span class="co-tag">#ICT</span>
+              <span class="co-tag">#AI</span>
+              <span class="co-tag">#上市櫃</span>
+            </div>
+            <div class="co-foot">
+              <button class="btn btn-secondary">查看</button>
+              <button class="btn btn-primary">＋ 連結</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="text-align: center; padding: 8px;">
+        <button class="btn btn-secondary">載入更多企業 ↓</button>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="card">
+        <div class="card-h">熱門產業 <span class="more">本週</span></div>
+        <div class="ind-row">
+          <div class="icn" style="background: rgba(99,102,241,0.15); color: #A78BFA;">🤖</div>
+          <div class="nm">AI / 機器學習</div>
+          <div class="ct">2,184 家</div>
+        </div>
+        <div class="ind-row">
+          <div class="icn" style="background: rgba(34,211,238,0.15); color: #67E8F9;">💎</div>
+          <div class="nm">半導體</div>
+          <div class="ct">1,420 家</div>
+        </div>
+        <div class="ind-row">
+          <div class="icn" style="background: rgba(16,185,129,0.15); color: #6EE7B7;">🏦</div>
+          <div class="nm">金融科技</div>
+          <div class="ct">986 家</div>
+        </div>
+        <div class="ind-row">
+          <div class="icn" style="background: rgba(245,158,11,0.15); color: #FCD34D;">🏭</div>
+          <div class="nm">智慧製造</div>
+          <div class="ct">2,640 家</div>
+        </div>
+        <div class="ind-row">
+          <div class="icn" style="background: rgba(236,72,153,0.15); color: #F9A8D4;">🛍️</div>
+          <div class="nm">零售 / 電商</div>
+          <div class="ct">1,840 家</div>
+        </div>
+        <div class="ind-row">
+          <div class="icn" style="background: rgba(139,92,246,0.15); color: #C4B5FD;">🎨</div>
+          <div class="nm">創意 / 設計</div>
+          <div class="ct">1,256 家</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">企業地理分布</div>
+        <div class="map-pill"><span class="dot" style="background: var(--accent);"></span><span class="nm">大台北</span><span class="ct">5,840</span></div>
+        <div class="bar" style="margin-bottom: 8px;"><span style="width: 90%"></span></div>
+        <div class="map-pill"><span class="dot" style="background: var(--cyan);"></span><span class="nm">新竹科技園區</span><span class="ct">1,920</span></div>
+        <div class="bar" style="margin-bottom: 8px;"><span style="width: 60%; background: linear-gradient(90deg, var(--cyan), #67E8F9);"></span></div>
+        <div class="map-pill"><span class="dot" style="background: var(--green);"></span><span class="nm">台中</span><span class="ct">1,440</span></div>
+        <div class="bar" style="margin-bottom: 8px;"><span style="width: 45%; background: linear-gradient(90deg, var(--green), #6EE7B7);"></span></div>
+        <div class="map-pill"><span class="dot" style="background: var(--amber);"></span><span class="nm">高雄</span><span class="ct">980</span></div>
+        <div class="bar" style="margin-bottom: 8px;"><span style="width: 30%; background: linear-gradient(90deg, var(--amber), #FCD34D);"></span></div>
+        <div class="map-pill"><span class="dot" style="background: var(--pink);"></span><span class="nm">台南</span><span class="ct">720</span></div>
+        <div class="bar"><span style="width: 22%; background: linear-gradient(90deg, var(--pink), #F9A8D4);"></span></div>
+      </div>
+
+      <div class="card" style="background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.06)); border-color: rgba(99,102,241,0.3);">
+        <div style="font-size: 13px; font-weight: 600; margin-bottom: 6px;">💡 為你建議</div>
+        <div style="font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-bottom: 12px;">完成公司簡介可以讓你的曝光率提升 3 倍，更容易被企業搜尋到。</div>
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;">完善公司檔案 →</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+</div>
+
+<script src="chrome.js"></script>
+<script>renderChrome({active:'discover', searchPlaceholder:'搜尋產業、地區、企業關鍵字...'});</script>
+</body>
+</html>
