@@ -8,6 +8,10 @@ export interface AuthUser {
   accountType: string;
   kycTier: number;
   status: string;
+  // auth Increment 1: backend's /me + the access-token JWT now carry an
+  // email_verified claim. Until the user verifies, write actions (發案/投標/
+  // KYC/合約) are gated client-side and the backend returns 403 EMAIL_NOT_VERIFIED.
+  emailVerified: boolean;
   companyId?: string | null;
   createdAt?: string;
 }
@@ -33,6 +37,10 @@ interface AuthState {
   setUser: (user: AuthUser) => void;
   refreshTokens: (newAccessToken: string, newRefreshToken: string) => void;
   setHydrating: (v: boolean) => void;
+  // auth Increment 1: optimistically flip emailVerified after a successful
+  // /verify-email call so the unverified banner + write-action gates clear
+  // immediately, even before the access token is refreshed with the new claim.
+  setEmailVerified: (v: boolean) => void;
 }
 
 // Only the refresh token is persisted; the access token lives in memory only.
@@ -76,6 +84,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   setHydrating: (v) => set({ isHydrating: v }),
+
+  setEmailVerified: (v) =>
+    set((state) => (state.user ? { user: { ...state.user, emailVerified: v } } : {})),
 }));
 
 // Register on globalThis so http.ts can access the token without a circular import.

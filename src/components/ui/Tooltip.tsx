@@ -18,7 +18,8 @@ export function Tooltip({ content, children, className = '' }: TooltipProps) {
       onFocusCapture={() => setVisible(true)}
       onBlurCapture={() => setVisible(false)}
     >
-      <div aria-describedby={visible ? id : undefined}>
+      {/* inline-flex + w-full so a flex-1 wrapper stretches the child control */}
+      <div className="inline-flex w-full" aria-describedby={visible ? id : undefined}>
         {children}
       </div>
       {visible && (

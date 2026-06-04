@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '../ui/Button';
 import { Tooltip } from '../ui/Tooltip';
+import { VerifiedActionGate } from '../auth/VerifiedActionGate';
 import { SignatureStatusChip } from './SignatureStatusChip';
 import { useAuthStore } from '../../store/authStore';
 import type { Contract, Signature } from '../../lib/api/coverones';
@@ -67,15 +68,17 @@ export function SignaturePanel({ contract, signatures, onSign, isSigning }: Sign
               </Button>
             </Tooltip>
           ) : (
-            <Button
-              variant="primary"
-              size="md"
-              loading={isSigning}
-              onClick={handleSign}
-              aria-label="Sign contract"
-            >
-              Sign Contract
-            </Button>
+            <VerifiedActionGate>
+              <Button
+                variant="primary"
+                size="md"
+                loading={isSigning}
+                onClick={handleSign}
+                aria-label="Sign contract"
+              >
+                Sign Contract
+              </Button>
+            </VerifiedActionGate>
           )}
         </div>
       )}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useCreateListing } from '../lib/query';
 import { TierGuard } from '../components/auth/TierGuard';
+import { VerifiedActionGate } from '../components/auth/VerifiedActionGate';
 import { PageHead } from '../components/layout/PageHead';
 import { Input } from '../components/ui/Input';
 import { Textarea } from '../components/ui/Textarea';
@@ -304,15 +305,18 @@ const PostJobPage = () => {
                   >
                     儲存草稿
                   </button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="md"
-                    loading={createListing.isPending}
-                    style={{ flex: 1, height: 44 }}
-                  >
-                    發布案件
-                  </Button>
+                  <VerifiedActionGate wrapperClassName="flex-1">
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="md"
+                      loading={createListing.isPending}
+                      className="w-full"
+                      style={{ height: 44 }}
+                    >
+                      發布案件
+                    </Button>
+                  </VerifiedActionGate>
                 </div>
               </form>
             </div>

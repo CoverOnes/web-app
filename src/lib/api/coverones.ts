@@ -2,13 +2,32 @@ import { http } from './http';
 import type { AuthUser } from '../../store/authStore';
 
 // ===== Auth =====
-export interface RegisterRequest {
+export type AccountType = 'PERSONAL' | 'COMPANY';
+
+// auth Increment 1: register payload is a discriminated union on accountType.
+// Shared fields apply to both; variant-specific fields are required only for
+// their account type (PERSONAL → nationalId, COMPANY → companyName).
+interface RegisterBase {
   email: string;
   password: string;
   displayName: string;
-  accountType: 'PERSONAL' | 'COMPANY';
-  companyName?: string;
+  // Real name / legal name — REQUIRED for both account types (1-100 chars).
+  legalName: string;
 }
+
+export interface RegisterPersonalRequest extends RegisterBase {
+  accountType: 'PERSONAL';
+  // TW national ID (e.g. A123456789) — required only for PERSONAL accounts.
+  nationalId: string;
+}
+
+export interface RegisterCompanyRequest extends RegisterBase {
+  accountType: 'COMPANY';
+  // Company name — required only for COMPANY accounts.
+  companyName: string;
+}
+
+export type RegisterRequest = RegisterPersonalRequest | RegisterCompanyRequest;
 
 export interface LoginRequest {
   email: string;
@@ -23,8 +42,27 @@ export interface LoginResponse {
   expiresIn: number;
 }
 
+// auth Increment 1: register no longer returns tokens. The user is created in
+// PENDING_VERIFICATION with emailVerified=false and must verify before login.
 export interface RegisterResponse {
   user: AuthUser;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface VerifyEmailResponse {
+  emailVerified: boolean;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
+}
+
+export interface ResendVerificationResponse {
+  // Always a generic message regardless of whether the email exists.
+  message: string;
 }
 
 // ===== Marketplace =====
@@ -139,6 +177,25 @@ export const authApi = {
 
   logout: (refreshToken: string) =>
     http.post('/v1/auth/logout', { refreshToken }).then((r) => r.data),
+
+  // auth Increment 1: explicit refresh so the client can mint a fresh access
+  // token after verifying email (the new token carries email_verified=true).
+  // /v1/auth/refresh is a public gateway route; the http client unwraps { data }.
+  refresh: (refreshToken: string) =>
+    http.post<Pick<LoginResponse, 'accessToken' | 'refreshToken'>>(
+      '/v1/auth/refresh',
+      { refreshToken }
+    ).then((r) => r.data),
+
+  // auth Increment 1: /v1/auth/verify-email is a public gateway route.
+  // 200 { data: { emailVerified: true } }; 400 INVALID_VERIFICATION_TOKEN on bad token.
+  verifyEmail: (data: VerifyEmailRequest) =>
+    http.post<VerifyEmailResponse>('/v1/auth/verify-email', data).then((r) => r.data),
+
+  // auth Increment 1: /v1/auth/resend-verification — 202 with a generic message
+  // (always generic, never leaks whether the email exists).
+  resendVerification: (data: ResendVerificationRequest) =>
+    http.post<ResendVerificationResponse>('/v1/auth/resend-verification', data).then((r) => r.data),
 
   // /api/user/v1/me → gateway strips /api/user → user service receives /v1/me
   // Accepts an optional token to use directly (bypasses store, for post-login hydration).

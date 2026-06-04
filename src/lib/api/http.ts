@@ -71,6 +71,21 @@ const createHttpClient = (): AxiosInstance => {
     },
     async (error: AxiosError) => {
       const originalRequest = error.config as typeof error.config & { _retry?: boolean };
+
+      // auth Increment 1: backend gates write actions with 403 EMAIL_NOT_VERIFIED.
+      // Surface it by flipping the store flag so the unverified banner + action
+      // gates reappear even if the JWT claim was stale. The original error is
+      // still rejected so the caller can show its own inline message.
+      if (error.response?.status === 403) {
+        const body = error.response.data as { code?: string; data?: { code?: string } } | undefined;
+        const code = body?.code ?? body?.data?.code;
+        if (code === 'EMAIL_NOT_VERIFIED') {
+          const { useAuthStore } = await import('../../store/authStore');
+          useAuthStore.getState().setEmailVerified(false);
+        }
+        return Promise.reject(error);
+      }
+
       if (error.response?.status === 401 && !originalRequest?._retry) {
         const { useAuthStore } = await import('../../store/authStore');
         const { refreshToken, refreshTokens, clearStaleSession } = useAuthStore.getState();

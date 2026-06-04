@@ -1,5 +1,6 @@
 import { QueryClient, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  authApi,
   marketplaceApi,
   workspaceApi,
   type ContractStatus,
@@ -13,6 +14,27 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// ===== Auth hooks (Increment 1) =====
+
+// Verify the email token read from ?token=. retry:false — a 400
+// INVALID_VERIFICATION_TOKEN must NOT be auto-retried (it's deterministic).
+export function useVerifyEmail() {
+  return useMutation({
+    mutationFn: (token: string) => authApi.verifyEmail({ token }),
+    retry: false,
+  });
+}
+
+// Resend the verification email. The backend always answers with a generic 202,
+// so success here never confirms the address exists. Errors are surfaced to the
+// caller via the mutation result (not swallowed).
+export function useResendVerification() {
+  return useMutation({
+    mutationFn: (email: string) => authApi.resendVerification({ email }),
+    retry: false,
+  });
+}
 
 // ===== Marketplace hooks =====
 
