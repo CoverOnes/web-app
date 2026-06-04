@@ -7,6 +7,7 @@ import CoverOnesTopbar from './CoverOnesTopbar';
 import CoverOnesMobileBottomNav from './CoverOnesMobileBottomNav';
 import MobileDrawer from './MobileDrawer';
 import ChatPopup from '../chat/ChatPopup';
+import { UnverifiedBanner } from '../auth/UnverifiedBanner';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -68,6 +69,9 @@ const CoverOnesLayout = () => {
       >
         {/* Topbar — sticky at top of main content column */}
         <CoverOnesTopbar />
+
+        {/* auth Increment 1: persistent unverified-email banner (per-session dismiss) */}
+        <UnverifiedBanner />
 
         {/* Scrollable outlet area */}
         <div style={{ flex: 1, overflowY: 'auto', background: 'var(--co-bg)' }}>

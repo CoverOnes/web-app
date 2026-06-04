@@ -4,6 +4,7 @@ import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
 import { Button } from '../ui/Button';
 import { KycRequiredBanner } from '../auth/KycRequiredBanner';
+import { VerifiedActionGate } from '../auth/VerifiedActionGate';
 import { useAuthStore } from '../../store/authStore';
 import type { CreateBidRequest } from '../../lib/api/coverones';
 
@@ -97,9 +98,11 @@ export function BidForm({ onSubmit, isSubmitting, error }: BidFormProps) {
         rows={3}
       />
 
-      <Button type="submit" variant="primary" size="md" loading={isSubmitting} className="w-full">
-        Submit Bid
-      </Button>
+      <VerifiedActionGate wrapperClassName="w-full">
+        <Button type="submit" variant="primary" size="md" loading={isSubmitting} className="w-full">
+          Submit Bid
+        </Button>
+      </VerifiedActionGate>
     </form>
   );
 }

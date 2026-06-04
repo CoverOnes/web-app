@@ -4,6 +4,8 @@ import { queryClient } from './lib/query';
 import CoverOnesLayout from './components/layout/CoverOnesLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import VerifyEmailSent from './pages/VerifyEmailSent';
+import VerifyEmail from './pages/VerifyEmail';
 import JobBoardPage from './pages/JobBoardPage';
 import PostJobPage from './pages/PostJobPage';
 import JobDetailPage from './pages/JobDetailPage';
@@ -28,6 +30,10 @@ function App() {
           {/* Public */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          {/* auth Increment 1: post-register "check your email" screen */}
+          <Route path="/register/verify-sent" element={<VerifyEmailSent />} />
+          {/* auth Increment 1: email verification deep link (?token=...) */}
+          <Route path="/verify-email" element={<VerifyEmail />} />
 
           {/* Protected */}
           <Route
