@@ -5,6 +5,7 @@ import {
   useTasks,
   useSignContract,
   useCancelContract,
+  useSubmitForSignature,
   useCreateTask,
   useUpdateTask,
 } from '../lib/query';
@@ -39,6 +40,8 @@ function getStepIndex(status: string): number {
 const ContractDetailPage = () => {
   const { id = '' } = useParams<{ id: string }>();
   const user = useAuthStore((s) => s.user);
+  const isHydrating = useAuthStore((s) => s.isHydrating);
+  const kycTier = user?.kycTier ?? 0;
 
   const { data: contract, isLoading, isError } = useContract(id);
   const { data: signatures = [] } = useSignatures(id);
@@ -46,6 +49,7 @@ const ContractDetailPage = () => {
 
   const signContract = useSignContract(id);
   const cancelContract = useCancelContract(id);
+  const submitForSignature = useSubmitForSignature(id);
   const createTask = useCreateTask(id);
   const updateTask = useUpdateTask(id);
 
@@ -74,6 +78,12 @@ const ContractDetailPage = () => {
 
   const isClient = user?.id === contract.clientUserId;
   const canCancel = isClient && (contract.status === 'DRAFT' || contract.status === 'PENDING_SIGNATURE');
+  // "送出簽署" is only shown to the client on a DRAFT contract when KYC Tier ≥ 2.
+  // Gate on !isHydrating so a false "KYC required" never flashes before hydration completes.
+  const canSubmitForSignature = isClient
+    && contract.status === 'DRAFT'
+    && !isHydrating
+    && kycTier >= 2;
 
   const handleStatusChange = (taskId: string, status: TaskStatus) => {
     setActionError('');
@@ -106,6 +116,25 @@ const ContractDetailPage = () => {
         actions={
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <StatusBadge status={contract.status} />
+            {canSubmitForSignature && (
+              <Button
+                variant="primary"
+                size="sm"
+                loading={submitForSignature.isPending}
+                onClick={() => {
+                  setActionError('');
+                  submitForSignature.mutate(undefined, {
+                    onError: (err) => {
+                      const axErr = err as import('axios').AxiosError<{ message?: string }>;
+                      setActionError(axErr.response?.data?.message ?? 'Failed to submit for signature.');
+                    },
+                  });
+                }}
+                aria-label="送出簽署"
+              >
+                送出簽署
+              </Button>
+            )}
             {canCancel && (
               <Button
                 variant="danger"
@@ -348,6 +377,22 @@ const ContractDetailPage = () => {
                 </div>
               </div>
 
+              {/* Action card for DRAFT — prompt client to submit for signature */}
+              {contract.status === 'DRAFT' && isClient && (
+                <div
+                  style={{
+                    background: 'rgba(99,102,241,0.1)',
+                    border: '1px solid rgba(99,102,241,0.25)',
+                    borderRadius: 8,
+                    padding: '10px 14px',
+                    fontSize: 12.5,
+                    color: 'var(--co-accent)',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  合約草稿已就緒。請確認條款後點擊「送出簽署」，將合約送給雙方進行電子簽名。
+                </div>
+              )}
               {/* Action card for pending signature */}
               {contract.status === 'PENDING_SIGNATURE' && (
                 <div

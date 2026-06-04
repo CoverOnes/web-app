@@ -104,10 +104,20 @@ export interface CreateBidRequest {
   message: string;
 }
 
+// Award — the shape returned by POST /api/marketplace/v1/bids/:id/accept.
+// NOTE: The backend returns the Award entity (marketplace/internal/domain/award.go)
+// which does NOT include contractId. The contract is created asynchronously in a
+// detached goroutine after the response returns (bid_service.go:248,296-314).
+// Discovery must happen client-side: list workspace contracts and match by listingId.
 export interface AwardResponse {
-  bidId: string;
+  id: string;
   listingId: string;
-  contractId: string;
+  bidId: string;
+  ownerUserId: string;
+  bidderUserId: string;
+  amount: string;
+  currency: string;
+  createdAt: string;
 }
 
 // ===== Workspace =====
@@ -125,6 +135,14 @@ export interface Contract {
   currency: string;
   status: ContractStatus;
   createdAt: string;
+  // Server-computed canonical hash of the contract content (workspace/internal/domain/contract.go:36).
+  // Signers MUST use this value directly — signing sha256(terms) produces a different digest
+  // and the backend will reject it (signature_handler.go:68 validates against ContentHash).
+  contentHash: string;
+  // Present when the contract was created from an accepted bid.
+  acceptedBidId?: string;
+  // Optimistic concurrency version — incremented on each state transition.
+  version?: number;
 }
 
 export interface Signature {

@@ -13,17 +13,10 @@ interface SignaturePanelProps {
   isSigning: boolean;
 }
 
-async function computeSha256Hex(text: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
 export function SignaturePanel({ contract, signatures, onSign, isSigning }: SignaturePanelProps) {
   const user = useAuthStore((s) => s.user);
   const kycTier = user?.kycTier ?? 0;
+  const isHydrating = useAuthStore((s) => s.isHydrating);
   const [signingError, setSigningError] = useState('');
 
   const clientSig = signatures.find((s) => s.signerUserId === contract.clientUserId);
@@ -32,14 +25,15 @@ export function SignaturePanel({ contract, signatures, onSign, isSigning }: Sign
   const canSign = contract.status === 'PENDING_SIGNATURE' && !userAlreadySigned;
   const isParty = user?.id === contract.clientUserId || user?.id === contract.freelancerUserId;
 
-  const handleSign = async () => {
+  const handleSign = () => {
     setSigningError('');
-    try {
-      const hash = await computeSha256Hex(contract.terms);
-      onSign(hash);
-    } catch {
-      setSigningError('Failed to compute signature hash. Please try again.');
+    // Use the server-returned contentHash directly. Signing sha256(terms) would produce
+    // a different digest; the backend validates against contract.ContentHash (signature_handler.go:68).
+    if (!contract.contentHash) {
+      setSigningError('合約內容雜湊不可用，請重新整理頁面後再試。');
+      return;
     }
+    onSign(contract.contentHash);
   };
 
   if (!isParty) return null;
@@ -61,7 +55,12 @@ export function SignaturePanel({ contract, signatures, onSign, isSigning }: Sign
 
       {canSign && (
         <div>
-          {kycTier < 2 ? (
+          {/* While hydrating, show a neutral disabled state — NOT a false KYC gate */}
+          {isHydrating ? (
+            <Button variant="primary" size="md" disabled aria-label="Sign contract (loading)">
+              Sign Contract
+            </Button>
+          ) : kycTier < 2 ? (
             <Tooltip content="KYC Tier 2 required to sign contracts">
               <Button variant="primary" size="md" disabled aria-label="Sign contract (KYC required)">
                 Sign Contract
