@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  /* ===== Design System: Accent (blue default, overridable via JS) ===== */
+  /* ===== Design System: chat-web namespace (kept for chat components only) ===== */
+  /* --color-accent is intentionally blue here for chat's send-button; CoverOnes uses --co-accent */
   --color-accent: #2563EB;
   --color-accent-hover: #1D4ED8;
   --color-accent-soft: rgba(37,99,235,0.14);
@@ -11,7 +12,7 @@
   --color-red: #EF4444;
   --color-amber: #F59E0B;
 
-  /* ===== Sidebar tokens (dark default) ===== */
+  /* ===== Sidebar tokens (chat-web origin — kept for chat components) ===== */
   --color-sb-bg: #0B1220;
   --color-sb-bg-2: #0F172A;
   --color-sb-hover: rgba(255,255,255,0.04);
@@ -22,7 +23,7 @@
   --color-sb-tint: rgba(255,255,255,0.04);
   --color-sb-tint-2: rgba(255,255,255,0.06);
 
-  /* ===== Main area tokens (dark default) ===== */
+  /* ===== Main area tokens (chat-web origin — kept for chat components) ===== */
   --color-main-bg: #111827;
   --color-main-bg-2: #1E293B;
   --color-main-text: #E5E7EB;
@@ -118,33 +119,67 @@
   --spacing-22: 88px;
 }
 
-/* ===== CoverOnes Design System v2 ===== */
+/* ===== CoverOnes Design System v2 (aligned 1:1 to shared.css) ===== */
 :root {
-  /* Backgrounds */
+  /* --- Backgrounds (shared.css §:root) --- */
   --co-bg:        #060A14;
   --co-bg-2:      #0B1220;
   --co-bg-3:      #0F172A;
   --co-bg-card:   #111827;
   --co-bg-card-2: #1E293B;
 
-  /* Borders */
+  /* --- Borders --- */
   --co-line:        rgba(148,163,184,0.10);
   --co-line-strong: rgba(148,163,184,0.18);
 
-  /* Text */
+  /* --- Text --- */
   --co-text:       #E5E7EB;
   --co-text-dim:   #94A3B8;
   --co-text-muted: #64748B;
 
-  /* Accent palette */
-  --co-accent:       #6366F1;
-  --co-accent-2:     #8B5CF6;
-  --co-accent-blue:  #2563EB;
+  /* --- Accent palette (indigo primary per shared.css §--accent) --- */
+  --co-accent:       #6366F1;   /* primary: nav active, btn gradient, tabs */
+  --co-accent-2:     #8B5CF6;   /* secondary violet */
+  --co-accent-blue:  #2563EB;   /* blue: logo mark, btn gradient start */
   --co-cyan:         #22D3EE;
   --co-green:        #10B981;
   --co-amber:        #F59E0B;
   --co-red:          #EF4444;
   --co-pink:         #EC4899;
+
+  /* --- Text on accent/gradient backgrounds --- */
+  --co-text-on-accent: #fff;
+
+  /* --- Button gradient (shared.css .btn-primary) --- */
+  --co-btn-primary-from: #2563EB;
+  --co-btn-primary-to:   #8B5CF6;
+
+  /* --- Shell dimensions (CSS vars so mobile can zero them in one place) --- */
+  --co-sidebar-w:  240px;
+  --co-topbar-h:   60px;
+
+  /* --- Component shape tokens --- */
+  --co-card-r:   12px;
+  --co-btn-r:     8px;
+  --co-tab-h:    44px;
+  --co-badge-r:  999px;
+
+  /* --- Role badge tokens (shared.css .bdg-dev / .bdg-design / .bdg-mfg / .bdg-mkt) --- */
+  --co-bdg-dev-bg:       rgba(99,102,241,0.15);
+  --co-bdg-dev-text:     #A78BFA;
+  --co-bdg-dev-border:   rgba(99,102,241,0.3);
+
+  --co-bdg-design-bg:    rgba(34,211,238,0.15);
+  --co-bdg-design-text:  #67E8F9;
+  --co-bdg-design-border: rgba(34,211,238,0.3);
+
+  --co-bdg-mfg-bg:       rgba(245,158,11,0.15);
+  --co-bdg-mfg-text:     #FCD34D;
+  --co-bdg-mfg-border:   rgba(245,158,11,0.3);
+
+  --co-bdg-mkt-bg:       rgba(236,72,153,0.15);
+  --co-bdg-mkt-text:     #F9A8D4;
+  --co-bdg-mkt-border:   rgba(236,72,153,0.3);
 }
 
 /* CoverOnes v2 base */
@@ -166,6 +201,7 @@ html, body { background: #000; color: var(--co-text); }
 }
 .co-lg-blue   { background: linear-gradient(135deg,#2563EB,#6366F1); }
 .co-lg-purple { background: linear-gradient(135deg,#8B5CF6,#EC4899); }
+.co-lg-pink   { background: linear-gradient(135deg,#EC4899,#8B5CF6); }
 .co-lg-orange { background: linear-gradient(135deg,#F59E0B,#EF4444); }
 .co-lg-amber  { background: linear-gradient(135deg,#F59E0B,#F97316); }
 .co-lg-green  { background: linear-gradient(135deg,#10B981,#059669); }
@@ -222,6 +258,17 @@ html, body { background: #000; color: var(--co-text); }
   --density-pad: 20px;
 }
 
+/* ===== Mobile-only component visibility (replaces per-component injected <style> tags) ===== */
+/* Hide mobile-only components on desktop */
+@media (min-width: 768px) {
+  .mobile-screen-header { display: none; }
+  .mobile-fab { display: none; }
+}
+/* Show topbar hamburger on mobile only (overrides inline display:none) */
+@media (max-width: 767px) {
+  .topbar-hamburger { display: flex !important; }
+}
+
 /* ===== Base ===== */
 @layer base {
   html {
@@ -274,6 +321,18 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+/* Mobile page slide-in transition */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
 }
 
 /* ===== Typing indicator dot ===== */
