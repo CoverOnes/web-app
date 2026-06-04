@@ -8,7 +8,7 @@ interface UseSSEOptions {
   onError?: (error: Event) => void;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://chat-gateway-1.onrender.com/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 /**
  * SSE (Server-Sent Events) Hook
@@ -135,4 +135,3 @@ export const useSSE = ({ roomId, userId, onMessage, onError }: UseSSEOptions) =>
 };
 
 export default useSSE;
-

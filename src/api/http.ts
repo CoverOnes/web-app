@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, AxiosError } from 'axios';
 import { generateRequestId } from '../utils/requestId';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://chat-gateway-1.onrender.com/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 /**
  * 創建 HTTP 客戶端實例
@@ -55,4 +55,3 @@ const createHttpClient = (): AxiosInstance => {
 
 export const http = createHttpClient();
 export default http;
-

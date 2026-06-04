@@ -30,6 +30,7 @@ const VerifyEmail = () => {
   const refreshToken = useAuthStore((s) => s.refreshToken);
   const refreshTokens = useAuthStore((s) => s.refreshTokens);
   const setEmailVerified = useAuthStore((s) => s.setEmailVerified);
+  const setKycTierAtLeast = useAuthStore((s) => s.setKycTierAtLeast);
 
   const verify = useVerifyEmail();
   const resend = useResendVerification();
@@ -51,7 +52,7 @@ const VerifyEmail = () => {
 
     (async () => {
       try {
-        await verify.mutateAsync(token);
+        const result = await verify.mutateAsync(token);
 
         // If a session exists, refresh it so the new access token carries the
         // email_verified=true claim; flip the store flag immediately regardless.
@@ -66,6 +67,7 @@ const VerifyEmail = () => {
           }
         }
         setEmailVerified(true);
+        setKycTierAtLeast(result.kycTier ?? 1);
         setPhase('success');
       } catch (err) {
         const axErr = err as AxiosError<{ message?: string; code?: string }>;

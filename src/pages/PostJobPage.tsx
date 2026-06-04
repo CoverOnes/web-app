@@ -43,7 +43,15 @@ const PostJobPage = () => {
   const [error, setError] = useState('');
 
   if (kycTier < 2) {
-    return <TierGuard requiredTier={2} fullPage>{null}</TierGuard>;
+    return (
+      <TierGuard
+        requiredTier={2}
+        fullPage
+        message="發布案件需要 KYC Tier 2。您仍可返回案件看板瀏覽開放案件。"
+      >
+        {null}
+      </TierGuard>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -1,8 +1,9 @@
 import axios, { type AxiosInstance, AxiosError } from 'axios';
 import { generateRequestId } from '../../utils/requestId';
 
-// WA-M3: All backend calls route through the gateway. Use VITE_API_BASE_URL.
-const GATEWAY_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// WA-M3: All backend calls route through the gateway. Production/dev should
+// inject VITE_API_BASE_URL when the gateway is not same-origin.
+const GATEWAY_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 let isRefreshing = false;
 // WA-M5: Queue holds both resolve AND reject callbacks so queued requests are

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const WBT_API_BASE_URL = import.meta.env.VITE_WBT_API_URL || 'http://localhost:8080/api';
+const WBT_API_BASE_URL = import.meta.env.VITE_WBT_API_URL ?? '';
 
 export const wbtHttp = axios.create({
   baseURL: WBT_API_BASE_URL,
