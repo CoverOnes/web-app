@@ -9,9 +9,10 @@ interface TierGuardProps {
   children: ReactNode;
   /** If true, renders full-page banner instead of inline */
   fullPage?: boolean;
+  message?: string;
 }
 
-export function TierGuard({ requiredTier, children, fullPage = false }: TierGuardProps) {
+export function TierGuard({ requiredTier, children, fullPage = false, message }: TierGuardProps) {
   const tier = useAuthStore((s) => s.user?.kycTier ?? 0);
   const navigate = useNavigate();
 
@@ -45,7 +46,7 @@ export function TierGuard({ requiredTier, children, fullPage = false }: TierGuar
         >
           <KycRequiredBanner
             requiredTier={requiredTier}
-            message={`需要 KYC Tier ${requiredTier} 認證才能使用此功能。完成身分驗證即可解鎖。`}
+            message={message ?? `需要 KYC Tier ${requiredTier} 認證才能使用此功能。完成身分驗證即可解鎖。`}
           />
           <div style={{ display: 'flex', gap: 10 }}>
             <Button variant="primary" size="md" onClick={() => navigate('/kyc')}>

@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Message } from '@/types';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+
 export function useSSE(roomId: string, userId: string) {
   const queryClient = useQueryClient();
 
@@ -14,7 +16,7 @@ export function useSSE(roomId: string, userId: string) {
 
     function connect() {
       if (!active) return;
-      const url = `${import.meta.env.VITE_API_BASE_URL}/messages/stream?room_id=${roomId}&user_id=${userId}`;
+      const url = `${API_BASE_URL}/messages/stream?room_id=${roomId}&user_id=${userId}`;
       es = new EventSource(url);
 
       es.addEventListener('message', (e: MessageEvent) => {

@@ -41,6 +41,9 @@ interface AuthState {
   // /verify-email call so the unverified banner + write-action gates clear
   // immediately, even before the access token is refreshed with the new claim.
   setEmailVerified: (v: boolean) => void;
+  // Email verification is Tier 1. Update the in-memory user without downgrading a
+  // user who has already completed higher KYC.
+  setKycTierAtLeast: (tier: number) => void;
 }
 
 // Only the refresh token is persisted; the access token lives in memory only.
@@ -87,6 +90,13 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setEmailVerified: (v) =>
     set((state) => (state.user ? { user: { ...state.user, emailVerified: v } } : {})),
+
+  setKycTierAtLeast: (tier) =>
+    set((state) => (
+      state.user
+        ? { user: { ...state.user, kycTier: Math.max(state.user.kycTier, tier) } }
+        : {}
+    )),
 }));
 
 // Register on globalThis so http.ts can access the token without a circular import.

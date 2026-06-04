@@ -81,4 +81,20 @@ describe('authStore — email verification (Increment 1)', () => {
 
     expect(useAuthStore.getState().user?.emailVerified).toBe(false);
   });
+
+  it('setKycTierAtLeast promotes a verified email user to at least Tier1', () => {
+    useAuthStore.setState({ user: { ...mockUser, kycTier: 0 } });
+
+    useAuthStore.getState().setKycTierAtLeast(1);
+
+    expect(useAuthStore.getState().user?.kycTier).toBe(1);
+  });
+
+  it('setKycTierAtLeast never downgrades an existing Tier2 user', () => {
+    useAuthStore.setState({ user: { ...mockUser, kycTier: 2 } });
+
+    useAuthStore.getState().setKycTierAtLeast(1);
+
+    expect(useAuthStore.getState().user?.kycTier).toBe(2);
+  });
 });

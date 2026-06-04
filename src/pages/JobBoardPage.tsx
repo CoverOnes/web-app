@@ -23,18 +23,42 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'CLOSED', label: '已關閉' },
 ];
 
+type ApiErrorBody = {
+  code?: string;
+  data?: {
+    code?: string;
+  };
+};
+
 function filterListings(listings: Listing[], tab: TabId): Listing[] {
   if (tab === 'ALL') return listings;
   return listings.filter((l) => l.status === tab);
 }
 
+function getApiErrorCode(error: unknown): string | undefined {
+  const response = (error as { response?: { data?: ApiErrorBody } })?.response;
+  return response?.data?.code ?? response?.data?.data?.code;
+}
+
 const JobBoardPage = () => {
   const navigate = useNavigate();
-  const kycTier = useAuthStore((s) => s.user?.kycTier ?? 0);
-  const { data: listings, isLoading, isError } = useListings({ status: 'OPEN' });
+  const user = useAuthStore((s) => s.user);
+  const kycTier = user?.kycTier ?? 0;
+  const { data: listings, isLoading, isError, error } = useListings({ status: 'OPEN' });
   const [activeTab, setActiveTab] = useState<TabId>('ALL');
 
   const canPost = kycTier >= 2;
+  const needsEmailVerification = !!user && !user.emailVerified;
+  const errorCode = getApiErrorCode(error);
+  const isEmailVerificationError = isError && (
+    errorCode === 'EMAIL_NOT_VERIFIED' || needsEmailVerification
+  );
+  const isTierRequiredError = isError && errorCode === 'KYC_TIER_REQUIRED' && !isEmailVerificationError;
+  const isOnboardingError = isEmailVerificationError || isTierRequiredError;
+
+  const goToVerifyEmail = () => {
+    navigate('/register/verify-sent', { state: { email: user?.email ?? '' } });
+  };
 
   const filteredListings = listings ? filterListings(listings, activeTab) : [];
 
@@ -65,17 +89,19 @@ const JobBoardPage = () => {
             >
               + 發布案件
             </Button>
+          ) : needsEmailVerification ? (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={goToVerifyEmail}
+              aria-label="驗證 Email 以啟用案件功能"
+            >
+              驗證 Email
+            </Button>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {/* 發布案件 stays disabled (needs Tier 2) but now sits next to a
-                  visible CTA so the user knows HOW to unlock it. */}
-              <Tooltip content="需要 KYC Tier 2 驗證才能發布案件。">
-                <Button variant="primary" size="md" disabled aria-label="發布案件 (需要 KYC)">
-                  + 發布案件
-                </Button>
-              </Tooltip>
+            <Tooltip content="發布案件需要 KYC Tier 2。">
               <Button
-                variant="secondary"
+                variant="primary"
                 size="md"
                 onClick={() => navigate('/kyc')}
                 aria-label="完成 KYC 認證以解鎖發布案件"
@@ -83,7 +109,7 @@ const JobBoardPage = () => {
                 <Icon.Lock size={13} />
                 完成 KYC 認證
               </Button>
-            </div>
+            </Tooltip>
           )
         }
       />
@@ -112,7 +138,23 @@ const JobBoardPage = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
             <LoadingSkeleton count={6} height="h-36" />
           </div>
-        ) : isError ? (
+        ) : isEmailVerificationError ? (
+          <EmptyState
+            icon={<Icon.Lock size={48} />}
+            title="請先驗證 Email"
+            description="驗證信已寄出。完成信箱驗證後，案件瀏覽會升級為可用狀態；發布案件仍需完成更高層級 KYC。"
+            ctaLabel="查看驗證信狀態"
+            onCta={goToVerifyEmail}
+          />
+        ) : isTierRequiredError ? (
+          <EmptyState
+            icon={<Icon.Lock size={48} />}
+            title="完成帳戶驗證後即可查看案件"
+            description="目前帳戶等級尚未開放案件列表。前往 KYC 查看下一步；發布案件需要 KYC Tier 2。"
+            ctaLabel="完成 KYC 認證"
+            onCta={() => navigate('/kyc')}
+          />
+        ) : isError && !isOnboardingError ? (
           <EmptyState
             icon={<Icon.X size={48} />}
             title="載入失敗"

@@ -54,6 +54,7 @@ export interface VerifyEmailRequest {
 
 export interface VerifyEmailResponse {
   emailVerified: boolean;
+  kycTier?: number;
 }
 
 export interface ResendVerificationRequest {
@@ -179,7 +180,8 @@ export interface UpdateTaskRequest {
 }
 
 // ===== API functions =====
-// WA-M3: All calls route through the gateway (VITE_API_BASE_URL = http://localhost:8080).
+// WA-M3: All calls route through the gateway configured by VITE_API_BASE_URL,
+// or same-origin relative paths when that env var is omitted.
 //   - Auth routes are public gateway routes: POST /v1/auth/{register,login,refresh,logout}
 //     The gateway forwards these directly to the user upstream (no /api/:svc wrapper).
 //   - Protected routes use /api/:svc/* pattern; the gateway strips /api/:svc and forwards
@@ -206,7 +208,7 @@ export const authApi = {
     ).then((r) => r.data),
 
   // auth Increment 1: /v1/auth/verify-email is a public gateway route.
-  // 200 { data: { emailVerified: true } }; 400 INVALID_VERIFICATION_TOKEN on bad token.
+  // 200 { data: { emailVerified: true, kycTier: 1 } }; 400 INVALID_VERIFICATION_TOKEN on bad token.
   verifyEmail: (data: VerifyEmailRequest) =>
     http.post<VerifyEmailResponse>('/v1/auth/verify-email', data).then((r) => r.data),
 
