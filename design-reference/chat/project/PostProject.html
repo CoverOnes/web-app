@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 發布需求</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .body { display:grid; grid-template-columns: minmax(0,1fr) 360px; gap:22px; padding:22px 28px 40px; }
+  .stepper { display:flex; gap:0; margin-bottom:18px; background:var(--bg-card); border:1px solid var(--line-strong); border-radius:14px; padding:8px; }
+  .step { flex:1; padding:14px 12px; border-radius:10px; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-dim); position:relative; }
+  .step.active { background:linear-gradient(135deg, rgba(99,102,241,.18), rgba(139,92,246,.12)); color:#fff; }
+  .step.done { color:var(--green); }
+  .step .n { width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; background:rgba(15,23,42,.6); border:1px solid var(--line); flex-shrink:0; }
+  .step.active .n { background:linear-gradient(135deg,var(--accent-blue),var(--accent-2)); border-color:transparent; color:#fff; }
+  .step.done .n { background:rgba(16,185,129,.2); border-color:var(--green); color:var(--green); }
+  .step .lbl { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; display:block; }
+  .step .nm { font-size:13px; font-weight:600; }
+
+  .sec { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:14px; padding:24px; margin-bottom:16px; }
+  .sec h2 { font-size:16px; font-weight:700; margin:0 0 4px 0; }
+  .sec .sub { font-size:12.5px; color:var(--text-dim); margin-bottom:18px; }
+
+  .field { margin-bottom:18px; }
+  .field label { display:block; font-size:12.5px; font-weight:600; margin-bottom:7px; color:var(--text); }
+  .field label .opt { color:var(--text-muted); font-weight:400; margin-left:6px; font-size:11px; }
+  .field label .req { color:#FCA5A5; margin-left:4px; }
+  .field .hint { font-size:11.5px; color:var(--text-dim); margin-top:5px; }
+  .input, .textarea, .select { width:100%; background:var(--bg-3); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:10px; font-size:13.5px; font-family:inherit; }
+  .input:focus, .textarea:focus { outline:none; border-color:var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+  .textarea { min-height:110px; resize:vertical; line-height:1.6; }
+
+  .cat-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:10px; }
+  .cat-card { padding:14px 12px; background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:10px; cursor:pointer; transition:all 150ms; }
+  .cat-card:hover { border-color:rgba(99,102,241,.4); transform:translateY(-1px); }
+  .cat-card.selected { background:linear-gradient(135deg, rgba(99,102,241,.15), rgba(139,92,246,.08)); border-color:var(--accent); }
+  .cat-card .ico { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:700; margin-bottom:8px; }
+  .cat-card .t { font-size:13px; font-weight:600; }
+  .cat-card .d { font-size:11px; color:var(--text-dim); margin-top:2px; }
+
+  .row-2 { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+
+  .tag-input { display:flex; flex-wrap:wrap; gap:6px; padding:10px 12px; background:var(--bg-3); border:1px solid var(--line); border-radius:10px; min-height:46px; align-items:center; }
+  .tag { padding:4px 10px; border-radius:999px; font-size:11.5px; background:rgba(99,102,241,.15); border:1px solid rgba(99,102,241,.3); color:#C7D2FE; display:flex; gap:6px; align-items:center; }
+  .tag .x { color:var(--text-muted); cursor:pointer; font-size:13px; line-height:1; }
+  .tag-input input { background:transparent; border:none; outline:none; color:var(--text); font-size:13px; flex:1; min-width:120px; padding:2px; }
+
+  .ms-row { display:grid; grid-template-columns: 32px 1fr 140px 36px; gap:10px; align-items:center; padding:12px; background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:10px; margin-bottom:8px; }
+  .ms-row .n { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,var(--accent-blue),var(--accent-2)); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .ms-row .input { padding:8px 12px; font-size:12.5px; }
+  .ms-row .del { background:transparent; border:1px solid var(--line); color:var(--text-dim); width:36px; height:36px; border-radius:8px; }
+
+  .preview-card { position:sticky; top:80px; }
+  .preview-card .label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+  .preview-card .label .live { width:6px; height:6px; border-radius:999px; background:var(--green); box-shadow:0 0 8px var(--green); }
+  .preview-card .pv-body { padding:14px; background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:10px; }
+  .preview-card h3 { font-size:14px; font-weight:700; margin:0 0 6px 0; line-height:1.4; }
+  .preview-card .by { font-size:11px; color:var(--text-dim); }
+  .preview-card .stats { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
+  .preview-card .stats .k { font-size:10px; color:var(--text-dim); text-transform:uppercase; }
+  .preview-card .stats .v { font-size:13px; font-weight:700; margin-top:2px; }
+
+  .ai-suggest { background: linear-gradient(135deg, rgba(34,211,238,.08), rgba(99,102,241,.05)); border:1px solid rgba(34,211,238,.25); border-radius:12px; padding:14px; margin-top:14px; }
+  .ai-suggest .h { font-size:12px; font-weight:700; color:#67E8F9; display:flex; align-items:center; gap:6px; }
+  .ai-suggest .b { font-size:12.5px; color:var(--text-dim); margin-top:6px; line-height:1.55; }
+
+  .footer-nav { display:flex; gap:10px; margin-top:20px; }
+  .footer-nav .save-d { background:transparent; color:var(--text-dim); border:1px solid var(--line-strong); padding:11px 18px; border-radius:10px; font-size:13px; }
+  .footer-nav .next { margin-left:auto; padding:11px 22px; font-size:13px; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+
+    <div class="page-head">
+      <div>
+        <h1 style="font-size:22px; font-weight:700; letter-spacing:-.02em; margin:0;">發布新需求</h1>
+        <p style="font-size:13px; color:var(--text-dim); margin:4px 0 0;">完整填寫 RFP 內容，平均可在 <b style="color:var(--green);">3.2 天</b> 內收到第一份報價</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-ghost">儲存草稿</button>
+        <button class="btn btn-secondary">取消</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div style="min-width:0;">
+
+        <!-- Stepper -->
+        <div class="stepper">
+          <div class="step done"><div class="n"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="lbl">Step 1</div><div class="nm">基本資訊</div></div></div>
+          <div class="step active"><div class="n">2</div><div><div class="lbl">Step 2</div><div class="nm">需求規格</div></div></div>
+          <div class="step"><div class="n">3</div><div><div class="lbl">Step 3</div><div class="nm">預算與時程</div></div></div>
+          <div class="step"><div class="n">4</div><div><div class="lbl">Step 4</div><div class="nm">審核與發布</div></div></div>
+        </div>
+
+        <!-- Section: 類別 -->
+        <div class="sec">
+          <h2>選擇專案類別</h2>
+          <div class="sub">類別會影響系統媒合的廠商池。可選擇 1-2 個主要類別。</div>
+          <div class="cat-grid">
+            <div class="cat-card selected">
+              <div class="ico" style="background:linear-gradient(135deg,#6366F1,#8B5CF6);">&lt;/&gt;</div>
+              <div class="t">技術接案</div>
+              <div class="d">後端 / 前端 / DevOps</div>
+            </div>
+            <div class="cat-card">
+              <div class="ico" style="background:linear-gradient(135deg,#EC4899,#F43F5E);">✦</div>
+              <div class="t">設計創意</div>
+              <div class="d">UI/UX / 平面 / 品牌</div>
+            </div>
+            <div class="cat-card">
+              <div class="ico" style="background:linear-gradient(135deg,#F59E0B,#EF4444);">⚙</div>
+              <div class="t">硬體製造</div>
+              <div class="d">PCB / 模具 / 代工</div>
+            </div>
+            <div class="cat-card">
+              <div class="ico" style="background:linear-gradient(135deg,#10B981,#22D3EE);">📊</div>
+              <div class="t">行銷顧問</div>
+              <div class="d">數位行銷 / 公關</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: 基本資訊 -->
+        <div class="sec">
+          <h2>專案基本資訊</h2>
+          <div class="sub">標題建議簡潔有力，平均瀏覽量在標題清楚時可提升 +42%</div>
+
+          <div class="field">
+            <label>專案標題<span class="req">*</span><span class="opt">建議 15-30 字</span></label>
+            <input class="input" value="EDA 工具 API Gateway 微服務化重構" />
+            <div class="hint">✓ 標題長度適中。<b style="color:var(--cyan);">AI 提示：</b>包含技術棧關鍵字可提升媒合精準度。</div>
+          </div>
+
+          <div class="field">
+            <label>簡短描述<span class="req">*</span></label>
+            <textarea class="textarea">將既有 EDA 工具的單體式 API Gateway 重構為基於 Kubernetes 的微服務架構。原系統承載每日約 1.2 億次內部請求，目前面臨擴展性瓶頸與部署困難。期望接案團隊具備大型 monolith 拆分實戰經驗，能在不停機前提下逐步拆分 8-12 個獨立微服務。</textarea>
+            <div class="hint">字數 138 / 建議 100-300 字</div>
+          </div>
+
+          <div class="field">
+            <label>必備技能<span class="req">*</span><span class="opt">輸入後按 Enter 新增</span></label>
+            <div class="tag-input">
+              <span class="tag">Go<span class="x">×</span></span>
+              <span class="tag">Kubernetes<span class="x">×</span></span>
+              <span class="tag">gRPC<span class="x">×</span></span>
+              <span class="tag">Microservices<span class="x">×</span></span>
+              <span class="tag">Service Mesh<span class="x">×</span></span>
+              <span class="tag">PostgreSQL<span class="x">×</span></span>
+              <input placeholder="新增技能標籤..." />
+            </div>
+            <div class="hint">💡 系統建議加入：<a style="color:#67E8F9;">Istio</a> · <a style="color:#67E8F9;">Observability</a> · <a style="color:#67E8F9;">CI/CD</a></div>
+          </div>
+
+          <div class="row-2">
+            <div class="field">
+              <label>工作模式<span class="req">*</span></label>
+              <select class="select">
+                <option>混合辦公（部分駐廠）</option>
+                <option>遠端</option>
+                <option>全程駐廠</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>地點偏好</label>
+              <select class="select">
+                <option>新竹科學園區（駐廠）</option>
+                <option>大台北地區</option>
+                <option>不限</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div class="field">
+              <label>需簽署 NDA</label>
+              <select class="select"><option>是 — 簽署後提供詳細文件</option><option>否</option></select>
+            </div>
+            <div class="field">
+              <label>專案保密級別</label>
+              <select class="select"><option>機密</option><option>內部</option><option>公開</option></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: 里程碑 -->
+        <div class="sec">
+          <h2>里程碑與付款</h2>
+          <div class="sub">分階段付款可降低雙方風險。建議至少設置 3 個里程碑。</div>
+
+          <div class="ms-row">
+            <div class="n">M1</div>
+            <input class="input" value="技術 PoC 與架構設計" />
+            <input class="input" value="NT$ 180,000" />
+            <button class="del">×</button>
+          </div>
+          <div class="ms-row">
+            <div class="n">M2</div>
+            <input class="input" value="前 4 個服務上線含監控" />
+            <input class="input" value="NT$ 360,000" />
+            <button class="del">×</button>
+          </div>
+          <div class="ms-row">
+            <div class="n">M3</div>
+            <input class="input" value="全部服務拆分完成" />
+            <input class="input" value="NT$ 480,000" />
+            <button class="del">×</button>
+          </div>
+          <div class="ms-row">
+            <div class="n">M4</div>
+            <input class="input" value="驗收 + 知識轉移 + 3 個月維護" />
+            <input class="input" value="NT$ 180,000" />
+            <button class="del">×</button>
+          </div>
+
+          <button class="btn btn-ghost" style="margin-top:6px;">＋ 新增里程碑</button>
+          <div style="display:flex; justify-content:space-between; margin-top:14px; padding:12px 14px; background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.3); border-radius:10px;">
+            <div style="font-size:12.5px; color:var(--green); font-weight:600;">✓ 預算總額</div>
+            <div style="font-size:18px; font-weight:800; color:var(--green);">NT$ 1,200,000</div>
+          </div>
+        </div>
+
+        <div class="footer-nav">
+          <button class="save-d">← 上一步</button>
+          <button class="btn btn-secondary">儲存草稿</button>
+          <button class="btn btn-primary next">下一步：預算與時程 →</button>
+        </div>
+
+      </div>
+
+      <!-- Right: Live Preview -->
+      <div style="min-width:0;">
+        <div class="card preview-card">
+          <div class="label"><span class="live"></span>即時預覽 — 廠商視角</div>
+          <div class="pv-body">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+              <span class="bdg bdg-dev">後端開發</span>
+              <span class="bdg bdg-cyan">技術接案</span>
+            </div>
+            <h3>EDA 工具 API Gateway 微服務化重構</h3>
+            <div class="by">台積電子 · 半導體 · 新竹科學園區</div>
+            <div class="stats">
+              <div><div class="k">預算</div><div class="v" style="color:var(--green);">NT$ 1.2M</div></div>
+              <div><div class="k">期程</div><div class="v">12 個月</div></div>
+              <div><div class="k">里程碑</div><div class="v">4 階段</div></div>
+              <div><div class="k">需 NDA</div><div class="v" style="color:#FCA5A5;">是</div></div>
+            </div>
+          </div>
+
+          <div class="ai-suggest">
+            <div class="h">✨ AI 媒合預測</div>
+            <div class="b">根據目前內容，預估可觸及 <b style="color:#67E8F9;">218 家</b> 高匹配廠商。預期應標數 <b style="color:#67E8F9;">8-14 家</b>，平均第一份報價將於 <b style="color:#67E8F9;">2.4 天</b> 內到達。</div>
+          </div>
+
+          <div class="ai-suggest" style="background: linear-gradient(135deg, rgba(245,158,11,.08), rgba(239,68,68,.05)); border-color:rgba(245,158,11,.25);">
+            <div class="h" style="color:#FCD34D;">⚠ 建議優化</div>
+            <div class="b">• 加入「Istio」標籤可多觸及 12% 廠商<br>• 預算總額略低於同類案件中位數（NT$ 1.4M）<br>• 建議補充「過往實績要求」段落</div>
+          </div>
+
+          <div style="font-size:11px; color:var(--text-muted); margin-top:14px; text-align:center;">
+            草稿自動儲存於 11:42
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+<script src="chrome.js"></script>
+<script>renderChrome({active:'projects', searchPlaceholder:'搜尋...'});</script>
+</body>
+</html>

@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 招標進度</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .body { padding: 22px 28px 40px 28px; display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 22px; }
+  .stat-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 14px; }
+  .stat { background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: 12px; padding: 14px 16px; }
+  .stat .l { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }
+  .stat .v { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-top: 4px; }
+  .stat .v.cyan { background: linear-gradient(135deg,#67E8F9,#2563EB); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat .v.amber { color: var(--amber); }
+  .stat .v.green { color: var(--green); }
+  .stat .v.purple { background: linear-gradient(135deg,#A78BFA,#EC4899); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat .d { font-size: 11px; color: var(--green); margin-top: 2px; }
+  .stat .d.red { color: var(--red); }
+
+  /* Pipeline */
+  .pipeline { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 16px; }
+  .pipe-col { background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: 12px; padding: 12px; min-height: 320px; display: flex; flex-direction: column; }
+  .pipe-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 0 4px; }
+  .pipe-h .t { font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .pipe-h .t .dot { width: 8px; height: 8px; border-radius: 999px; }
+  .pipe-h .ct { font-size: 11px; color: var(--text-dim); padding: 1px 7px; border-radius: 999px; background: rgba(148,163,184,0.12); font-weight: 600; }
+  .pipe-h .sum { font-size: 10px; color: var(--text-muted); }
+  .pipe-card { background: var(--bg-3); border: 1px solid var(--line); border-radius: 9px; padding: 10px; margin-bottom: 8px; }
+  .pipe-card .co { font-size: 11.5px; color: var(--text-dim); font-weight: 500; display: flex; align-items: center; gap: 4px; }
+  .pipe-card .tt { font-size: 12.5px; font-weight: 600; line-height: 1.4; margin: 4px 0 6px 0; }
+  .pipe-card .meta { display: flex; gap: 8px; font-size: 10.5px; color: var(--text-muted); flex-wrap: wrap; }
+  .pipe-card .meta .b { color: var(--green); font-weight: 600; }
+  .pipe-card .meta .due { color: var(--amber); font-weight: 600; }
+  .pipe-card .progress-mini { height: 3px; border-radius: 999px; background: rgba(148,163,184,0.1); margin-top: 8px; overflow: hidden; }
+  .pipe-card .progress-mini > span { display: block; height: 100%; background: linear-gradient(90deg,var(--accent),var(--cyan)); }
+
+  /* Detail card */
+  .detail-card { background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+  .detail-h { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .detail-h .lg { width: 56px; height: 56px; font-size: 18px; }
+  .detail-h .meta-tags { display: flex; gap: 6px; margin-top: 6px; }
+  .detail-actions { margin-left: auto; display: flex; gap: 6px; }
+
+  /* Stepper */
+  .stepper { display: grid; grid-template-columns: repeat(5,1fr); gap: 4px; margin: 10px 0 14px 0; position: relative; }
+  .step { position: relative; }
+  .step .ring { width: 32px; height: 32px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin: 0 auto 6px auto; position: relative; z-index: 1; }
+  .step.done .ring { background: var(--green); color: #fff; }
+  .step.now .ring { background: var(--accent); color: #fff; box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
+  .step.todo .ring { background: var(--bg-3); border: 2px solid var(--line-strong); color: var(--text-dim); }
+  .step .lbl { text-align: center; font-size: 11px; font-weight: 600; }
+  .step .ts { text-align: center; font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .step.done .lbl, .step.now .lbl { color: var(--text); }
+  .step.todo .lbl { color: var(--text-dim); }
+  .step::after { content: ""; position: absolute; top: 16px; left: 50%; right: -50%; height: 2px; background: var(--line-strong); z-index: 0; }
+  .step.done::after { background: var(--green); }
+  .step:last-child::after { display: none; }
+
+  /* Detail body */
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+  .detail-cell { background: rgba(15,23,42,0.5); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .detail-cell .l { font-size: 11px; color: var(--text-dim); }
+  .detail-cell .v { font-size: 16px; font-weight: 700; margin-top: 4px; letter-spacing: -0.01em; }
+
+  /* Activity log */
+  .log-card { background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: 12px; }
+  .log-row { display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); align-items: flex-start; }
+  .log-row:last-child { border-bottom: none; }
+  .log-row .ico { width: 28px; height: 28px; border-radius: 8px; background: var(--bg-3); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--text-dim); }
+  .log-row.evt-msg .ico { background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.3); color: #67E8F9; }
+  .log-row.evt-doc .ico { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.3); color: #A78BFA; }
+  .log-row.evt-win .ico { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.3); color: #6EE7B7; }
+  .log-row.evt-warn .ico { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.3); color: #FCD34D; }
+  .log-row .t { font-size: 13px; line-height: 1.5; }
+  .log-row .t b { color: var(--text); font-weight: 600; }
+  .log-row .ts { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Right column */
+  .panel { background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: 12px; padding: 16px; }
+  .deadline-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .deadline-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .deadline-row:first-of-type { padding-top: 0; }
+  .deadline-row .day { width: 38px; text-align: center; flex-shrink: 0; }
+  .deadline-row .day .d { font-size: 18px; font-weight: 700; line-height: 1; color: var(--amber); }
+  .deadline-row .day .m { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+  .deadline-row .day.urgent .d { color: var(--red); }
+  .deadline-row .info { flex: 1; min-width: 0; }
+  .deadline-row .tt { font-size: 12.5px; font-weight: 600; }
+  .deadline-row .co { font-size: 11px; color: var(--text-dim); }
+
+  .ww-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+  .ww-row .lg { width: 26px; height: 26px; font-size: 10px; }
+  .ww-row .info { flex: 1; min-width: 0; }
+  .ww-row .tt { font-size: 12px; font-weight: 600; }
+  .ww-row .pct { font-size: 11px; color: var(--green); font-weight: 600; }
+  .ww-row .pct.lose { color: var(--red); }
+
+  .pipe-num { font-size: 14px; font-weight: 700; }
+
+  /* Section title */
+  .sec-title { font-size: 14px; font-weight: 600; margin: 0 0 10px 0; display: flex; align-items: baseline; gap: 8px; }
+  .sec-title .sub { font-size: 11.5px; color: var(--text-dim); font-weight: 400; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+
+    <div class="page-head">
+      <div class="head-row">
+        <div>
+          <div class="crumb">主選單 / 招標進度</div>
+          <h1>招標進度 · 我的投標管理</h1>
+          <p class="desc">本月 <b style="color:var(--text)">9</b> 個案件投標中 · <b style="color:#6EE7B7">2</b> 個已得標 · 平均評估時程 <b style="color:#67E8F9">14 天</b></p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-secondary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 10h18M9 21V10"/></svg>看板檢視</button>
+          <button class="btn btn-secondary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4h8v2M3 12h18"/></svg>清單檢視</button>
+          <button class="btn btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>新增投標</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active">全部 <span class="ct">17</span></div>
+      <div class="tab">進行中 <span class="ct">9</span></div>
+      <div class="tab">已得標 <span class="ct">2</span></div>
+      <div class="tab">未得標 <span class="ct">3</span></div>
+      <div class="tab">已撤回 <span class="ct">1</span></div>
+      <div class="tab">封存 <span class="ct">2</span></div>
+    </div>
+
+    <div class="body">
+      <!-- LEFT -->
+      <div>
+
+        <div class="stat-row">
+          <div class="stat">
+            <div class="l">投標中</div>
+            <div class="v cyan">9</div>
+            <div class="d">▲ 3 vs 上月</div>
+          </div>
+          <div class="stat">
+            <div class="l">本月得標率</div>
+            <div class="v green">42%</div>
+            <div class="d">業界平均 28%</div>
+          </div>
+          <div class="stat">
+            <div class="l">合約金額 (累計)</div>
+            <div class="v purple">NT$ 12.4M</div>
+            <div class="d">▲ 32% YoY</div>
+          </div>
+          <div class="stat">
+            <div class="l">即將截標</div>
+            <div class="v amber">3</div>
+            <div class="d red">最近 5/03</div>
+          </div>
+          <div class="stat">
+            <div class="l">需補件</div>
+            <div class="v" style="color:var(--red);">2</div>
+            <div class="d red">逾期 1 案</div>
+          </div>
+        </div>
+
+        <!-- Pipeline -->
+        <h2 class="sec-title">投標管線 <span class="sub">· Pipeline View · 拖曳卡片可變更階段</span></h2>
+        <div class="pipeline">
+
+          <div class="pipe-col">
+            <div class="pipe-h">
+              <div class="t"><span class="dot" style="background:#94A3B8;"></span>追蹤中</div>
+              <span class="ct">4</span>
+            </div>
+            <div class="pipe-card">
+              <div class="co"><span style="color:#A78BFA;">●</span> 玉山銀行</div>
+              <div class="tt">行員培訓 LMS 系統開發</div>
+              <div class="meta"><span class="b">NT$ 1.6M</span><span>📅 5/22</span></div>
+              <div class="progress-mini"><span style="width: 12%;"></span></div>
+            </div>
+            <div class="pipe-card">
+              <div class="co"><span style="color:#67E8F9;">●</span> 緯創資通</div>
+              <div class="tt">SCM 系統現代化</div>
+              <div class="meta"><span class="b">NT$ 3.8M</span><span>📅 6/01</span></div>
+              <div class="progress-mini"><span style="width: 8%;"></span></div>
+            </div>
+            <div class="pipe-card">
+              <div class="co"><span style="color:#FCD34D;">●</span> 統一超商</div>
+              <div class="tt">夏季 Campaign 投放</div>
+              <div class="meta"><span class="b">NT$ 920K</span><span class="due">📅 4/30</span></div>
+              <div class="progress-mini"><span style="width: 5%;"></span></div>
+            </div>
+            <div class="pipe-card">
+              <div class="co"><span style="color:#F472B6;">●</span> 誠品文創</div>
+              <div class="tt">品牌官網改版</div>
+              <div class="meta"><span class="b">NT$ 480K</span><span>📅 5/15</span></div>
+              <div class="progress-mini"><span style="width: 3%;"></span></div>
+            </div>
+          </div>
+
+          <div class="pipe-col">
+            <div class="pipe-h">
+              <div class="t"><span class="dot" style="background:#22D3EE;"></span>準備提案</div>
+              <span class="ct">3</span>
+            </div>
+            <div class="pipe-card" style="border-color: rgba(34,211,238,0.3);">
+              <div class="co"><span style="color:#67E8F9;">●</span> 台積電子</div>
+              <div class="tt">EDA API Gateway 重構</div>
+              <div class="meta"><span class="b">NT$ 1.2M</span><span class="due">📅 5/12</span></div>
+              <div class="progress-mini"><span style="width: 35%;"></span></div>
+            </div>
+            <div class="pipe-card">
+              <div class="co"><span style="color:#FCA5A5;">●</span> 中華電信</div>
+              <div class="tt">5G PCBA 代工 5,000 套</div>
+              <div class="meta"><span class="b">NT$ 4.5M</span><span>📅 5/20</span></div>
+              <div class="progress-mini"><span style="width: 28%;"></span></div>
+            </div>
+            <div class="pipe-card">
+              <div class="co"><span style="color:#F9A8D4;">●</span> Pinkoi</div>
+              <div class="tt">設計師後台改版</div>
+              <div class="meta"><span class="b">NT$ 600K</span><span>📅 5/18</span></div>
+              <div class="progress-mini"><span style="width: 40%;"></span></div>
+            </div>
+          </div>
+
+          <div class="pipe-col">
+            <div class="pipe-h">
+              <div class="t"><span class="dot" style="background:#A78BFA;"></span>已投標</div>
+              <span class="ct">5</span>
+            </div>
+            <div class="pipe-card" style="border-color: rgba(99,102,241,0.4); background: linear-gradient(180deg, rgba(99,102,241,0.08), var(--bg-3));">
+              <div class="co"><span style="color:#A78BFA;">●</span> 台積電子 <span style="margin-left:auto;color:var(--amber);font-weight:600;">評估中</span></div>
+              <div class="tt">Wafer 良率分析平台</div>
+              <div class="meta"><span class="b">NT$ 2.8M</span><span>已投 3 天</span></div>
+              <div class="progress-mini"><span style="width: 65%; background: linear-gradient(90deg,#A78BFA,#22D3EE);"></span></div>
+            </div>
+            <div class="pipe-card">
+              <div class="co"><span style="color:#6EE7B7;">●</span> 玉山銀行</div>
+              <div class="tt">財務 Chatbot 開發</div>
+              <div class="meta"><span class="b">NT$ 1.4M</span><span>已投 5 天</span></div>
+              <div class="progress-mini"><span style="width: 55%;"></span></div>
+            </div>
+            <div class="pipe-card">
+              <div class="co"><span style="color:#67E8F9;">●</span> 沛星互動</div>
+              <div class="tt">Data Pipeline 諮詢</div>
+              <div class="meta"><span class="b">NT$ 800K</span><span>已投 2 天</span></div>
+              <div class="progress-mini"><span style="width: 50%;"></span></div>
+            </div>
+            <div class="pipe-card">
+              <div class="co"><span style="color:#FCD34D;">●</span> 鴻海精密</div>
+              <div class="tt">產線 AI 視覺檢測</div>
+              <div class="meta"><span class="b">NT$ 5.2M</span><span>已投 8 天</span></div>
+              <div class="progress-mini"><span style="width: 60%;"></span></div>
+            </div>
+            <div class="pipe-card">
+              <div class="co"><span style="color:#F9A8D4;">●</span> 誠品文創</div>
+              <div class="tt">會員 App 改版 v3</div>
+              <div class="meta"><span class="b">NT$ 1.1M</span><span>已投 12 天</span></div>
+              <div class="progress-mini"><span style="width: 70%;"></span></div>
+            </div>
+          </div>
+
+          <div class="pipe-col">
+            <div class="pipe-h">
+              <div class="t"><span class="dot" style="background:#10B981;"></span>已得標</div>
+              <span class="ct">2</span>
+            </div>
+            <div class="pipe-card" style="border-color: rgba(16,185,129,0.4); background: linear-gradient(180deg, rgba(16,185,129,0.08), var(--bg-3));">
+              <div class="co"><span style="color:#6EE7B7;">●</span> Cathay 國泰金 <span style="margin-left:auto;color:var(--green);font-weight:600;">✓ 中標</span></div>
+              <div class="tt">行員培訓 LMS 系統</div>
+              <div class="meta"><span class="b">NT$ 2.4M</span><span>合約 3/12 簽訂</span></div>
+              <div class="progress-mini"><span style="width: 100%; background: var(--green);"></span></div>
+            </div>
+            <div class="pipe-card" style="border-color: rgba(16,185,129,0.4); background: linear-gradient(180deg, rgba(16,185,129,0.08), var(--bg-3));">
+              <div class="co"><span style="color:#6EE7B7;">●</span> 趨勢科技 <span style="margin-left:auto;color:var(--green);font-weight:600;">✓ 中標</span></div>
+              <div class="tt">內部 Dashboard 重構</div>
+              <div class="meta"><span class="b">NT$ 1.8M</span><span>合約 4/05 簽訂</span></div>
+              <div class="progress-mini"><span style="width: 100%; background: var(--green);"></span></div>
+            </div>
+          </div>
+
+          <div class="pipe-col">
+            <div class="pipe-h">
+              <div class="t"><span class="dot" style="background:#EF4444;"></span>未得標</div>
+              <span class="ct">3</span>
+            </div>
+            <div class="pipe-card" style="opacity: 0.7;">
+              <div class="co"><span style="color:#FCA5A5;">●</span> 巨大機械 <span style="margin-left:auto;color:var(--red);font-weight:600;">未中標</span></div>
+              <div class="tt">智慧倉儲系統</div>
+              <div class="meta"><span class="b">NT$ 3.2M</span><span>4/02 公告</span></div>
+              <div class="progress-mini"><span style="width: 100%; background: var(--red);"></span></div>
+            </div>
+            <div class="pipe-card" style="opacity: 0.7;">
+              <div class="co"><span style="color:#FCA5A5;">●</span> 富邦金 <span style="margin-left:auto;color:var(--red);font-weight:600;">未中標</span></div>
+              <div class="tt">客服 NLU 模型</div>
+              <div class="meta"><span class="b">NT$ 1.6M</span><span>3/28 公告</span></div>
+              <div class="progress-mini"><span style="width: 100%; background: var(--red);"></span></div>
+            </div>
+            <div class="pipe-card" style="opacity: 0.7;">
+              <div class="co"><span style="color:#FCA5A5;">●</span> 中華電 <span style="margin-left:auto;color:var(--text-dim);font-weight:600;">已撤回</span></div>
+              <div class="tt">5G IoT 平台 RFP</div>
+              <div class="meta"><span class="b">NT$ 2.0M</span><span>3/15 撤回</span></div>
+              <div class="progress-mini"><span style="width: 100%; background: var(--text-muted);"></span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Active deal detail -->
+        <h2 class="sec-title">當前焦點案件 <span class="sub">· 台積電子 — Wafer 良率分析平台</span></h2>
+        <div class="detail-card">
+          <div class="detail-h">
+            <div class="lg" style="background: linear-gradient(135deg,#2563EB,#6366F1); width:56px; height:56px; font-size: 18px;">台</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size: 17px; font-weight: 700;">Wafer 良率 AI 分析平台 — 投標案 #2025-0418</div>
+              <div style="font-size: 12.5px; color: var(--text-dim); margin-top: 2px;">台積電子 · 半導體 · 新竹科學園區</div>
+              <div class="meta-tags">
+                <span class="bdg bdg-dev">後端開發</span>
+                <span class="bdg bdg-cyan">AI / ML</span>
+                <span class="bdg bdg-amber">⚡ 高優先</span>
+                <span class="bdg" style="background:rgba(99,102,241,0.15); color:#C7D2FE; border:1px solid rgba(99,102,241,0.3);">已投標 · 評估中</span>
+              </div>
+            </div>
+            <div class="detail-actions">
+              <button class="btn btn-secondary">📥 下載 RFP</button>
+              <button class="btn btn-secondary">💬 訊息對方</button>
+              <button class="btn btn-primary">查看完整提案 →</button>
+            </div>
+          </div>
+
+          <div class="stepper">
+            <div class="step done">
+              <div class="ring">✓</div>
+              <div class="lbl">收到 RFP</div>
+              <div class="ts">4/05</div>
+            </div>
+            <div class="step done">
+              <div class="ring">✓</div>
+              <div class="lbl">準備提案</div>
+              <div class="ts">4/12</div>
+            </div>
+            <div class="step done">
+              <div class="ring">✓</div>
+              <div class="lbl">送出投標</div>
+              <div class="ts">4/18</div>
+            </div>
+            <div class="step now">
+              <div class="ring">4</div>
+              <div class="lbl">買方評估</div>
+              <div class="ts">進行中 · 65%</div>
+            </div>
+            <div class="step todo">
+              <div class="ring">5</div>
+              <div class="lbl">合約簽訂</div>
+              <div class="ts">預計 5/12</div>
+            </div>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail-cell">
+              <div class="l">合約金額</div>
+              <div class="v" style="color: var(--green);">NT$ 2,800,000</div>
+            </div>
+            <div class="detail-cell">
+              <div class="l">執行週期</div>
+              <div class="v">6 個月</div>
+            </div>
+            <div class="detail-cell">
+              <div class="l">競爭家數</div>
+              <div class="v">8 家投標 <span style="font-size:11.5px;font-weight:500;color:var(--text-dim);">/ 已剩 3</span></div>
+            </div>
+            <div class="detail-cell">
+              <div class="l">預測得標率</div>
+              <div class="v" style="background: linear-gradient(135deg,#A78BFA,#22D3EE); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">68%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity log -->
+        <h2 class="sec-title">案件動態 <span class="sub">· 共 18 筆紀錄</span></h2>
+        <div class="log-card">
+          <div class="log-row evt-msg">
+            <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <div style="flex:1;">
+              <div class="t"><b>陳採購 (台積電子)</b> 留言：「貴公司提案的微服務架構設計很完整，我們希望能看到關於 SLO/SLI 監控的補充細節」</div>
+              <div class="ts">35 分鐘前 · 案件 #2025-0418</div>
+            </div>
+            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11.5px;">回覆</button>
+          </div>
+
+          <div class="log-row evt-doc">
+            <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+            <div style="flex:1;">
+              <div class="t">系統收到來自 <b>玉山銀行</b> 的補充文件 — <b>RFP-Addendum-v2.pdf</b> (4 頁)</div>
+              <div class="ts">2 小時前 · 財務 Chatbot 開發</div>
+            </div>
+            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11.5px;">下載</button>
+          </div>
+
+          <div class="log-row evt-warn">
+            <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 9v4M12 17h.01M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg></div>
+            <div style="flex:1;">
+              <div class="t">⚠ <b>統一超商 — 夏季 Campaign 投標</b> 即將截止 (剩 <b style="color:var(--red);">2 天</b>)，請儘速補上「過往社群操盤實績」附件</div>
+              <div class="ts">5 小時前 · 自動提醒</div>
+            </div>
+            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 11.5px;">立即補件</button>
+          </div>
+
+          <div class="log-row evt-win">
+            <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m9 11 3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <div style="flex:1;">
+              <div class="t">🎉 恭喜！<b>趨勢科技 — 內部 Dashboard 重構</b> 已正式得標，合約金額 <b style="color:var(--green);">NT$ 1.8M</b>，預計 4/05 啟動專案</div>
+              <div class="ts">昨天 · 系統更新</div>
+            </div>
+          </div>
+
+          <div class="log-row evt-doc">
+            <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+            <div style="flex:1;">
+              <div class="t">AI 分析：你的 <b>台積電子 — Wafer 良率分析平台</b> 提案技術匹配度 <b style="color:#67E8F9;">94%</b>，但價格較競爭者高 8%。建議調整 → 補充交付時程承諾</div>
+              <div class="ts">2 天前 · ChatOwl AI 顧問</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+
+        <!-- Calendar / urgent deadlines -->
+        <div class="panel">
+          <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;display:flex;justify-content:space-between;align-items:center;">
+            🚨 截標倒數 <span style="font-size:11px;color:var(--red);font-weight:600;">3 件緊急</span>
+          </h3>
+
+          <div class="deadline-row">
+            <div class="day urgent">
+              <div class="d">2</div>
+              <div class="m">天</div>
+            </div>
+            <div class="info">
+              <div class="tt">夏季 Social Campaign</div>
+              <div class="co">統一超商 · NT$ 920K</div>
+            </div>
+            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11.5px;">補件</button>
+          </div>
+
+          <div class="deadline-row">
+            <div class="day">
+              <div class="d">5</div>
+              <div class="m">天</div>
+            </div>
+            <div class="info">
+              <div class="tt">EDA API Gateway 重構</div>
+              <div class="co">台積電子 · NT$ 1.2M</div>
+            </div>
+            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 11.5px;">投標</button>
+          </div>
+
+          <div class="deadline-row">
+            <div class="day">
+              <div class="d">8</div>
+              <div class="m">天</div>
+            </div>
+            <div class="info">
+              <div class="tt">5G PCBA 代工 5,000 套</div>
+              <div class="co">中華電信 · NT$ 4.5M</div>
+            </div>
+            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11.5px;">查看</button>
+          </div>
+
+          <div class="deadline-row">
+            <div class="day">
+              <div class="d">14</div>
+              <div class="m">天</div>
+            </div>
+            <div class="info">
+              <div class="tt">設計師後台改版</div>
+              <div class="co">Pinkoi · NT$ 600K</div>
+            </div>
+            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11.5px;">查看</button>
+          </div>
+        </div>
+
+        <!-- Win/loss analysis -->
+        <div class="panel">
+          <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;display:flex;justify-content:space-between;align-items:center;">
+            得標分析 <span style="font-size:11px;color:var(--text-dim);font-weight:400;">最近 12 個月</span>
+          </h3>
+
+          <!-- Donut chart placeholder -->
+          <div style="display: flex; align-items: center; gap: 14px; padding: 6px 0 12px 0;">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="14"/>
+              <circle cx="50" cy="50" r="36" fill="none" stroke="#10B981" stroke-width="14" stroke-dasharray="95 226" transform="rotate(-90 50 50)"/>
+              <circle cx="50" cy="50" r="36" fill="none" stroke="#A78BFA" stroke-width="14" stroke-dasharray="68 226" stroke-dashoffset="-95" transform="rotate(-90 50 50)"/>
+              <circle cx="50" cy="50" r="36" fill="none" stroke="#EF4444" stroke-width="14" stroke-dasharray="48 226" stroke-dashoffset="-163" transform="rotate(-90 50 50)"/>
+              <text x="50" y="50" text-anchor="middle" fill="#fff" font-size="20" font-weight="700">42%</text>
+              <text x="50" y="64" text-anchor="middle" fill="#94A3B8" font-size="9">中標率</text>
+            </svg>
+            <div style="font-size: 11.5px; flex: 1;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="width:8px;height:8px;border-radius:2px;background:#10B981;"></span>得標 <b style="margin-left:auto;">14 件</b></div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="width:8px;height:8px;border-radius:2px;background:#A78BFA;"></span>評估中 <b style="margin-left:auto;">9 件</b></div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="width:8px;height:8px;border-radius:2px;background:#EF4444;"></span>未中標 <b style="margin-left:auto;">7 件</b></div>
+              <div style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:2px;background:rgba(148,163,184,0.4);"></span>已撤回 <b style="margin-left:auto;">3 件</b></div>
+            </div>
+          </div>
+
+          <div style="font-size: 11.5px; color: var(--text-dim); padding: 10px 12px; background: rgba(167,139,250,0.08); border: 1px solid rgba(167,139,250,0.25); border-radius: 8px; line-height: 1.5;">
+            💡 <b style="color:#A78BFA;">AI 顧問：</b>你在「半導體 / 製造」產業的得標率高達 <b style="color:var(--green);">68%</b>，但「金融」產業僅 <b style="color:var(--red);">22%</b>。建議優先投標製造業相關案件。
+          </div>
+        </div>
+
+        <!-- Top winners by category -->
+        <div class="panel">
+          <h3 style="font-size:13px;font-weight:600;margin:0 0 8px 0;">產業類別表現</h3>
+
+          <div class="ww-row">
+            <div class="lg" style="background: linear-gradient(135deg,#2563EB,#6366F1);">半</div>
+            <div class="info">
+              <div class="tt">半導體 / 製造</div>
+              <div style="font-size: 10.5px; color: var(--text-muted);">12 件投標 · 8 件得標</div>
+            </div>
+            <span class="pct">68%</span>
+          </div>
+
+          <div class="ww-row">
+            <div class="lg" style="background: linear-gradient(135deg,#0EA5E9,#22D3EE);">S</div>
+            <div class="info">
+              <div class="tt">SaaS / AI</div>
+              <div style="font-size: 10.5px; color: var(--text-muted);">8 件投標 · 4 件得標</div>
+            </div>
+            <span class="pct">50%</span>
+          </div>
+
+          <div class="ww-row">
+            <div class="lg" style="background: linear-gradient(135deg,#EC4899,#8B5CF6);">零</div>
+            <div class="info">
+              <div class="tt">零售 / 文創</div>
+              <div style="font-size: 10.5px; color: var(--text-muted);">6 件投標 · 2 件得標</div>
+            </div>
+            <span class="pct">33%</span>
+          </div>
+
+          <div class="ww-row">
+            <div class="lg" style="background: linear-gradient(135deg,#10B981,#059669);">金</div>
+            <div class="info">
+              <div class="tt">金融 / 銀行</div>
+              <div style="font-size: 10.5px; color: var(--text-muted);">9 件投標 · 2 件得標</div>
+            </div>
+            <span class="pct lose">22%</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="chrome.js"></script>
+<script>renderChrome({active:'bidding', searchPlaceholder:'搜尋投標案、合約金額、買方...'});</script>
+</body>
+</html>

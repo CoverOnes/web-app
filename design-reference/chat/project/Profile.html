@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 個人公開頁</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .body { padding:0; }
+  .cover { height:200px; background:linear-gradient(135deg,#312E81 0%, #6366F1 50%, #22D3EE 100%); position:relative; overflow:hidden; }
+  .cover::after { content:""; position:absolute; inset:0; background-image:radial-gradient(circle at 20% 50%, rgba(255,255,255,.15),transparent 50%), radial-gradient(circle at 80% 30%, rgba(34,211,238,.25),transparent 50%); }
+  .cover .edit { position:absolute; right:18px; top:18px; padding:7px 13px; background:rgba(0,0,0,.4); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.2); border-radius:8px; color:#fff; font-size:12px; cursor:pointer; }
+
+  .head { padding:0 28px; margin-top:-72px; position:relative; }
+  .head-row { display:flex; align-items:flex-end; gap:24px; margin-bottom:18px; }
+  .ava { width:144px; height:144px; border-radius:50%; background:linear-gradient(135deg,#6366F1,#EC4899); display:flex; align-items:center; justify-content:center; font-size:54px; font-weight:800; color:#fff; border:5px solid var(--bg); box-shadow:0 14px 36px rgba(0,0,0,.5); position:relative; }
+  .ava .vd { position:absolute; right:6px; bottom:8px; width:30px; height:30px; border-radius:50%; background:#22D3EE; display:flex; align-items:center; justify-content:center; color:#0F172A; font-size:14px; border:3px solid var(--bg); }
+  .head-info { flex:1; padding-bottom:10px; }
+  .head-info h1 { font-size:26px; font-weight:800; letter-spacing:-.02em; margin:0; }
+  .head-info .tt { font-size:14px; color:var(--text-dim); margin-top:5px; }
+  .head-info .tt b { color:var(--text); }
+  .head-info .meta { display:flex; gap:14px; font-size:12px; color:var(--text-muted); margin-top:9px; flex-wrap:wrap; }
+  .head-actions { display:flex; gap:9px; padding-bottom:10px; }
+
+  .tabs { display:flex; gap:24px; padding:0 28px; border-bottom:1px solid var(--line); }
+  .tab { padding:12px 0; font-size:13px; color:var(--text-dim); cursor:pointer; border-bottom:2px solid transparent; }
+  .tab.on { color:#A78BFA; border-bottom-color:#6366F1; font-weight:600; }
+
+  .layout { display:grid; grid-template-columns:1fr 320px; gap:18px; padding:18px 28px 28px; }
+  .col-main > * { margin-bottom:14px; }
+  .col-side > * { margin-bottom:14px; }
+
+  .card { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:13px; padding:20px 22px; }
+  .card h3 { font-size:13px; font-weight:700; margin:0 0 13px; display:flex; justify-content:space-between; align-items:center; }
+  .card h3 .more { font-size:11.5px; color:#A78BFA; cursor:pointer; font-weight:500; }
+
+  .about p { font-size:13px; color:var(--text-dim); line-height:1.75; margin:0 0 12px; }
+  .about p b { color:var(--text); }
+  .high { background:linear-gradient(90deg, rgba(99,102,241,.15), transparent); padding:1px 5px; border-radius:3px; color:#C7D2FE; font-weight:600; }
+
+  .skills { display:flex; flex-wrap:wrap; gap:7px; }
+  .skill { padding:5px 11px; background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.3); border-radius:7px; font-size:11.5px; color:#C7D2FE; }
+  .skill.t { background:rgba(34,211,238,.12); border-color:rgba(34,211,238,.3); color:#67E8F9; }
+
+  .exp-row { display:flex; gap:14px; padding:13px 0; border-top:1px solid var(--line); }
+  .exp-row:first-of-type { border:none; padding-top:0; }
+  .exp-logo { width:42px; height:42px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; color:#fff; font-weight:700; }
+  .exp-row.a .exp-logo { background:linear-gradient(135deg,#6366F1,#A78BFA); }
+  .exp-row.b .exp-logo { background:linear-gradient(135deg,#22D3EE,#3B82F6); }
+  .exp-row.c .exp-logo { background:linear-gradient(135deg,#10B981,#059669); }
+  .exp-row.d .exp-logo { background:linear-gradient(135deg,#F59E0B,#EF4444); }
+  .exp-info { flex:1; }
+  .exp-info .ti { font-size:13.5px; font-weight:700; }
+  .exp-info .co { font-size:12px; color:var(--text-dim); margin-top:1px; }
+  .exp-info .pe { font-size:11px; color:var(--text-muted); margin-top:2px; }
+  .exp-info .desc { font-size:12px; color:var(--text-dim); line-height:1.65; margin-top:6px; }
+  .exp-info .tags { display:flex; gap:5px; margin-top:7px; flex-wrap:wrap; }
+  .exp-info .tags .t { font-size:10.5px; color:var(--text-muted); padding:2px 7px; background:var(--bg-3); border-radius:4px; }
+
+  .proj-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:11px; }
+  .proj { background:var(--bg-3); border:1px solid var(--line); border-radius:9px; padding:13px; cursor:pointer; }
+  .proj .ti { font-size:13px; font-weight:600; }
+  .proj .desc { font-size:11.5px; color:var(--text-dim); line-height:1.55; margin-top:5px; }
+  .proj .meta { display:flex; gap:10px; margin-top:8px; font-size:10.5px; color:var(--text-muted); }
+  .proj .meta b { color:#6EE7B7; }
+
+  .review-row { padding:13px 0; border-top:1px solid var(--line); }
+  .review-row:first-of-type { border:none; padding-top:0; }
+  .review-row .stars { color:#FCD34D; font-size:12px; margin-bottom:4px; }
+  .review-row .qt { font-size:12.5px; color:var(--text-dim); line-height:1.65; font-style:italic; }
+  .review-row .by { font-size:11px; color:var(--text-muted); margin-top:5px; }
+
+  .stat-row { display:flex; justify-content:space-between; padding:9px 0; border-top:1px solid var(--line); font-size:12.5px; }
+  .stat-row:first-of-type { border:none; padding-top:0; }
+  .stat-row .v { font-weight:700; }
+  .stat-row .v.g { color:#6EE7B7; }
+  .stat-row .v.c { color:#67E8F9; }
+
+  .endorse-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--line); }
+  .endorse-row:first-of-type { border:none; padding-top:0; }
+  .endorse-row .av { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; flex-shrink:0; }
+  .endorse-row .info { flex:1; }
+  .endorse-row .info .n { font-size:12px; font-weight:600; }
+  .endorse-row .info .r { font-size:10.5px; color:var(--text-muted); }
+
+  .lang-row { display:flex; justify-content:space-between; padding:7px 0; font-size:12px; }
+  .lang-row .l { color:var(--text-dim); }
+  .lang-row .lvl { color:#6EE7B7; font-size:11px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+    <div class="body">
+      <div class="cover"><div class="edit">📷 編輯封面</div></div>
+
+      <div class="head">
+        <div class="head-row">
+          <div class="ava">張<div class="vd">✓</div></div>
+          <div class="head-info">
+            <h1>張育騰 <span style="color:var(--text-muted); font-size:14px; font-weight:400;">@yutengchang</span></h1>
+            <div class="tt">產品總監 @ <b>奇點科技股份有限公司</b> · B2B SaaS 增長專家</div>
+            <div class="meta">
+              <span>📍 台北 · 內湖科技園區</span>
+              <span>🎓 政治大學 EMBA</span>
+              <span>🔗 connect 248 位</span>
+              <span>👁 本月被瀏覽 1,240 次</span>
+              <span>⭐ 5.0 (47)</span>
+            </div>
+          </div>
+          <div class="head-actions">
+            <button class="btn btn-secondary">📩 發送訊息</button>
+            <button class="btn btn-secondary">📅 安排會議</button>
+            <button class="btn btn-primary">＋ 加入人脈</button>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab on">總覽</div>
+          <div class="tab">經歷</div>
+          <div class="tab">專案作品</div>
+          <div class="tab">評價（47）</div>
+          <div class="tab">活動</div>
+          <div class="tab">推薦語</div>
+        </div>
+      </div>
+
+      <div class="layout">
+        <div class="col-main">
+          <div class="card about">
+            <h3>關於我</h3>
+            <p>14 年 B2B SaaS 產品經驗，專注於企業增長、訂閱制商模設計、產品分析。曾主導 <span class="high">3 個 ARR 破億美金</span> 產品從 0–1 到規模化的全流程。</p>
+            <p>目前在 <b>奇點科技</b> 帶領 22 人產品團隊，負責企業 AI 工作流產品線。對 <span class="high">產品市場契合度（PMF）</span>、<span class="high">負流失（NRR）</span>、<span class="high">PLG 增長模型</span> 特別有研究。</p>
+            <p>業餘時間：寫產品週報「PM 思維」（訂閱數 8.4K）、SaaS 顧問（年限 3 個案）、線上課程講師。歡迎交流。</p>
+          </div>
+
+          <div class="card">
+            <h3>專業技能 <span class="more">編輯</span></h3>
+            <div class="skills">
+              <span class="skill t">B2B SaaS</span>
+              <span class="skill t">產品策略</span>
+              <span class="skill t">PLG 增長</span>
+              <span class="skill">用戶研究</span>
+              <span class="skill">Mixpanel / Amplitude</span>
+              <span class="skill">A/B Testing</span>
+              <span class="skill">Pricing Strategy</span>
+              <span class="skill">產品分析</span>
+              <span class="skill">Roadmap 規劃</span>
+              <span class="skill">OKR 管理</span>
+              <span class="skill">Figma</span>
+              <span class="skill">SQL</span>
+              <span class="skill">客戶成功</span>
+              <span class="skill">企業客戶導入</span>
+              <span class="skill">合約談判</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>工作經歷 <span class="more">完整經歷 →</span></h3>
+            <div class="exp-row a">
+              <div class="exp-logo">奇</div>
+              <div class="exp-info">
+                <div class="ti">產品總監</div>
+                <div class="co">奇點科技股份有限公司</div>
+                <div class="pe">2022 / 03 — 至今 · 3 年 3 個月 · 台北</div>
+                <div class="desc">負責企業 AI 工作流產品線從 0 到 1，年度 ARR 從 NT$ 0 增長至 NT$ 4.2 億，企業客戶 240 家。帶領 22 人團隊。</div>
+                <div class="tags"><span class="t">B2B SaaS</span><span class="t">AI 產品</span><span class="t">團隊管理</span></div>
+              </div>
+            </div>
+            <div class="exp-row b">
+              <div class="exp-logo">M</div>
+              <div class="exp-info">
+                <div class="ti">資深產品經理</div>
+                <div class="co">Microsoft Taiwan</div>
+                <div class="pe">2018 / 06 — 2022 / 02 · 3 年 8 個月 · 台北 / Redmond</div>
+                <div class="desc">負責 Microsoft Teams 亞太區市場功能（會議、視訊、整合）。MAU 從 800 萬增長至 4,200 萬。</div>
+              </div>
+            </div>
+            <div class="exp-row c">
+              <div class="exp-logo">L</div>
+              <div class="exp-info">
+                <div class="ti">產品經理</div>
+                <div class="co">LINE Taiwan</div>
+                <div class="pe">2015 / 09 — 2018 / 05 · 2 年 9 個月 · 台北</div>
+                <div class="desc">LINE Pay 商家服務、LINE 官方帳號 API。商家後台從 1,000 家擴展到 12 萬家。</div>
+              </div>
+            </div>
+            <div class="exp-row d">
+              <div class="exp-logo">創</div>
+              <div class="exp-info">
+                <div class="ti">共同創辦人 / 產品長</div>
+                <div class="co">Foodie 美食外送（已被收購）</div>
+                <div class="pe">2013 / 02 — 2015 / 08 · 2 年 7 個月</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>精選專案 <span class="more">查看全部 28 件</span></h3>
+            <div class="proj-grid">
+              <div class="proj">
+                <div class="ti">⚡ AI Workflow Engine v2</div>
+                <div class="desc">企業 LLM 工作流引擎，支援 200+ 整合。</div>
+                <div class="meta"><span>🏢 奇點科技</span><span><b>+ 280%</b> ARR</span></div>
+              </div>
+              <div class="proj">
+                <div class="ti">📊 客戶成功儀表板</div>
+                <div class="desc">即時 NRR / 流失預警，挽留 NT$ 8 千萬 ARR。</div>
+                <div class="meta"><span>🏢 奇點科技</span><span><b>NRR +12%</b></span></div>
+              </div>
+              <div class="proj">
+                <div class="ti">💬 Teams 視訊會議重構</div>
+                <div class="desc">會議延遲降 60%，DAU + 18%。</div>
+                <div class="meta"><span>🏢 Microsoft</span><span><b>4.2 億 MAU</b></span></div>
+              </div>
+              <div class="proj">
+                <div class="ti">💳 LINE Pay 商家平台</div>
+                <div class="desc">商家後台從 1K 擴展到 120K。</div>
+                <div class="meta"><span>🏢 LINE</span><span><b>120x</b> 規模</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>客戶評價 <span class="more">查看全部 47 則</span></h3>
+            <div class="review-row">
+              <div class="stars">★★★★★ <span style="color:var(--text-dim); font-weight:400; margin-left:8px; font-size:11.5px;">5.0 · 產品策略顧問</span></div>
+              <div class="qt">"育騰幫我們重新定義 SaaS 訂閱方案，三個月後 NRR 從 92% 漲到 118%。對 B2B 增長的洞察非常深，特別是企業客戶導入流程的設計。強力推薦！"</div>
+              <div class="by">— 林佳妮 · 雲飛科技 共同創辦人 / 2025/04</div>
+            </div>
+            <div class="review-row">
+              <div class="stars">★★★★★ <span style="color:var(--text-dim); font-weight:400; margin-left:8px; font-size:11.5px;">5.0 · 產品團隊培訓</span></div>
+              <div class="qt">"連續 3 個月每週 4 小時的內部工作坊，我們 PM 團隊對 OKR 和產品分析的能力顯著提升。客觀、實戰、不教條。"</div>
+              <div class="by">— 王志偉 · 數聯智能 CTO / 2025/03</div>
+            </div>
+            <div class="review-row">
+              <div class="stars">★★★★★ <span style="color:var(--text-dim); font-weight:400; margin-left:8px; font-size:11.5px;">5.0 · 顧問諮詢</span></div>
+              <div class="qt">"從 PMF 到定價策略再到客戶成功體系，育騰是我們 Series A 過程中最關鍵的外部顧問。"</div>
+              <div class="by">— Sarah Chen · ProSync CEO / 2025/02</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-side">
+          <div class="card">
+            <h3>📊 平台聲望</h3>
+            <div class="stat-row"><span>個人評分</span><span class="v" style="color:#FCD34D;">★ 5.0 (47)</span></div>
+            <div class="stat-row"><span>已完成案件</span><span class="v c">28</span></div>
+            <div class="stat-row"><span>累計合作金額</span><span class="v g">NT$ 1,840 萬</span></div>
+            <div class="stat-row"><span>平均回覆時間</span><span class="v">2.4 小時</span></div>
+            <div class="stat-row"><span>準時交付率</span><span class="v g">96%</span></div>
+            <div class="stat-row"><span>加入時間</span><span class="v">2022 / 06</span></div>
+          </div>
+          <div class="card">
+            <h3>🎯 我擅長的</h3>
+            <div class="skills">
+              <span class="skill" style="background:rgba(245,158,11,.15); border-color:rgba(245,158,11,.3); color:#FCD34D;">⭐ 產品策略 (28)</span>
+              <span class="skill" style="background:rgba(245,158,11,.15); border-color:rgba(245,158,11,.3); color:#FCD34D;">⭐ B2B SaaS (24)</span>
+              <span class="skill" style="background:rgba(245,158,11,.15); border-color:rgba(245,158,11,.3); color:#FCD34D;">⭐ PLG (18)</span>
+              <span class="skill">客戶成功 (12)</span>
+              <span class="skill">定價策略 (9)</span>
+              <span class="skill">用戶研究 (7)</span>
+            </div>
+          </div>
+          <div class="card">
+            <h3>🤝 同事推薦語 (12)</h3>
+            <div class="endorse-row">
+              <div class="av" style="background:linear-gradient(135deg,#6366F1,#A78BFA);">林</div>
+              <div class="info"><div class="n">林佳妮</div><div class="r">"資深 SaaS 增長專家"</div></div>
+            </div>
+            <div class="endorse-row">
+              <div class="av" style="background:linear-gradient(135deg,#22D3EE,#3B82F6);">王</div>
+              <div class="info"><div class="n">王志偉</div><div class="r">"產品策略洞察極深"</div></div>
+            </div>
+            <div class="endorse-row">
+              <div class="av" style="background:linear-gradient(135deg,#10B981,#059669);">陳</div>
+              <div class="info"><div class="n">陳冠宇</div><div class="r">"領導力強，能快速建立信任"</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>🌐 語言</h3>
+            <div class="lang-row"><span class="l">中文（繁體）</span><span class="lvl">★★★★★ 母語</span></div>
+            <div class="lang-row"><span class="l">English</span><span class="lvl">★★★★★ 流利</span></div>
+            <div class="lang-row"><span class="l">日本語</span><span class="lvl">★★★☆☆ 商業會話</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>window.__active='profile'; window.__searchPlaceholder='搜尋人...';</script>
+<script src="chrome.js"></script>
+</body>
+</html>

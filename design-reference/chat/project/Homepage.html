@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 首頁</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #060A14;
+    --bg-2: #0B1220;
+    --bg-3: #0F172A;
+    --bg-card: #111827;
+    --bg-card-2: #1E293B;
+    --line: rgba(148,163,184,0.1);
+    --line-strong: rgba(148,163,184,0.18);
+    --text: #E5E7EB;
+    --text-dim: #94A3B8;
+    --text-muted: #64748B;
+    --accent: #6366F1;
+    --accent-2: #8B5CF6;
+    --accent-blue: #2563EB;
+    --cyan: #22D3EE;
+    --green: #10B981;
+    --amber: #F59E0B;
+    --red: #EF4444;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #000; color: var(--text);
+    font-family: 'Inter', 'Noto Sans TC', -apple-system, sans-serif;
+    font-feature-settings: "cv11","ss01"; -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums; }
+  button { cursor: pointer; border: none; background: none; color: inherit; font: inherit; }
+  input { font: inherit; color: inherit; outline: none; border: none; background: none; }
+  a { color: inherit; text-decoration: none; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.2); border-radius: 999px; }
+
+  .page {
+    width: 1440px; min-height: 1024px;
+    background: var(--bg);
+    display: grid;
+    grid-template-columns: 240px 1fr;
+  }
+
+  /* ========= SIDEBAR ========= */
+  .sb {
+    background: var(--bg-2);
+    border-right: 1px solid var(--line);
+    padding: 18px 12px;
+    display: flex; flex-direction: column;
+    gap: 4px;
+    position: sticky; top: 0; height: 100vh;
+  }
+  .sb-brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 10px 16px 10px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 10px;
+  }
+  .sb-brand .mark {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+  }
+  .sb-brand .name { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .sb-brand .sub { font-size: 10.5px; color: var(--text-dim); }
+
+  .company-switcher {
+    margin: 0 0 14px 0;
+    padding: 10px 12px;
+    background: linear-gradient(180deg, rgba(99,102,241,0.08), rgba(139,92,246,0.04));
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .company-switcher .logo {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: linear-gradient(135deg, #F59E0B, #EF4444);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; color: #fff;
+  }
+  .company-switcher .info { flex: 1; min-width: 0; }
+  .company-switcher .info .n { font-size: 12.5px; font-weight: 600; }
+  .company-switcher .info .t { font-size: 10.5px; color: var(--text-dim); }
+  .company-switcher .chev { color: var(--text-dim); }
+
+  .nav-section { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 12px 6px 12px; font-weight: 600; }
+  .nav-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 8px 12px; border-radius: 8px;
+    color: var(--text-dim); font-size: 13px; font-weight: 500;
+    width: 100%; text-align: left;
+    transition: background 150ms, color 150ms;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+  .nav-item.active { background: linear-gradient(90deg, rgba(99,102,241,0.18), rgba(99,102,241,0.04)); color: #fff; position: relative; }
+  .nav-item.active::before { content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--accent); }
+  .nav-item.active .ico { color: var(--accent); }
+  .nav-item .ico { color: var(--text-muted); display: flex; }
+  .nav-item .badge { margin-left: auto; font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--red); color: #fff; font-weight: 600; min-width: 16px; text-align: center; }
+  .nav-item .count { margin-left: auto; font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+  .sb-footer { margin-top: auto; padding: 10px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+  .sb-footer .av { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #2563EB, #6366F1); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+
+  /* ========= MAIN ========= */
+  .main { display: flex; flex-direction: column; min-width: 0; }
+
+  /* Top bar */
+  .topbar {
+    height: 60px;
+    background: rgba(11,18,32,0.85); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 28px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .search {
+    flex: 1; max-width: 540px;
+    display: flex; align-items: center; gap: 10px;
+    height: 38px; padding: 0 14px;
+    background: var(--bg-3);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    color: var(--text-dim); font-size: 13px;
+  }
+  .search .kbd { margin-left: auto; font-size: 10.5px; padding: 1px 6px; border-radius: 4px; background: rgba(148,163,184,0.1); color: var(--text-muted); font-family: monospace; }
+  .top-actions { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+  .icon-btn { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--text-dim); position: relative; transition: background 150ms; }
+  .icon-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+  .icon-btn .dot { position: absolute; top: 8px; right: 9px; width: 7px; height: 7px; background: var(--red); border-radius: 999px; box-shadow: 0 0 0 2px var(--bg-2); }
+  .icon-btn .num { position: absolute; top: 4px; right: 3px; font-size: 9.5px; font-weight: 700; color: #fff; background: var(--red); padding: 1px 4px; border-radius: 999px; min-width: 16px; text-align: center; box-shadow: 0 0 0 2px var(--bg-2); }
+  .me-pill { display: flex; align-items: center; gap: 8px; padding: 4px 8px 4px 4px; border-radius: 999px; background: var(--bg-3); border: 1px solid var(--line-strong); }
+  .me-pill .av { width: 28px; height: 28px; border-radius: 999px; background: linear-gradient(135deg, #2563EB, #6366F1); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+  .me-pill .nm { font-size: 12.5px; font-weight: 500; }
+  .me-pill .role { font-size: 10.5px; color: var(--text-dim); }
+
+  /* Layout */
+  .body {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    padding: 24px 28px 40px 28px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .col { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+
+  /* Welcome header */
+  .welcome {
+    background: linear-gradient(135deg, rgba(37,99,235,0.18) 0%, rgba(99,102,241,0.12) 50%, rgba(139,92,246,0.18) 100%);
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 16px;
+    padding: 22px 26px;
+    position: relative; overflow: hidden;
+  }
+  .welcome::before {
+    content: ""; position: absolute; right: -40px; top: -40px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(139,92,246,0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .welcome .greeting { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px 0; }
+  .welcome .greeting .name { background: linear-gradient(135deg, #A78BFA, #67E8F9); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .welcome .greeting .num { color: var(--cyan); font-weight: 800; -webkit-text-fill-color: var(--cyan); }
+  .welcome .desc { font-size: 13.5px; color: var(--text-dim); margin: 0; }
+  .welcome .pills { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .quick-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: rgba(15,23,42,0.6); border: 1px solid var(--line-strong); font-size: 12px; backdrop-filter: blur(8px); }
+  .quick-pill .num { font-weight: 700; color: var(--cyan); }
+
+  /* Hero carousel */
+  .hero-section { display: flex; flex-direction: column; gap: 12px; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; }
+  .section-title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .section-title .em { background: linear-gradient(135deg, #FB923C, #F472B6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .section-link { font-size: 12px; color: var(--text-dim); display: inline-flex; align-items: center; gap: 4px; }
+
+  .carousel { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; }
+  .hero-card {
+    border-radius: 14px;
+    padding: 18px;
+    border: 1px solid var(--line-strong);
+    position: relative; overflow: hidden;
+    min-height: 160px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .hero-card.big {
+    background:
+      radial-gradient(400px 200px at 100% 0%, rgba(34,211,238,0.2), transparent),
+      linear-gradient(135deg, #0F172A, #1E293B);
+  }
+  .hero-card.med {
+    background:
+      radial-gradient(300px 200px at 100% 100%, rgba(139,92,246,0.18), transparent),
+      linear-gradient(135deg, #0F172A, #1E293B);
+  }
+  .hero-card.sm {
+    background:
+      radial-gradient(300px 200px at 0% 0%, rgba(245,158,11,0.15), transparent),
+      linear-gradient(135deg, #0F172A, #1E293B);
+  }
+  .hot-tag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #FCA5A5; font-size: 10.5px; font-weight: 600; width: fit-content; }
+  .hero-card .t { font-size: 16px; font-weight: 600; line-height: 1.4; margin: 10px 0 8px 0; }
+  .hero-card .meta { display: flex; gap: 12px; font-size: 11px; color: var(--text-dim); flex-wrap: wrap; }
+  .hero-card .meta b { color: var(--text); font-weight: 600; }
+
+  /* Project cards */
+  .proj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .proj {
+    background: var(--bg-card);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: border-color 150ms, transform 150ms;
+  }
+  .proj:hover { border-color: rgba(99,102,241,0.4); transform: translateY(-1px); }
+  .proj-head { display: flex; align-items: center; gap: 10px; }
+  .proj-logo { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
+  .proj-co { font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+  .proj-co .v { color: var(--cyan); display: flex; }
+  .proj-loc { font-size: 11px; color: var(--text-dim); }
+  .proj-cat { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 500; margin-left: auto; }
+  .cat-dev { background: rgba(99,102,241,0.15); color: #A78BFA; border: 1px solid rgba(99,102,241,0.3); }
+  .cat-design { background: rgba(34,211,238,0.15); color: #67E8F9; border: 1px solid rgba(34,211,238,0.3); }
+  .cat-mfg { background: rgba(245,158,11,0.15); color: #FCD34D; border: 1px solid rgba(245,158,11,0.3); }
+  .cat-mkt { background: rgba(236,72,153,0.15); color: #F9A8D4; border: 1px solid rgba(236,72,153,0.3); }
+
+  .proj-title { font-size: 14px; font-weight: 600; line-height: 1.4; }
+  .proj-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .proj-stats { display: flex; gap: 12px; padding: 10px 0 0 0; border-top: 1px dashed var(--line); }
+  .proj-stats .s { display: flex; flex-direction: column; gap: 1px; }
+  .proj-stats .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .proj-stats .v { font-size: 13px; font-weight: 600; }
+  .proj-stats .v.budget { color: var(--green); }
+  .proj-stats .v.due { color: var(--amber); }
+
+  .proj-foot { display: flex; align-items: center; gap: 8px; padding-top: 8px; }
+  .bidders { display: flex; }
+  .bidders .av { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--bg-card); margin-left: -6px; font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .bidders .av:first-child { margin-left: 0; }
+  .bid-count { font-size: 11px; color: var(--text-dim); margin-left: 2px; }
+  .bid-btn {
+    margin-left: auto;
+    padding: 7px 14px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-2));
+    color: #fff; font-size: 12px; font-weight: 600;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.25);
+  }
+
+  /* Feed (LinkedIn style) */
+  .feed-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .feed-head { display: flex; gap: 10px; align-items: flex-start; }
+  .feed-logo { width: 40px; height: 40px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 14px; flex-shrink: 0; }
+  .feed-meta .co { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+  .feed-meta .ind { font-size: 11.5px; color: var(--text-dim); }
+  .feed-meta .time { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-top: 1px; }
+  .follow-btn { margin-left: auto; padding: 5px 12px; border-radius: 7px; border: 1px solid var(--accent); color: #C7D2FE; font-size: 12px; font-weight: 500; }
+  .feed-body { font-size: 13.5px; line-height: 1.6; color: var(--text); margin: 12px 0; }
+  .feed-body .mention { color: #A78BFA; font-weight: 500; }
+  .feed-body .tag { color: var(--cyan); }
+  .feed-attach {
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; display: flex; gap: 12px; align-items: center;
+    background: rgba(15,23,42,0.5);
+    margin-bottom: 12px;
+  }
+  .feed-attach .ico-box { width: 44px; height: 44px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: flex; align-items: center; justify-content: center; }
+  .feed-attach .t { font-size: 13px; font-weight: 600; }
+  .feed-attach .d { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+  .feed-attach .cta { margin-left: auto; padding: 6px 12px; border-radius: 7px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); font-size: 12px; color: #C7D2FE; }
+  .feed-stats { display: flex; gap: 14px; font-size: 11.5px; color: var(--text-dim); padding: 8px 0; border-top: 1px solid var(--line); }
+  .feed-actions { display: flex; gap: 4px; padding-top: 6px; border-top: 1px solid var(--line); }
+  .feed-action { flex: 1; padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; color: var(--text-dim); transition: background 150ms; }
+  .feed-action:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+
+  /* Composer */
+  .composer { background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: 12px; padding: 14px; display: flex; gap: 10px; align-items: center; }
+  .composer .av { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, #2563EB, #6366F1); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; }
+  .composer .input { flex: 1; padding: 9px 14px; background: var(--bg-3); border: 1px solid var(--line); border-radius: 999px; font-size: 13px; color: var(--text-dim); }
+  .composer .btns { display: flex; gap: 4px; }
+  .comp-btn { padding: 7px 10px; border-radius: 7px; font-size: 12px; color: var(--text-dim); display: inline-flex; align-items: center; gap: 5px; }
+  .comp-btn:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+  .comp-btn.primary { background: var(--accent); color: #fff; padding: 7px 14px; }
+
+  /* Right sidebar */
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .panel h3 { font-size: 13px; font-weight: 600; margin: 0 0 14px 0; display: flex; align-items: center; justify-content: space-between; }
+  .panel h3 .more { font-size: 11px; color: var(--text-dim); font-weight: 400; }
+
+  .sug-co { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .sug-co:last-child { border-bottom: none; padding-bottom: 0; }
+  .sug-co:first-of-type { padding-top: 0; }
+  .sug-logo { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
+  .sug-info { flex: 1; min-width: 0; }
+  .sug-name { font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sug-meta { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+  .sug-mut { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+  .connect-btn {
+    padding: 5px 11px; border-radius: 7px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: #C7D2FE;
+    font-size: 11.5px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .connect-btn:hover { background: rgba(99,102,241,0.1); }
+
+  /* Stats panel */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-cell { background: rgba(15,23,42,0.6); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .stat-cell .lbl { font-size: 10.5px; color: var(--text-dim); }
+  .stat-cell .v { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 4px 0 2px 0; }
+  .stat-cell .v.cyan { background: linear-gradient(135deg, #67E8F9, #2563EB); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat-cell .v.purple { background: linear-gradient(135deg, #A78BFA, #EC4899); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat-cell .v.green { color: var(--green); }
+  .stat-cell .v.amber { color: var(--amber); }
+  .stat-cell .delta { font-size: 10.5px; color: var(--green); display: inline-flex; align-items: center; gap: 3px; }
+  .stat-cell .delta.down { color: var(--red); }
+
+  .progress-row { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); margin-top: 10px; }
+  .progress-row .l { display: flex; justify-content: space-between; font-size: 11.5px; }
+  .progress-row .l .lbl { color: var(--text-dim); }
+  .progress-row .l .v { font-weight: 600; }
+  .bar { height: 6px; border-radius: 999px; background: rgba(148,163,184,0.1); overflow: hidden; }
+  .bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--cyan)); }
+
+  /* Trending */
+  .trending-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .trending-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .trending-row:first-of-type { padding-top: 0; }
+  .trending-row .rk { font-size: 11px; color: var(--text-muted); width: 16px; }
+  .trending-row .info { flex: 1; min-width: 0; }
+  .trending-row .tag { font-size: 12.5px; font-weight: 600; color: var(--cyan); }
+  .trending-row .ct { font-size: 10.5px; color: var(--text-dim); }
+  .trending-row .delta { font-size: 10.5px; color: var(--green); }
+
+  /* SVG ico shorthand */
+  .i-svg { display: inline-block; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<!-- ========= SIDEBAR ========= -->
+<aside class="sb">
+  <div class="sb-brand">
+    <div class="mark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <circle cx="9" cy="10" r="2.4" fill="#fff"/>
+        <circle cx="15" cy="10" r="2.4" fill="#fff"/>
+        <circle cx="9" cy="10" r="1" fill="#0B1220"/>
+        <circle cx="15" cy="10" r="1" fill="#0B1220"/>
+        <path d="M11 14.5 L12 16 L13 14.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </div>
+    <div>
+      <div class="name">ChatOwl</div>
+      <div class="sub">B2B 接案媒合</div>
+    </div>
+  </div>
+
+  <div class="company-switcher">
+    <div class="logo">奇</div>
+    <div class="info">
+      <div class="n">奇點科技</div>
+      <div class="t">企業帳號 · 已認證</div>
+    </div>
+    <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m8 9 4-4 4 4M8 15l4 4 4-4"/></svg>
+  </div>
+
+  <div class="nav-section">主選單</div>
+  <button class="nav-item active">
+    <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m3 12 9-9 9 9"/><path d="M5 10v10h14V10"/></svg></span>
+    首頁
+  </button>
+  <button class="nav-item">
+    <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg></span>
+    我的公司
+  </button>
+  <button class="nav-item">
+    <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+    探索企業
+  </button>
+  <button class="nav-item">
+    <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4h8v2M3 12h18"/></svg></span>
+    專案接案
+    <span class="badge">12</span>
+  </button>
+  <button class="nav-item">
+    <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 9h18l-2 11H5L3 9z"/><path d="M8 9V5a4 4 0 0 1 8 0v4"/></svg></span>
+    招標中
+    <span class="count">86</span>
+  </button>
+  <button class="nav-item">
+    <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+    訊息
+    <span class="badge">5</span>
+  </button>
+  <button class="nav-item">
+    <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="9" cy="8" r="4"/><path d="M17 11a3 3 0 1 0 0-6"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M21 20c0-2.5-1.5-4.5-3.5-5.3"/></svg></span>
+    網路人脈
+    <span class="count">248</span>
+  </button>
+  <button class="nav-item">
+    <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+    通知
+    <span class="badge">3</span>
+  </button>
+
+  <div class="nav-section">收藏</div>
+  <button class="nav-item">
+    <span class="ico" style="color: var(--amber)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.1 6.3 7 1-5 4.9 1.2 6.9L12 17.8l-6.3 3.3L6.9 14.2l-5-4.9 7-1Z"/></svg></span>
+    重要專案
+  </button>
+  <button class="nav-item">
+    <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg></span>
+    AI 應用產業
+  </button>
+
+  <div class="sb-footer">
+    <div class="av">A</div>
+    <div style="flex: 1; min-width: 0;">
+      <div style="font-size: 12px; font-weight: 600;">Alex Chen</div>
+      <div style="font-size: 10.5px; color: var(--green); display: flex; align-items: center; gap: 4px;">
+        <span style="width: 6px; height: 6px; border-radius: 999px; background: var(--green)"></span>
+        產品總監 · 線上
+      </div>
+    </div>
+    <button class="icon-btn" style="width: 28px; height: 28px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- ========= MAIN ========= -->
+<main class="main">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      搜尋專案、公司、關鍵字...
+      <span class="kbd">⌘K</span>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" title="加密訊息">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="num">5</span>
+      </button>
+      <button class="icon-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="num">3</span>
+      </button>
+      <button class="icon-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+      <div style="width: 1px; height: 24px; background: var(--line); margin: 0 6px;"></div>
+      <button class="me-pill">
+        <span class="av">A</span>
+        <div style="text-align: left;">
+          <div class="nm">Alex Chen</div>
+          <div class="role">奇點科技 · 產品總監</div>
+        </div>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="color: var(--text-dim); margin: 0 4px 0 2px;"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Body grid -->
+  <div class="body">
+
+    <!-- LEFT COLUMN -->
+    <div class="col">
+
+      <!-- Welcome -->
+      <div class="welcome">
+        <h1 class="greeting">早安，<span class="name">Alex</span>！今天有 <span class="num">3</span> 個新專案媒合機會</h1>
+        <p class="desc">你的公司資料完整度 <b style="color: var(--text);">92%</b> · 過去 7 天有 <b style="color: var(--cyan);">14 家企業</b>瀏覽過你的檔案</p>
+        <div class="pills">
+          <span class="quick-pill">📥 收件匣 <span class="num">12</span></span>
+          <span class="quick-pill">⏳ 待回應邀請 <span class="num">5</span></span>
+          <span class="quick-pill">🤝 進行中合作 <span class="num">8</span></span>
+          <span class="quick-pill">💎 我的標案 <span class="num">3</span></span>
+        </div>
+      </div>
+
+      <!-- Composer -->
+      <div class="composer">
+        <span class="av">A</span>
+        <div class="input">分享公司動態，或發布合作機會...</div>
+        <div class="btns">
+          <button class="comp-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+            圖片
+          </button>
+          <button class="comp-btn primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            發布專案
+          </button>
+        </div>
+      </div>
+
+      <!-- Hero / This Week's Hot -->
+      <div class="hero-section">
+        <div class="section-head">
+          <div class="section-title">🔥 <span class="em">本週熱門接案</span></div>
+          <a class="section-link">查看全部 →</a>
+        </div>
+        <div class="carousel">
+          <div class="hero-card big">
+            <div>
+              <span class="hot-tag">● 限時 · 4 天截標</span>
+              <div class="t">智慧工廠 IoT 平台 — 全棧開發團隊招募</div>
+              <div style="font-size: 12px; color: var(--text-dim); line-height: 1.5;">某半導體龍頭企業徵求具備 MES/SCADA 整合經驗的接案團隊...</div>
+            </div>
+            <div class="meta">
+              <span>💰 預算 <b>NT$ 2,800,000</b></span>
+              <span>📅 週期 <b>6 個月</b></span>
+              <span>🏢 已 <b>23 家</b>企業關注</span>
+            </div>
+          </div>
+          <div class="hero-card med">
+            <div>
+              <span class="hot-tag" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4); color: #FCD34D;">⚡ 加急</span>
+              <div class="t">品牌官網改版 + CMS 整合</div>
+            </div>
+            <div class="meta">
+              <span>💰 <b>NT$ 480K</b></span>
+              <span>📅 <b>2 個月</b></span>
+            </div>
+          </div>
+          <div class="hero-card sm">
+            <div>
+              <span class="hot-tag" style="background: rgba(34,211,238,0.15); border-color: rgba(34,211,238,0.4); color: #67E8F9;">🆕 新發布</span>
+              <div class="t">電商 App UI/UX 重新設計</div>
+            </div>
+            <div class="meta">
+              <span>💰 <b>NT$ 320K</b></span>
+              <span>📅 <b>3 個月</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended projects -->
+      <div>
+        <div class="section-head" style="margin-bottom: 12px;">
+          <div class="section-title">推薦專案 · <span style="color: var(--text-dim); font-weight: 400; font-size: 13px;">為 奇點科技 量身挑選</span></div>
+          <a class="section-link">篩選 ⚙</a>
+        </div>
+        <div class="proj-grid">
+
+          <div class="proj">
+            <div class="proj-head">
+              <div class="proj-logo" style="background: linear-gradient(135deg,#2563EB,#6366F1);">台</div>
+              <div style="min-width: 0;">
+                <div class="proj-co">台積電子 <span class="v"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+                <div class="proj-loc">📍 新竹科學園區</div>
+              </div>
+              <span class="proj-cat cat-dev">後端開發</span>
+            </div>
+            <div class="proj-title">EDA 工具 API Gateway 微服務化重構</div>
+            <div class="proj-desc">需有 Go / Kubernetes / gRPC 經驗團隊，協助將既有 monolith 拆分為微服務架構...</div>
+            <div class="proj-stats">
+              <div class="s"><span class="lbl">預算</span><span class="v budget">NT$ 1.2M</span></div>
+              <div class="s"><span class="lbl">截標</span><span class="v due">5/12</span></div>
+              <div class="s"><span class="lbl">類型</span><span class="v">技術接案</span></div>
+            </div>
+            <div class="proj-foot">
+              <div class="bidders">
+                <div class="av" style="background: linear-gradient(135deg,#F59E0B,#EF4444)">鴻</div>
+                <div class="av" style="background: linear-gradient(135deg,#10B981,#059669)">新</div>
+                <div class="av" style="background: linear-gradient(135deg,#8B5CF6,#EC4899)">奇</div>
+              </div>
+              <span class="bid-count">+8 家投標中</span>
+              <button class="bid-btn">立即應標</button>
+            </div>
+          </div>
+
+          <div class="proj">
+            <div class="proj-head">
+              <div class="proj-logo" style="background: linear-gradient(135deg,#EC4899,#8B5CF6);">誠</div>
+              <div style="min-width: 0;">
+                <div class="proj-co">誠品文創 <span class="v"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+                <div class="proj-loc">📍 台北信義區</div>
+              </div>
+              <span class="proj-cat cat-design">品牌設計</span>
+            </div>
+            <div class="proj-title">2026 年度品牌識別系統升級</div>
+            <div class="proj-desc">徵求具有零售業 VI 經驗的設計團隊，需提案 logo、色彩、字體、應用範本...</div>
+            <div class="proj-stats">
+              <div class="s"><span class="lbl">預算</span><span class="v budget">NT$ 680K</span></div>
+              <div class="s"><span class="lbl">截標</span><span class="v due">5/03</span></div>
+              <div class="s"><span class="lbl">類型</span><span class="v">創意接案</span></div>
+            </div>
+            <div class="proj-foot">
+              <div class="bidders">
+                <div class="av" style="background: linear-gradient(135deg,#0EA5E9,#22D3EE)">藍</div>
+                <div class="av" style="background: linear-gradient(135deg,#F97316,#F59E0B)">橙</div>
+              </div>
+              <span class="bid-count">+5 家投標中</span>
+              <button class="bid-btn">立即應標</button>
+            </div>
+          </div>
+
+          <div class="proj">
+            <div class="proj-head">
+              <div class="proj-logo" style="background: linear-gradient(135deg,#10B981,#059669);">中</div>
+              <div style="min-width: 0;">
+                <div class="proj-co">中華電信 <span class="v"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+                <div class="proj-loc">📍 全台</div>
+              </div>
+              <span class="proj-cat cat-mfg">硬體製造</span>
+            </div>
+            <div class="proj-title">5G 中繼設備 PCB 板代工 (5,000 套)</div>
+            <div class="proj-desc">需具備 PCBA 量產經驗、ISO9001 認證，可接受 30 天交期...</div>
+            <div class="proj-stats">
+              <div class="s"><span class="lbl">預算</span><span class="v budget">NT$ 4.5M</span></div>
+              <div class="s"><span class="lbl">截標</span><span class="v due">5/20</span></div>
+              <div class="s"><span class="lbl">類型</span><span class="v">招標案</span></div>
+            </div>
+            <div class="proj-foot">
+              <div class="bidders">
+                <div class="av" style="background: linear-gradient(135deg,#6366F1,#8B5CF6)">紫</div>
+                <div class="av" style="background: linear-gradient(135deg,#F59E0B,#EF4444)">紅</div>
+                <div class="av" style="background: linear-gradient(135deg,#0EA5E9,#22D3EE)">青</div>
+              </div>
+              <span class="bid-count">+12 家投標中</span>
+              <button class="bid-btn">立即應標</button>
+            </div>
+          </div>
+
+          <div class="proj">
+            <div class="proj-head">
+              <div class="proj-logo" style="background: linear-gradient(135deg,#F59E0B,#F97316);">統</div>
+              <div style="min-width: 0;">
+                <div class="proj-co">統一超商 <span class="v"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+                <div class="proj-loc">📍 台北 / 遠端</div>
+              </div>
+              <span class="proj-cat cat-mkt">數位行銷</span>
+            </div>
+            <div class="proj-title">夏季新品 Social Media Campaign</div>
+            <div class="proj-desc">需有 IG / TikTok 操盤經驗，含 KOL 合作 + 短影音製作 + 投放優化...</div>
+            <div class="proj-stats">
+              <div class="s"><span class="lbl">預算</span><span class="v budget">NT$ 920K</span></div>
+              <div class="s"><span class="lbl">截標</span><span class="v due">4/30</span></div>
+              <div class="s"><span class="lbl">類型</span><span class="v">行銷接案</span></div>
+            </div>
+            <div class="proj-foot">
+              <div class="bidders">
+                <div class="av" style="background: linear-gradient(135deg,#EC4899,#F472B6)">粉</div>
+                <div class="av" style="background: linear-gradient(135deg,#10B981,#34D399)">綠</div>
+              </div>
+              <span class="bid-count">+6 家投標中</span>
+              <button class="bid-btn">立即應標</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Feed -->
+      <div>
+        <div class="section-head" style="margin-bottom: 12px;">
+          <div class="section-title">企業動態</div>
+          <a class="section-link">最新 ▾</a>
+        </div>
+
+        <div class="feed-card">
+          <div class="feed-head">
+            <div class="feed-logo" style="background: linear-gradient(135deg,#2563EB,#6366F1);">台</div>
+            <div class="feed-meta">
+              <div class="co">台積電子 <span style="color: var(--cyan); display: inline-flex;"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+              <div class="ind">半導體 · 12,400 位追蹤者</div>
+              <div class="time">2 小時前 · 🌐 公開</div>
+            </div>
+            <button class="follow-btn">+ 追蹤</button>
+          </div>
+          <div class="feed-body">
+            我們正在尋找具備 <span class="mention">@AI 視覺檢測</span>實戰經驗的台灣團隊，協助開發新一代晶圓良率分析平台。歡迎有意願的公司主動聯繫合作 🤝<br/><br/>
+            <span class="tag">#AI #半導體 #接案媒合 #智慧製造</span>
+          </div>
+          <div class="feed-attach">
+            <div class="ico-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.75"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4h8v2"/></svg>
+            </div>
+            <div>
+              <div class="t">AI 視覺檢測平台開發 — RFP 文件</div>
+              <div class="d">12 頁 PDF · 預算 NT$ 3.2M · 截標 5/15</div>
+            </div>
+            <button class="cta">查看 RFP</button>
+          </div>
+          <div class="feed-stats">
+            <span>👍 248 個讚 · 32 家企業已轉發</span>
+            <span style="margin-left: auto;">18 則留言</span>
+          </div>
+          <div class="feed-actions">
+            <button class="feed-action">👍 讚</button>
+            <button class="feed-action">💬 留言</button>
+            <button class="feed-action">🔁 轉發</button>
+            <button class="feed-action">📩 私訊洽談</button>
+          </div>
+        </div>
+
+        <div class="feed-card" style="margin-top: 14px;">
+          <div class="feed-head">
+            <div class="feed-logo" style="background: linear-gradient(135deg,#EC4899,#8B5CF6);">誠</div>
+            <div class="feed-meta">
+              <div class="co">誠品文創 <span style="color: var(--cyan); display: inline-flex;"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+              <div class="ind">零售 / 文創 · 8,200 位追蹤者</div>
+              <div class="time">5 小時前</div>
+            </div>
+            <button class="follow-btn">+ 追蹤</button>
+          </div>
+          <div class="feed-body">
+            和 <span class="mention">@奇點科技</span> 合作的會員 App 改版專案順利上線 🎉 三個月時間，新版下載量提升 <b style="color: var(--green);">+340%</b>。感謝整個團隊的努力！
+          </div>
+          <div class="feed-stats">
+            <span>👍 412 個讚 · 6 位夥伴標註</span>
+            <span style="margin-left: auto;">42 則留言</span>
+          </div>
+          <div class="feed-actions">
+            <button class="feed-action">👍 讚</button>
+            <button class="feed-action">💬 留言</button>
+            <button class="feed-action">🔁 轉發</button>
+            <button class="feed-action">📩 私訊洽談</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col">
+
+      <!-- Stats -->
+      <div class="panel">
+        <h3>我的接案統計 <span class="more">本月</span></h3>
+        <div class="stat-grid">
+          <div class="stat-cell">
+            <div class="lbl">中標數</div>
+            <div class="v cyan">14</div>
+            <span class="delta">▲ 23% MoM</span>
+          </div>
+          <div class="stat-cell">
+            <div class="lbl">進行中專案</div>
+            <div class="v purple">8</div>
+            <span class="delta">▲ 2 vs 上月</span>
+          </div>
+          <div class="stat-cell">
+            <div class="lbl">合作企業數</div>
+            <div class="v green">42</div>
+            <span class="delta">▲ 6</span>
+          </div>
+          <div class="stat-cell">
+            <div class="lbl">營收 (NT$)</div>
+            <div class="v amber">3.2M</div>
+            <span class="delta">▲ 18%</span>
+          </div>
+        </div>
+        <div class="progress-row">
+          <div class="l"><span class="lbl">月度目標達成</span><span class="v">68%</span></div>
+          <div class="bar"><span style="width: 68%"></span></div>
+        </div>
+        <div class="progress-row" style="border-top: none; padding-top: 0;">
+          <div class="l"><span class="lbl">企業檔案完整度</span><span class="v">92%</span></div>
+          <div class="bar"><span style="width: 92%; background: linear-gradient(90deg, var(--green), var(--cyan));"></span></div>
+        </div>
+      </div>
+
+      <!-- Suggested companies -->
+      <div class="panel">
+        <h3>為你推薦的公司 <span class="more">查看全部</span></h3>
+
+        <div class="sug-co">
+          <div class="sug-logo" style="background: linear-gradient(135deg,#0EA5E9,#22D3EE);">沛</div>
+          <div class="sug-info">
+            <div class="sug-name">沛星互動 (Appier) <span style="color: var(--cyan); display: inline-flex;"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="sug-meta">AI / SaaS · 台北</div>
+            <div class="sug-mut">🤝 12 個共同合作夥伴</div>
+          </div>
+          <button class="connect-btn">＋ 連結</button>
+        </div>
+
+        <div class="sug-co">
+          <div class="sug-logo" style="background: linear-gradient(135deg,#F59E0B,#EF4444);">鴻</div>
+          <div class="sug-info">
+            <div class="sug-name">鴻海精密 <span style="color: var(--cyan); display: inline-flex;"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="sug-meta">電子製造 · 新北土城</div>
+            <div class="sug-mut">🔥 上週發布 8 個新專案</div>
+          </div>
+          <button class="connect-btn">＋ 連結</button>
+        </div>
+
+        <div class="sug-co">
+          <div class="sug-logo" style="background: linear-gradient(135deg,#10B981,#059669);">玉</div>
+          <div class="sug-info">
+            <div class="sug-name">玉山銀行 <span style="color: var(--cyan); display: inline-flex;"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/></svg></span></div>
+            <div class="sug-meta">金融 · 台北</div>
+            <div class="sug-mut">🤝 5 個共同合作夥伴</div>
+          </div>
+          <button class="connect-btn">＋ 連結</button>
+        </div>
+
+        <div class="sug-co">
+          <div class="sug-logo" style="background: linear-gradient(135deg,#8B5CF6,#EC4899);">巨</div>
+          <div class="sug-info">
+            <div class="sug-name">巨大機械</div>
+            <div class="sug-meta">機械製造 · 台中</div>
+            <div class="sug-mut">📍 同產業推薦</div>
+          </div>
+          <button class="connect-btn">＋ 連結</button>
+        </div>
+      </div>
+
+      <!-- Trending -->
+      <div class="panel">
+        <h3>🔥 熱門產業趨勢 <span class="more">本週</span></h3>
+        <div class="trending-row">
+          <span class="rk">01</span>
+          <div class="info">
+            <div class="tag">#AI生成式應用</div>
+            <div class="ct">2,840 個專案 · 248 家企業</div>
+          </div>
+          <span class="delta">▲ 124%</span>
+        </div>
+        <div class="trending-row">
+          <span class="rk">02</span>
+          <div class="info">
+            <div class="tag">#半導體封測</div>
+            <div class="ct">1,920 個專案 · 86 家企業</div>
+          </div>
+          <span class="delta">▲ 48%</span>
+        </div>
+        <div class="trending-row">
+          <span class="rk">03</span>
+          <div class="info">
+            <div class="tag">#永續ESG</div>
+            <div class="ct">1,560 個專案 · 312 家企業</div>
+          </div>
+          <span class="delta">▲ 36%</span>
+        </div>
+        <div class="trending-row">
+          <span class="rk">04</span>
+          <div class="info">
+            <div class="tag">#智慧製造</div>
+            <div class="ct">1,240 個專案 · 184 家企業</div>
+          </div>
+          <span class="delta">▲ 22%</span>
+        </div>
+        <div class="trending-row">
+          <span class="rk">05</span>
+          <div class="info">
+            <div class="tag">#跨境電商</div>
+            <div class="ct">980 個專案 · 156 家企業</div>
+          </div>
+          <span class="delta">▲ 18%</span>
+        </div>
+      </div>
+
+      <!-- Activity ping -->
+      <div class="panel" style="background: linear-gradient(135deg, rgba(34,211,238,0.1), rgba(99,102,241,0.05)); border-color: rgba(34,211,238,0.3);">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--cyan); margin-bottom: 10px;">
+          <span style="width: 6px; height: 6px; border-radius: 999px; background: var(--cyan); box-shadow: 0 0 8px var(--cyan);"></span>
+          即時活動
+        </div>
+        <div style="font-size: 13px; font-weight: 600; line-height: 1.45;">
+          <b style="color: #67E8F9;">台積電子</b> 剛瀏覽了你的公司檔案
+        </div>
+        <div style="font-size: 11.5px; color: var(--text-dim); margin-top: 4px;">12 分鐘前 · 主動聯繫機會</div>
+        <button style="margin-top: 12px; width: 100%; padding: 9px; border-radius: 8px; background: linear-gradient(135deg, var(--accent-blue), var(--accent-2)); color: #fff; font-weight: 600; font-size: 12.5px;">
+          發送合作邀請 →
+        </button>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+</div>
+</body>
+</html>

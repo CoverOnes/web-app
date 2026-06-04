@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 行事曆</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .body { padding:0; display:grid; grid-template-columns:280px 1fr 320px; height: calc(100vh - 56px); overflow:hidden; }
+
+  .left { background:var(--bg-2); border-right:1px solid var(--line); padding:18px; overflow-y:auto; }
+  .left .new-btn { width:100%; padding:10px; background:linear-gradient(135deg,#6366F1,#8B5CF6); color:#fff; border:none; border-radius:9px; font-weight:600; cursor:pointer; margin-bottom:18px; box-shadow:0 6px 18px rgba(99,102,241,.3); }
+  .mini-cal { background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:18px; }
+  .mini-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .mini-head .m { font-size:13px; font-weight:700; }
+  .mini-head .nav { display:flex; gap:4px; }
+  .mini-head .nav span { width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-muted); }
+  .mini-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; font-size:11px; }
+  .mini-grid .h { color:var(--text-muted); text-align:center; padding:5px 0; font-weight:600; }
+  .mini-grid .d { aspect-ratio:1; display:flex; align-items:center; justify-content:center; color:var(--text-dim); cursor:pointer; border-radius:50%; position:relative; }
+  .mini-grid .d:hover { background:var(--bg-3); }
+  .mini-grid .d.o { color:var(--text-muted); opacity:.4; }
+  .mini-grid .d.t { background:#6366F1; color:#fff; font-weight:700; }
+  .mini-grid .d.has::after { content:""; position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:3px; height:3px; border-radius:50%; background:#22D3EE; }
+
+  .left h3 { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin:0 0 10px; }
+  .cal-row { display:flex; align-items:center; gap:9px; padding:6px 0; font-size:12.5px; cursor:pointer; }
+  .cal-row .dot { width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+
+  .center { padding:0; overflow-y:auto; }
+  .ph { padding:18px 24px 14px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:5; }
+  .ph .left-side { display:flex; align-items:center; gap:14px; }
+  .ph h1 { font-size:22px; font-weight:800; letter-spacing:-.02em; margin:0; }
+  .ph .nav-btn { padding:6px 11px; background:var(--bg-3); border:1px solid var(--line-strong); border-radius:7px; color:var(--text); font-size:12px; cursor:pointer; }
+  .ph .today { background:rgba(99,102,241,.18); border-color:rgba(99,102,241,.4); color:#C7D2FE; }
+  .ph .view-tabs { display:flex; background:var(--bg-3); border:1px solid var(--line-strong); border-radius:8px; padding:2px; }
+  .ph .vt { padding:6px 14px; font-size:12px; color:var(--text-dim); cursor:pointer; border-radius:6px; }
+  .ph .vt.on { background:rgba(99,102,241,.2); color:#C7D2FE; font-weight:600; }
+
+  /* Week grid */
+  .grid-wrap { padding:0; }
+  .week-head { display:grid; grid-template-columns:60px repeat(7,1fr); border-bottom:1px solid var(--line); position:sticky; top:73px; background:var(--bg); z-index:4; }
+  .week-head .day-h { padding:11px 8px 10px; text-align:center; border-left:1px solid var(--line); }
+  .week-head .day-h .dn { font-size:11px; color:var(--text-muted); text-transform:uppercase; }
+  .week-head .day-h .dnum { font-size:20px; font-weight:700; margin-top:2px; }
+  .week-head .day-h.t .dnum { color:#fff; background:#6366F1; width:32px; height:32px; line-height:32px; border-radius:50%; margin:2px auto 0; }
+  .week-head .gap { border-left:0; }
+
+  .week-grid { display:grid; grid-template-columns:60px repeat(7,1fr); position:relative; }
+  .hour-col { display:flex; flex-direction:column; }
+  .hour-cell { height:54px; padding:3px 6px; font-size:10px; color:var(--text-muted); text-align:right; }
+  .day-col { border-left:1px solid var(--line); position:relative; display:flex; flex-direction:column; }
+  .hour-line { height:54px; border-top:1px solid var(--line); }
+  .hour-line:first-child { border-top:0; }
+
+  .ev { position:absolute; left:3px; right:3px; padding:5px 8px; border-radius:7px; font-size:11px; line-height:1.35; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,.18); border:1px solid transparent; overflow:hidden; }
+  .ev .t { font-weight:700; }
+  .ev .s { font-size:10px; opacity:.85; margin-top:1px; }
+  .ev.indigo { background:linear-gradient(180deg,#4F46E5,#3730A3); color:#fff; border-color:rgba(255,255,255,.15); }
+  .ev.cyan { background:linear-gradient(180deg,#0891B2,#0E7490); color:#fff; }
+  .ev.amber { background:linear-gradient(180deg,#D97706,#B45309); color:#fff; }
+  .ev.pink  { background:linear-gradient(180deg,#DB2777,#9D174D); color:#fff; }
+  .ev.green { background:linear-gradient(180deg,#059669,#047857); color:#fff; }
+  .ev.gray  { background:rgba(99,102,241,.18); color:#C7D2FE; border-color:rgba(99,102,241,.4); }
+
+  .now-line { position:absolute; left:60px; right:0; height:2px; background:#EF4444; z-index:3; pointer-events:none; }
+  .now-line::before { content:""; position:absolute; left:-6px; top:-5px; width:12px; height:12px; border-radius:50%; background:#EF4444; }
+
+  /* Right rail */
+  .right { background:var(--bg-2); border-left:1px solid var(--line); padding:18px; overflow-y:auto; }
+  .right h3 { font-size:13px; font-weight:700; margin:0 0 11px; }
+
+  .agenda { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:10px; padding:14px; margin-bottom:14px; }
+  .agenda-row { display:flex; gap:10px; padding:8px 0; border-top:1px solid var(--line); }
+  .agenda-row:first-of-type { border:none; padding-top:0; }
+  .agenda-row .bar { width:3px; border-radius:99px; flex-shrink:0; }
+  .agenda-row .info { flex:1; font-size:12px; }
+  .agenda-row .ti { font-weight:600; }
+  .agenda-row .me { color:var(--text-muted); font-size:10.5px; margin-top:2px; display:flex; gap:7px; }
+
+  .invite { background:linear-gradient(135deg, rgba(245,158,11,.1), rgba(236,72,153,.05)); border:1px solid rgba(245,158,11,.3); padding:14px; border-radius:10px; margin-bottom:11px; }
+  .invite .badge { display:inline-block; padding:2px 7px; background:rgba(245,158,11,.2); border-radius:4px; color:#FCD34D; font-size:10px; font-weight:700; margin-bottom:6px; }
+  .invite .ti { font-size:13px; font-weight:600; }
+  .invite .me { font-size:11px; color:var(--text-dim); margin-top:6px; }
+  .invite .actions { display:flex; gap:5px; margin-top:9px; }
+  .invite .actions .b { flex:1; padding:5px; border-radius:6px; font-size:11px; cursor:pointer; text-align:center; }
+  .invite .actions .ok { background:#22D3EE; color:#0F172A; font-weight:700; }
+  .invite .actions .no { background:var(--bg-3); border:1px solid var(--line); color:var(--text); }
+  .invite .actions .may { background:var(--bg-3); border:1px solid var(--line); color:var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+    <div class="body">
+
+      <!-- LEFT -->
+      <div class="left">
+        <button class="new-btn">＋ 建立會議</button>
+        <div class="mini-cal">
+          <div class="mini-head">
+            <div class="m">2025 年 5 月</div>
+            <div class="nav"><span>‹</span><span>›</span></div>
+          </div>
+          <div class="mini-grid">
+            <span class="h">日</span><span class="h">一</span><span class="h">二</span><span class="h">三</span><span class="h">四</span><span class="h">五</span><span class="h">六</span>
+            <span class="d o">27</span><span class="d o">28</span><span class="d o">29</span><span class="d o">30</span><span class="d">1</span><span class="d has">2</span><span class="d">3</span>
+            <span class="d">4</span><span class="d has">5</span><span class="d has">6</span><span class="d has">7</span><span class="d">8</span><span class="d has">9</span><span class="d">10</span>
+            <span class="d">11</span><span class="d has">12</span><span class="d has">13</span><span class="d has">14</span><span class="d has">15</span><span class="d has">16</span><span class="d">17</span>
+            <span class="d">18</span><span class="d has">19</span><span class="d has">20</span><span class="d has">21</span><span class="d t has">22</span><span class="d has">23</span><span class="d">24</span>
+            <span class="d">25</span><span class="d has">26</span><span class="d has">27</span><span class="d">28</span><span class="d">29</span><span class="d has">30</span><span class="d">31</span>
+          </div>
+        </div>
+
+        <h3>我的行事曆</h3>
+        <div class="cal-row"><div class="dot" style="background:#6366F1;"></div>個人</div>
+        <div class="cal-row"><div class="dot" style="background:#22D3EE;"></div>會議邀約</div>
+        <div class="cal-row"><div class="dot" style="background:#F59E0B;"></div>專案截止</div>
+        <div class="cal-row"><div class="dot" style="background:#EC4899;"></div>視訊洽談</div>
+        <div class="cal-row"><div class="dot" style="background:#10B981;"></div>合約里程碑</div>
+
+        <h3 style="margin-top:18px;">團隊行事曆</h3>
+        <div class="cal-row"><div class="dot" style="background:#A78BFA;"></div>產品團隊</div>
+        <div class="cal-row"><div class="dot" style="background:#67E8F9;"></div>業務團隊</div>
+        <div class="cal-row"><div class="dot" style="background:#FCA5A5;"></div>客戶活動</div>
+      </div>
+
+      <!-- CENTER -->
+      <div class="center">
+        <div class="ph">
+          <div class="left-side">
+            <h1>2025 年 5 月</h1>
+            <div style="display:flex; gap:6px;">
+              <button class="nav-btn">‹</button>
+              <button class="nav-btn today">今天</button>
+              <button class="nav-btn">›</button>
+            </div>
+          </div>
+          <div class="view-tabs">
+            <span class="vt">日</span><span class="vt on">週</span><span class="vt">月</span><span class="vt">議程</span>
+          </div>
+        </div>
+
+        <div class="grid-wrap">
+          <div class="week-head">
+            <div></div>
+            <div class="day-h"><div class="dn">週日</div><div class="dnum">18</div></div>
+            <div class="day-h"><div class="dn">週一</div><div class="dnum">19</div></div>
+            <div class="day-h"><div class="dn">週二</div><div class="dnum">20</div></div>
+            <div class="day-h"><div class="dn">週三</div><div class="dnum">21</div></div>
+            <div class="day-h t"><div class="dn">週四</div><div class="dnum">22</div></div>
+            <div class="day-h"><div class="dn">週五</div><div class="dnum">23</div></div>
+            <div class="day-h"><div class="dn">週六</div><div class="dnum">24</div></div>
+          </div>
+
+          <div class="week-grid">
+            <div class="hour-col">
+              <div class="hour-cell">8:00</div>
+              <div class="hour-cell">9:00</div>
+              <div class="hour-cell">10:00</div>
+              <div class="hour-cell">11:00</div>
+              <div class="hour-cell">12:00</div>
+              <div class="hour-cell">13:00</div>
+              <div class="hour-cell">14:00</div>
+              <div class="hour-cell">15:00</div>
+              <div class="hour-cell">16:00</div>
+              <div class="hour-cell">17:00</div>
+              <div class="hour-cell">18:00</div>
+            </div>
+
+            <!-- Sun -->
+            <div class="day-col">
+              <div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div>
+            </div>
+            <!-- Mon (19) -->
+            <div class="day-col">
+              <div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div>
+              <div class="ev indigo" style="top:54px; height:54px;"><div class="t">產品週會</div><div class="s">9:00 – 10:00 · 視訊</div></div>
+              <div class="ev cyan" style="top:162px; height:81px;"><div class="t">與雲飛科技初談</div><div class="s">11:00 – 12:30</div></div>
+              <div class="ev amber" style="top:324px; height:108px;"><div class="t">RFP 撰寫 · ERP 案</div><div class="s">14:00 – 16:00</div></div>
+            </div>
+            <!-- Tue (20) -->
+            <div class="day-col">
+              <div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div>
+              <div class="ev pink" style="top:108px; height:54px;"><div class="t">客戶 demo · 數聯</div><div class="s">10:00 – 11:00</div></div>
+              <div class="ev gray" style="top:216px; height:54px;"><div class="t">午餐 · Sarah</div><div class="s">12:00 – 13:00</div></div>
+              <div class="ev green" style="top:378px; height:108px;"><div class="t">合約簽署 · 鴻海</div><div class="s">15:00 – 17:00 · 內湖</div></div>
+            </div>
+            <!-- Wed (21) -->
+            <div class="day-col">
+              <div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div>
+              <div class="ev indigo" style="top:54px; height:54px;"><div class="t">每週 1:1</div><div class="s">9:00 – 10:00</div></div>
+              <div class="ev cyan" style="top:270px; height:108px;"><div class="t">提案簡報排練</div><div class="s">13:00 – 15:00</div></div>
+              <div class="ev amber" style="top:432px; height:54px;"><div class="t">截止 · 招標應標</div><div class="s">16:00</div></div>
+            </div>
+            <!-- Thu (22) TODAY -->
+            <div class="day-col" style="background:rgba(99,102,241,.04);">
+              <div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div>
+              <div class="ev pink" style="top:54px; height:81px;"><div class="t">與奇點科技 · 產品策略</div><div class="s">9:00 – 10:30 · Zoom</div></div>
+              <div class="ev cyan" style="top:189px; height:54px;"><div class="t">投標說明會</div><div class="s">11:30 – 12:30</div></div>
+              <div class="ev gray" style="top:270px; height:54px;"><div class="t">午餐</div><div class="s">13:00 – 14:00</div></div>
+              <div class="ev indigo" style="top:324px; height:108px;"><div class="t">PRD 評審 · v2</div><div class="s">14:00 – 16:00</div></div>
+              <div class="ev green" style="top:486px; height:54px;"><div class="t">合作意向書討論</div><div class="s">17:00 – 18:00</div></div>
+            </div>
+            <!-- Fri (23) -->
+            <div class="day-col">
+              <div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div>
+              <div class="ev indigo" style="top:108px; height:54px;"><div class="t">All-hands</div><div class="s">10:00 – 11:00</div></div>
+              <div class="ev pink" style="top:270px; height:108px;"><div class="t">招標決選會議</div><div class="s">13:00 – 15:00</div></div>
+            </div>
+            <!-- Sat -->
+            <div class="day-col">
+              <div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div><div class="hour-line"></div>
+            </div>
+
+            <div class="now-line" style="top:325px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="right">
+        <h3>📅 今天的議程</h3>
+        <div class="agenda">
+          <div class="agenda-row">
+            <div class="bar" style="background:#EC4899;"></div>
+            <div class="info"><div class="ti">與奇點科技 · 產品策略</div><div class="me"><span>🕒 9:00 – 10:30</span><span>🎥 Zoom</span></div></div>
+          </div>
+          <div class="agenda-row">
+            <div class="bar" style="background:#22D3EE;"></div>
+            <div class="info"><div class="ti">投標說明會</div><div class="me"><span>🕒 11:30 – 12:30</span><span>📍 信義會議室 A</span></div></div>
+          </div>
+          <div class="agenda-row">
+            <div class="bar" style="background:#6366F1;"></div>
+            <div class="info"><div class="ti">PRD 評審 · v2</div><div class="me"><span>🕒 14:00 – 16:00</span><span>👥 8 人</span></div></div>
+          </div>
+          <div class="agenda-row">
+            <div class="bar" style="background:#10B981;"></div>
+            <div class="info"><div class="ti">合作意向書討論</div><div class="me"><span>🕒 17:00 – 18:00</span><span>🎥 Google Meet</span></div></div>
+          </div>
+        </div>
+
+        <h3>📨 待回覆邀約 (3)</h3>
+        <div class="invite">
+          <span class="badge">⏰ 24h 內回覆</span>
+          <div class="ti">合約簽署 · 數聯智能</div>
+          <div class="me">📅 5/27 (週二) 14:00<br>👤 王志偉 邀請</div>
+          <div class="actions"><span class="b ok">接受</span><span class="b may">待定</span><span class="b no">拒絕</span></div>
+        </div>
+        <div class="invite">
+          <span class="badge">⏰ 3 天內</span>
+          <div class="ti">產品 demo · 鴻海</div>
+          <div class="me">📅 5/29 (週四) 10:00<br>👤 林經理 邀請</div>
+          <div class="actions"><span class="b ok">接受</span><span class="b may">待定</span><span class="b no">拒絕</span></div>
+        </div>
+        <div class="invite">
+          <span class="badge">下週</span>
+          <div class="ti">投資人會議</div>
+          <div class="me">📅 6/03 (週二) 16:00<br>👤 Sarah Chen 邀請</div>
+          <div class="actions"><span class="b ok">接受</span><span class="b may">待定</span><span class="b no">拒絕</span></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+<script>window.__active='calendar'; window.__searchPlaceholder='搜尋會議...';</script>
+<script src="chrome.js"></script>
+</body>
+</html>

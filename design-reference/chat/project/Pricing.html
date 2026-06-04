@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 訂閱方案</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .body { padding:32px 28px 40px; }
+  .ph { text-align:center; margin-bottom:28px; }
+  .ph h1 { font-size:34px; font-weight:800; letter-spacing:-.025em; margin:0 0 9px; background:linear-gradient(90deg,#A78BFA,#22D3EE); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .ph p { font-size:14.5px; color:var(--text-dim); margin:0; }
+
+  .toggle { display:inline-flex; background:var(--bg-3); border:1px solid var(--line-strong); border-radius:10px; padding:3px; margin:18px auto 0; gap:2px; }
+  .toggle .t { padding:7px 16px; font-size:12.5px; cursor:pointer; border-radius:7px; color:var(--text-dim); }
+  .toggle .t.on { background:rgba(99,102,241,.25); color:#fff; font-weight:600; }
+  .toggle .save { color:#6EE7B7; font-size:10px; margin-left:4px; }
+
+  .grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; max-width:1280px; margin:28px auto 0; }
+  .plan { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:14px; padding:26px 22px; position:relative; display:flex; flex-direction:column; }
+  .plan.hot { background:linear-gradient(180deg, rgba(99,102,241,.12), rgba(99,102,241,.03)); border-color:rgba(99,102,241,.5); box-shadow:0 12px 32px rgba(99,102,241,.18); }
+  .plan.hot::before { content:"⭐ 最受歡迎"; position:absolute; top:-12px; left:50%; transform:translateX(-50%); padding:4px 14px; background:linear-gradient(90deg,#6366F1,#22D3EE); border-radius:99px; font-size:11px; font-weight:700; color:#fff; box-shadow:0 6px 18px rgba(99,102,241,.4); }
+  .plan .nm { font-size:14px; color:var(--text-dim); font-weight:600; }
+  .plan .desc { font-size:12px; color:var(--text-muted); margin-top:4px; min-height:30px; line-height:1.5; }
+  .plan .price { display:flex; align-items:flex-end; gap:5px; margin-top:18px; }
+  .plan .price .num { font-size:38px; font-weight:800; letter-spacing:-.025em; }
+  .plan .price .cur { font-size:13px; color:var(--text-dim); margin-bottom:6px; }
+  .plan .price .per { font-size:12px; color:var(--text-muted); margin-bottom:6px; margin-left:3px; }
+  .plan .save-row { font-size:11.5px; color:#6EE7B7; margin-top:4px; min-height:18px; }
+  .plan .cta { width:100%; padding:11px; border-radius:9px; border:none; font-size:13px; font-weight:600; cursor:pointer; margin-top:18px; }
+  .plan.free .cta { background:var(--bg-3); border:1px solid var(--line-strong); color:var(--text); }
+  .plan.pro .cta  { background:linear-gradient(90deg,#6366F1,#8B5CF6); color:#fff; }
+  .plan.team .cta { background:linear-gradient(90deg,#22D3EE,#3B82F6); color:#fff; }
+  .plan.ent .cta  { background:rgba(245,158,11,.18); border:1px solid rgba(245,158,11,.4); color:#FCD34D; }
+  .plan ul { list-style:none; padding:0; margin:18px 0 0; font-size:12.5px; }
+  .plan li { padding:7px 0 7px 22px; position:relative; color:var(--text-dim); line-height:1.5; }
+  .plan li::before { content:"✓"; position:absolute; left:0; color:#6EE7B7; font-weight:800; }
+  .plan li.no { color:var(--text-muted); opacity:.5; }
+  .plan li.no::before { content:"–"; color:var(--text-muted); }
+  .plan li b { color:var(--text); }
+
+  /* Comparison table */
+  .cmp { max-width:1100px; margin:48px auto 0; background:var(--bg-card); border:1px solid var(--line-strong); border-radius:14px; overflow:hidden; }
+  .cmp h2 { padding:22px 26px 14px; font-size:18px; font-weight:700; margin:0; }
+  .cmp table { width:100%; border-collapse:collapse; }
+  .cmp th, .cmp td { padding:11px 16px; text-align:left; font-size:12.5px; border-top:1px solid var(--line); }
+  .cmp th { background:var(--bg-3); color:var(--text-dim); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; position:sticky; top:0; }
+  .cmp td.cat { font-weight:700; background:var(--bg-3); color:#A78BFA; padding:8px 16px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+  .cmp td.l { font-weight:500; color:var(--text); }
+  .cmp td.v { text-align:center; color:var(--text-dim); }
+  .cmp td.v.ok { color:#6EE7B7; font-weight:700; }
+  .cmp td.v.no { color:var(--text-muted); }
+  .cmp td.v.hot { color:#A78BFA; font-weight:700; background:rgba(99,102,241,.06); }
+
+  .faq-wrap { max-width:840px; margin:48px auto 0; }
+  .faq-wrap h2 { font-size:22px; font-weight:800; text-align:center; margin:0 0 22px; }
+  .faq { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:11px; padding:6px 22px; margin-bottom:10px; }
+  .faq-q { padding:14px 0; font-size:14px; font-weight:600; cursor:pointer; display:flex; justify-content:space-between; }
+  .faq-q .ar { color:var(--text-muted); }
+  .faq.open .faq-q .ar { transform:rotate(180deg); }
+  .faq-a { padding:0 0 14px; font-size:12.5px; color:var(--text-dim); line-height:1.7; display:none; }
+  .faq.open .faq-a { display:block; }
+
+  .cta-bot { max-width:880px; margin:48px auto 0; padding:32px 36px; background:linear-gradient(135deg,#312E81,#6366F1); border-radius:16px; text-align:center; position:relative; overflow:hidden; }
+  .cta-bot::after { content:""; position:absolute; inset:0; background-image:radial-gradient(circle at 20% 50%, rgba(34,211,238,.25),transparent 50%); }
+  .cta-bot h2 { font-size:24px; font-weight:800; margin:0 0 9px; position:relative; z-index:1; }
+  .cta-bot p { font-size:13.5px; color:rgba(255,255,255,.8); margin:0 0 18px; position:relative; z-index:1; }
+  .cta-bot button { padding:11px 28px; background:#fff; color:#1E1B4B; border:none; border-radius:9px; font-size:13.5px; font-weight:700; cursor:pointer; position:relative; z-index:1; box-shadow:0 6px 18px rgba(0,0,0,.3); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+    <div class="body">
+      <div class="ph">
+        <h1>選擇適合您企業規模的方案</h1>
+        <p>從免費試用到大型企業，ChatOwl 都能成為您的成長夥伴。所有方案皆含 14 天免費試用。</p>
+        <div class="toggle">
+          <div class="t">月付</div>
+          <div class="t on">年付 <span class="save">省 20%</span></div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="plan free">
+          <div class="nm">Starter</div>
+          <div class="desc">適合剛起步的小型公司，先試水溫。</div>
+          <div class="price"><span class="num">免費</span></div>
+          <div class="save-row">不需信用卡</div>
+          <button class="cta">免費註冊</button>
+          <ul>
+            <li>1 位團隊成員</li>
+            <li>每月 5 個專案發布</li>
+            <li>每日 20 次企業搜尋</li>
+            <li>基本訊息功能</li>
+            <li>免費報告 / 月（5 篇）</li>
+            <li class="no">PRO 報告下載</li>
+            <li class="no">進階搜尋 / 篩選</li>
+            <li class="no">數據儀表板</li>
+            <li class="no">API 串接</li>
+          </ul>
+        </div>
+
+        <div class="plan pro hot">
+          <div class="nm" style="color:#A78BFA;">Pro</div>
+          <div class="desc">適合中小企業，提升商務開發效率。</div>
+          <div class="price"><span class="cur">NT$</span><span class="num">1,580</span><span class="per">/ 月</span></div>
+          <div class="save-row">年付一次省 NT$ 3,792</div>
+          <button class="cta">開始 14 天試用</button>
+          <ul>
+            <li><b>5 位</b>團隊成員</li>
+            <li>每月 <b>50 個</b>專案發布</li>
+            <li><b>無限</b>企業搜尋</li>
+            <li>無限訊息 + 視訊洽談</li>
+            <li><b>所有 PRO 報告無限下載</b></li>
+            <li><b>提早 7 天</b>看到新報告</li>
+            <li>進階搜尋與篩選</li>
+            <li>基礎數據儀表板</li>
+            <li class="no">API 串接</li>
+          </ul>
+        </div>
+
+        <div class="plan team">
+          <div class="nm" style="color:#67E8F9;">Team</div>
+          <div class="desc">適合成長中企業，多部門協作。</div>
+          <div class="price"><span class="cur">NT$</span><span class="num">4,800</span><span class="per">/ 月</span></div>
+          <div class="save-row">年付一次省 NT$ 11,520</div>
+          <button class="cta">聯絡業務</button>
+          <ul>
+            <li><b>20 位</b>團隊成員</li>
+            <li><b>無限</b>專案發布</li>
+            <li>進階企業情報（FactSet）</li>
+            <li>專屬 CSM 客戶經理</li>
+            <li>所有 PRO 報告 + 客製簡報</li>
+            <li>進階數據儀表板 + 趨勢預測</li>
+            <li>產業洞察 AI 分析</li>
+            <li>API 串接（10K req/月）</li>
+            <li>履約保證金折讓 50%</li>
+          </ul>
+        </div>
+
+        <div class="plan ent">
+          <div class="nm" style="color:#FCD34D;">Enterprise</div>
+          <div class="desc">適合大型企業集團，量身訂做。</div>
+          <div class="price"><span class="num" style="font-size:32px;">客製報價</span></div>
+          <div class="save-row">起價 NT$ 25,000 / 月</div>
+          <button class="cta">預約專人介紹</button>
+          <ul>
+            <li><b>無限</b>團隊成員（含 SSO）</li>
+            <li>無限專案 / 招標 / 簽約</li>
+            <li>專屬資料庫帳號</li>
+            <li>產業客製研究服務</li>
+            <li>SLA 99.99% 保證</li>
+            <li>白標 / 子帳號管理</li>
+            <li>無限 API + Webhook</li>
+            <li>履約保證金免收</li>
+            <li>法務 / 合規顧問</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cmp">
+        <h2>📋 完整方案比較</h2>
+        <table>
+          <thead><tr><th style="width:38%;">功能</th><th>Starter</th><th style="background:rgba(99,102,241,.1);">Pro</th><th>Team</th><th>Enterprise</th></tr></thead>
+          <tbody>
+            <tr><td class="cat" colspan="5">🚀 核心功能</td></tr>
+            <tr><td class="l">團隊成員數</td><td class="v">1</td><td class="v hot">5</td><td class="v">20</td><td class="v">無限</td></tr>
+            <tr><td class="l">每月發布專案數</td><td class="v">5</td><td class="v hot">50</td><td class="v">無限</td><td class="v">無限</td></tr>
+            <tr><td class="l">企業搜尋次數</td><td class="v">20 / 日</td><td class="v hot">無限</td><td class="v">無限</td><td class="v">無限</td></tr>
+            <tr><td class="l">私訊洽談</td><td class="v ok">✓</td><td class="v hot">✓</td><td class="v ok">✓</td><td class="v ok">✓</td></tr>
+            <tr><td class="l">視訊會議</td><td class="v no">–</td><td class="v hot">✓</td><td class="v ok">✓</td><td class="v ok">✓</td></tr>
+
+            <tr><td class="cat" colspan="5">📊 報告與洞察</td></tr>
+            <tr><td class="l">免費報告</td><td class="v">5 / 月</td><td class="v hot">無限</td><td class="v">無限</td><td class="v">無限</td></tr>
+            <tr><td class="l">PRO 專屬報告</td><td class="v no">–</td><td class="v hot">✓</td><td class="v ok">✓</td><td class="v ok">✓</td></tr>
+            <tr><td class="l">提早看到新報告</td><td class="v no">–</td><td class="v hot">7 天</td><td class="v">14 天</td><td class="v">獨家內容</td></tr>
+            <tr><td class="l">客製產業簡報</td><td class="v no">–</td><td class="v no">–</td><td class="v ok">2 份 / 季</td><td class="v ok">無限</td></tr>
+
+            <tr><td class="cat" colspan="5">🔧 技術整合</td></tr>
+            <tr><td class="l">API 串接</td><td class="v no">–</td><td class="v no">–</td><td class="v">10K / 月</td><td class="v ok">無限</td></tr>
+            <tr><td class="l">Webhook</td><td class="v no">–</td><td class="v no">–</td><td class="v ok">✓</td><td class="v ok">✓</td></tr>
+            <tr><td class="l">SSO（SAML / OIDC）</td><td class="v no">–</td><td class="v no">–</td><td class="v no">–</td><td class="v ok">✓</td></tr>
+            <tr><td class="l">SLA</td><td class="v no">–</td><td class="v">99%</td><td class="v">99.9%</td><td class="v ok">99.99%</td></tr>
+
+            <tr><td class="cat" colspan="5">🛟 客戶支援</td></tr>
+            <tr><td class="l">Email 客服</td><td class="v ok">✓</td><td class="v hot">✓</td><td class="v ok">✓</td><td class="v ok">✓</td></tr>
+            <tr><td class="l">即時客服</td><td class="v no">–</td><td class="v hot">工作時間</td><td class="v">7 / 12</td><td class="v ok">7 / 24</td></tr>
+            <tr><td class="l">專屬客戶經理</td><td class="v no">–</td><td class="v no">–</td><td class="v ok">✓</td><td class="v ok">✓</td></tr>
+            <tr><td class="l">法務 / 合規顧問</td><td class="v no">–</td><td class="v no">–</td><td class="v no">–</td><td class="v ok">✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="faq-wrap">
+        <h2>常見問題</h2>
+        <div class="faq open">
+          <div class="faq-q">可以隨時取消嗎？<span class="ar">▾</span></div>
+          <div class="faq-a">可以。隨時可降級或取消，已付費期間使用至到期日為止，不另收違約金。年付方案可申請按比例退款（手續費 5%）。</div>
+        </div>
+        <div class="faq">
+          <div class="faq-q">月付與年付怎麼選？<span class="ar">▾</span></div>
+          <div class="faq-a">年付一次付清省 20%，且鎖定當前價格 12 個月。建議確定長期使用後再選年付。</div>
+        </div>
+        <div class="faq">
+          <div class="faq-q">Pro 升級到 Team 流程？<span class="ar">▾</span></div>
+          <div class="faq-a">隨時可在「設定 → 訂閱」一鍵升級。升級當日按比例補差額，立即解鎖新功能。降級於下個計費週期生效。</div>
+        </div>
+        <div class="faq">
+          <div class="faq-q">企業方案有試用嗎？<span class="ar">▾</span></div>
+          <div class="faq-a">Enterprise 方案提供 30 天 PoC（概念驗證）期，含專屬 CSM 協助導入評估。請聯絡業務團隊。</div>
+        </div>
+        <div class="faq">
+          <div class="faq-q">付款方式有哪些？<span class="ar">▾</span></div>
+          <div class="faq-a">支援信用卡（Visa / Master / JCB / AmEx）、ATM 轉帳、企業支票、PayPal。Enterprise 方案另支援匯款與電子發票。</div>
+        </div>
+      </div>
+
+      <div class="cta-bot">
+        <h2>還在猶豫？預約 30 分鐘專人介紹</h2>
+        <p>由我們的解決方案顧問為您量身評估最適合的方案，含專屬 demo 與優惠估價。</p>
+        <button>📅 預約諮詢時間</button>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+  document.querySelectorAll('.faq-q').forEach(q=>q.addEventListener('click',()=>q.parentElement.classList.toggle('open')));
+  document.querySelectorAll('.toggle .t').forEach(t=>t.addEventListener('click',function(){this.parentElement.querySelectorAll('.t').forEach(x=>x.classList.remove('on'));this.classList.add('on');}));
+  window.__active='pricing'; window.__searchPlaceholder='搜尋...';
+</script>
+<script src="chrome.js"></script>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 收藏夾</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .body { padding:22px 28px 40px; display:grid; grid-template-columns: 240px minmax(0,1fr); gap:24px; }
+
+  /* Sidebar collections */
+  .col-side { display:flex; flex-direction:column; gap:6px; align-self:flex-start; position:sticky; top:80px; }
+  .col-h { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-muted); padding:10px 4px 6px; }
+  .col-item { display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:9px; font-size:13px; cursor:pointer; color:var(--text-dim); }
+  .col-item:hover { background:rgba(255,255,255,.04); color:var(--text); }
+  .col-item.active { background:linear-gradient(90deg, rgba(99,102,241,.18), transparent); color:#fff; }
+  .col-item .ic { width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .col-item .ic.s { background:rgba(245,158,11,.2); color:#FCD34D; }
+  .col-item .ic.p { background:rgba(99,102,241,.2); color:#A78BFA; }
+  .col-item .ic.c { background:rgba(34,211,238,.2); color:#67E8F9; }
+  .col-item .ic.h { background:rgba(236,72,153,.2); color:#F9A8D4; }
+  .col-item .ic.r { background:rgba(16,185,129,.2); color:#6EE7B7; }
+  .col-item .ic.t { background:rgba(148,163,184,.18); }
+  .col-item .ct { margin-left:auto; font-size:11px; color:var(--text-muted); }
+  .col-item.active .ct { color:#C7D2FE; }
+  .col-item.add { color:#A78BFA; }
+
+  /* Header pills */
+  .head-pills { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .pill { padding:6px 13px; border-radius:999px; font-size:12px; background:var(--bg-3); border:1px solid var(--line); color:var(--text-dim); cursor:pointer; }
+  .pill.on { background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; border-color:transparent; font-weight:600; }
+  .pill .ct { font-size:10.5px; opacity:.85; margin-left:4px; }
+
+  /* View toolbar */
+  .view-bar { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .view-bar .total { font-size:13px; color:var(--text-dim); }
+  .view-bar .total b { color:var(--text); font-weight:700; }
+  .view-bar .right { margin-left:auto; display:flex; gap:6px; align-items:center; font-size:12px; color:var(--text-dim); }
+  .view-bar .vbtn { padding:6px 10px; border-radius:7px; background:var(--bg-3); border:1px solid var(--line); cursor:pointer; }
+  .view-bar .vbtn.on { background:rgba(99,102,241,.18); border-color:rgba(99,102,241,.4); color:#C7D2FE; }
+
+  /* Grid */
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+
+  .save-card { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:13px; overflow:hidden; transition:all 200ms; cursor:pointer; position:relative; }
+  .save-card:hover { transform:translateY(-3px); border-color:rgba(99,102,241,.4); box-shadow:0 18px 40px rgba(0,0,0,.4); }
+  .save-card .star { position:absolute; top:11px; right:11px; width:30px; height:30px; border-radius:8px; background:rgba(0,0,0,.5); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; color:#FCD34D; font-size:14px; z-index:2; }
+
+  .sc-cover { height:90px; background:linear-gradient(135deg, rgba(99,102,241,.25), rgba(139,92,246,.15)); position:relative; display:flex; align-items:center; justify-content:center; }
+  .sc-cover.proj { background:linear-gradient(135deg, rgba(34,211,238,.2), rgba(99,102,241,.15)); }
+  .sc-cover.peo { background:linear-gradient(135deg, rgba(236,72,153,.2), rgba(245,158,11,.1)); }
+  .sc-cover.rep { background:linear-gradient(135deg, rgba(16,185,129,.18), rgba(34,211,238,.12)); }
+  .sc-cover .lg { position:absolute; bottom:-18px; left:18px; width:50px; height:50px; font-size:18px; border:3px solid var(--bg-card); }
+  .sc-cover .tag-tl { position:absolute; top:11px; left:11px; padding:3px 9px; background:rgba(0,0,0,.55); backdrop-filter:blur(8px); border-radius:5px; font-size:10.5px; font-weight:600; color:#fff; }
+  .sc-cover .pat { position:absolute; inset:0; opacity:.18; background-image: radial-gradient(circle at 30% 20%, #fff 1px, transparent 1px), radial-gradient(circle at 70% 60%, #fff 1px, transparent 1px); background-size: 24px 24px; }
+
+  .sc-body { padding:24px 16px 14px; }
+  .sc-body .ti { font-size:14px; font-weight:700; line-height:1.4; }
+  .sc-body .meta { font-size:11.5px; color:var(--text-dim); margin-top:5px; display:flex; gap:8px; flex-wrap:wrap; }
+  .sc-body .desc { font-size:12px; color:var(--text-dim); margin-top:8px; line-height:1.55; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .sc-body .badges { display:flex; gap:5px; margin-top:10px; flex-wrap:wrap; }
+
+  .sc-foot { padding:10px 16px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-muted); background:rgba(15,23,42,.4); }
+  .sc-foot .col { color:#A78BFA; font-weight:600; }
+  .sc-foot .ago { font-feature-settings:"tnum"; }
+
+  .sc-body .price { font-size:15px; font-weight:800; color:var(--green); font-feature-settings:"tnum"; margin-top:6px; }
+  .sc-body .price .lo { font-size:11px; color:var(--text-dim); font-weight:400; }
+
+  /* Person card */
+  .save-card.person .sc-body { padding:16px; }
+  .save-card.person .av { width:46px; height:46px; border-radius:999px; background:linear-gradient(135deg,#EC4899,#F59E0B); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#fff; }
+
+  /* Empty hint at top */
+  .smart-banner { background:linear-gradient(135deg, rgba(99,102,241,.1), rgba(34,211,238,.05)); border:1px solid rgba(99,102,241,.3); border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .smart-banner .ic { width:36px; height:36px; border-radius:9px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:flex; align-items:center; justify-content:center; }
+  .smart-banner .t { font-size:13px; font-weight:600; }
+  .smart-banner .d { font-size:11.5px; color:var(--text-dim); margin-top:2px; }
+  .smart-banner .btn { margin-left:auto; padding:7px 13px; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+    <div class="page-head">
+      <div class="head-row">
+        <div>
+          <div class="crumb">收藏夾 / 我關注的</div>
+          <h1>收藏夾</h1>
+          <p class="desc">統一管理你關注的公司、想投標的專案、想合作的人脈與重要文件</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-secondary">📥 匯出 CSV</button>
+          <button class="btn btn-primary">＋ 新增收藏夾</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="body">
+      <aside class="col-side">
+        <div class="col-h">收藏夾</div>
+        <div class="col-item active">
+          <div class="ic s">★</div>
+          <div>全部收藏</div>
+          <div class="ct">18</div>
+        </div>
+
+        <div class="col-h">分類</div>
+        <div class="col-item">
+          <div class="ic c">🏢</div>
+          <div>公司</div>
+          <div class="ct">7</div>
+        </div>
+        <div class="col-item">
+          <div class="ic p">📋</div>
+          <div>專案 / RFP</div>
+          <div class="ct">6</div>
+        </div>
+        <div class="col-item">
+          <div class="ic h">👤</div>
+          <div>人脈</div>
+          <div class="ct">3</div>
+        </div>
+        <div class="col-item">
+          <div class="ic r">📄</div>
+          <div>文件 / 案例</div>
+          <div class="ct">2</div>
+        </div>
+
+        <div class="col-h">自訂列表</div>
+        <div class="col-item">
+          <div class="ic" style="background:rgba(245,158,11,.2); color:#FCD34D;">⚡</div>
+          <div>Q2 重點 BD</div>
+          <div class="ct">5</div>
+        </div>
+        <div class="col-item">
+          <div class="ic" style="background:rgba(34,211,238,.2); color:#67E8F9;">🎯</div>
+          <div>潛在子廠商</div>
+          <div class="ct">9</div>
+        </div>
+        <div class="col-item">
+          <div class="ic" style="background:rgba(236,72,153,.2); color:#F9A8D4;">🔥</div>
+          <div>競爭對手追蹤</div>
+          <div class="ct">4</div>
+        </div>
+        <div class="col-item add">
+          <div class="ic" style="background:rgba(99,102,241,.15); color:#A78BFA;">＋</div>
+          <div>新增列表</div>
+        </div>
+
+        <div class="col-h">歷史紀錄</div>
+        <div class="col-item">
+          <div class="ic t">👁</div>
+          <div>最近瀏覽</div>
+          <div class="ct">42</div>
+        </div>
+      </aside>
+
+      <div>
+
+        <div class="smart-banner">
+          <div class="ic">🤖</div>
+          <div>
+            <div class="t">您收藏的「沛星互動」剛剛發佈了一個新的 RFP</div>
+            <div class="d">符合您的能力標籤 — 預算 NT$ 1.2M – 1.8M · 截止 4/30 · 已 7 家投標</div>
+          </div>
+          <button class="btn btn-primary">查看 →</button>
+        </div>
+
+        <div class="head-pills">
+          <span class="pill on">全部 <span class="ct">18</span></span>
+          <span class="pill">公司 <span class="ct">7</span></span>
+          <span class="pill">專案 <span class="ct">6</span></span>
+          <span class="pill">人脈 <span class="ct">3</span></span>
+          <span class="pill">文件 <span class="ct">2</span></span>
+          <span class="pill">📅 截止日近 <span class="ct">3</span></span>
+          <span class="pill">🔥 有更新 <span class="ct">5</span></span>
+        </div>
+
+        <div class="view-bar">
+          <span class="total"><b>18</b> 個收藏 · 篩選：全部</span>
+          <div class="right">
+            <span>排序：</span>
+            <span style="color:var(--text); font-weight:600;">最近收藏 ▾</span>
+            <span style="margin-left:14px;"></span>
+            <span class="vbtn on">⊞ 卡片</span>
+            <span class="vbtn">☰ 列表</span>
+          </div>
+        </div>
+
+        <div class="grid">
+
+          <!-- Project card -->
+          <div class="save-card">
+            <div class="star">★</div>
+            <div class="sc-cover proj">
+              <div class="pat"></div>
+              <div class="tag-tl">📋 RFP · 4/30 截止</div>
+              <div class="lg lg-blue">玉</div>
+            </div>
+            <div class="sc-body">
+              <div class="ti">玉山銀行 — 私行客戶 LLM 客服機器人 PoC</div>
+              <div class="meta"><span>📅 投標倒數 14 天</span><span>·</span><span>已 7 家投標</span></div>
+              <div class="price">NT$ 1.2M <span class="lo">– 1.8M · 10 週</span></div>
+              <div class="badges">
+                <span class="bdg bdg-dev">LLM</span>
+                <span class="bdg bdg-cyan">RAG</span>
+                <span class="bdg bdg-green">金融</span>
+              </div>
+            </div>
+            <div class="sc-foot">
+              <span class="col">📋 Q2 重點 BD</span>
+              <span class="ago">🕘 2 天前</span>
+            </div>
+          </div>
+
+          <!-- Company card -->
+          <div class="save-card">
+            <div class="star">★</div>
+            <div class="sc-cover">
+              <div class="pat"></div>
+              <div class="tag-tl">🏢 公司</div>
+              <div class="lg lg-purple">沛</div>
+            </div>
+            <div class="sc-body">
+              <div class="ti">沛星互動 Appier</div>
+              <div class="meta"><span>軟體 · 200+ 人</span><span>·</span><span>★ 4.8</span><span>·</span><span style="color:var(--green);">✓ 認證</span></div>
+              <div class="desc">亞洲領先的 AI 行銷與客服解決方案，具備金融業合規經驗。已服務玉山、國泰、富邦。</div>
+              <div class="badges">
+                <span class="bdg bdg-grey">3 度連結</span>
+                <span class="bdg bdg-green">最近發 RFP</span>
+              </div>
+            </div>
+            <div class="sc-foot">
+              <span class="col">🎯 潛在子廠商</span>
+              <span class="ago">🕘 5 天前</span>
+            </div>
+          </div>
+
+          <!-- Person card -->
+          <div class="save-card person">
+            <div class="star">★</div>
+            <div class="sc-cover peo">
+              <div class="pat"></div>
+              <div class="tag-tl">👤 人脈</div>
+            </div>
+            <div class="sc-body">
+              <div style="display:flex; gap:12px; align-items:center; margin-top:-8px; margin-bottom:8px;">
+                <div class="av">王</div>
+                <div>
+                  <div class="ti" style="font-size:14px;">王允中</div>
+                  <div class="meta" style="margin-top:2px;">LLM 工程經理 @ 沛星</div>
+                </div>
+              </div>
+              <div class="desc">前玉山銀行 AI 研究員 · 11 年經驗 · 預計 5/15 升任技術副總</div>
+              <div class="badges">
+                <span class="bdg bdg-cyan">1 度連結</span>
+                <span class="bdg bdg-amber">本月升遷</span>
+              </div>
+            </div>
+            <div class="sc-foot">
+              <span class="col">⚡ Q2 重點 BD</span>
+              <span class="ago">🕘 1 週前</span>
+            </div>
+          </div>
+
+          <!-- Project -->
+          <div class="save-card">
+            <div class="star">★</div>
+            <div class="sc-cover proj">
+              <div class="pat"></div>
+              <div class="tag-tl">📋 RFP · 5/12 截止</div>
+              <div class="lg lg-amber">屈</div>
+            </div>
+            <div class="sc-body">
+              <div class="ti">屈臣氏 — 全通路客服自動化升級案</div>
+              <div class="meta"><span>📅 26 天</span><span>·</span><span>12 家投標</span></div>
+              <div class="price">NT$ 800K <span class="lo">– 1.5M · 16 週</span></div>
+              <div class="badges">
+                <span class="bdg bdg-mkt">零售</span>
+                <span class="bdg bdg-cyan">Line API</span>
+              </div>
+            </div>
+            <div class="sc-foot">
+              <span class="col">未分類</span>
+              <span class="ago">🕘 3 天前</span>
+            </div>
+          </div>
+
+          <!-- Company -->
+          <div class="save-card">
+            <div class="star">★</div>
+            <div class="sc-cover">
+              <div class="pat"></div>
+              <div class="tag-tl">🏢 公司 · 競品</div>
+              <div class="lg lg-rose">超</div>
+            </div>
+            <div class="sc-body">
+              <div class="ti">超對稱科技</div>
+              <div class="meta"><span>軟體 · 65 人</span><span>·</span><span>★ 4.6</span></div>
+              <div class="desc">企業級客服 AI 平台，自研 RAG 架構與多語系支援。為玉山銀行、國泰世華建置內部知識庫。</div>
+              <div class="badges">
+                <span class="bdg bdg-red">競品</span>
+                <span class="bdg bdg-grey">未連結</span>
+              </div>
+            </div>
+            <div class="sc-foot">
+              <span class="col">🔥 競爭對手追蹤</span>
+              <span class="ago">🕘 2 週前</span>
+            </div>
+          </div>
+
+          <!-- Document -->
+          <div class="save-card">
+            <div class="star">★</div>
+            <div class="sc-cover rep">
+              <div class="pat"></div>
+              <div class="tag-tl">📄 PRO 報告</div>
+              <div class="lg" style="background:rgba(245,158,11,.4); color:#FCD34D; border:3px solid var(--bg-card);">📑</div>
+            </div>
+            <div class="sc-body">
+              <div class="ti">2025 年台灣金融業 LLM 客服白皮書</div>
+              <div class="meta"><span>iThome × ChatOwl</span><span>·</span><span>32 頁 PDF</span></div>
+              <div class="desc">收錄 14 家銀行的 LLM 客服佈局策略、合規挑戰、ROI 計算模型。</div>
+              <div class="badges">
+                <span class="bdg bdg-amber">PRO 獨家</span>
+                <span class="bdg bdg-grey">已下載</span>
+              </div>
+            </div>
+            <div class="sc-foot">
+              <span class="col">未分類</span>
+              <span class="ago">🕘 3 週前</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="text-align:center; margin-top:24px; padding:14px; border:1px dashed var(--line); border-radius:11px; color:var(--text-muted); font-size:12.5px;">
+          顯示 6 / 18 · <a style="color:#A78BFA;">載入更多 →</a>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+<script src="chrome.js"></script>
+<script>renderChrome({ active:'saved', searchPlaceholder:'搜尋收藏...' });</script>
+</body></html>

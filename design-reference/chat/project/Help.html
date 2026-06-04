@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 幫助中心</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .body { padding:24px 28px; }
+  .hero { background:linear-gradient(135deg,#312E81,#6366F1); border-radius:16px; padding:36px 40px; margin-bottom:18px; text-align:center; position:relative; overflow:hidden; }
+  .hero::after { content:""; position:absolute; inset:0; background-image:radial-gradient(circle at 30% 30%, rgba(255,255,255,.15),transparent 50%); pointer-events:none; }
+  .hero h1 { font-size:30px; font-weight:800; letter-spacing:-.02em; margin:0 0 8px; }
+  .hero p { font-size:14px; color:rgba(255,255,255,.8); margin:0 0 18px; }
+  .hero .search { max-width:560px; margin:0 auto; position:relative; }
+  .hero .search input { width:100%; padding:13px 18px 13px 44px; background:rgba(0,0,0,.3); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.25); border-radius:10px; color:#fff; font-size:14px; }
+  .hero .search .ic { position:absolute; left:15px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,.6); }
+  .hero .quick { display:flex; gap:8px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
+  .hero .quick .q { padding:5px 12px; background:rgba(255,255,255,.12); backdrop-filter:blur(8px); border-radius:999px; font-size:12px; color:#fff; cursor:pointer; }
+
+  .cat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+  .cat { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:13px; padding:20px; cursor:pointer; transition:all 200ms; }
+  .cat:hover { border-color:rgba(99,102,241,.4); transform:translateY(-2px); }
+  .cat .ic { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:11px; }
+  .cat .ic.a { background:rgba(99,102,241,.18); color:#A78BFA; }
+  .cat .ic.b { background:rgba(34,211,238,.18); color:#67E8F9; }
+  .cat .ic.c { background:rgba(245,158,11,.18); color:#FCD34D; }
+  .cat .ic.d { background:rgba(16,185,129,.18); color:#6EE7B7; }
+  .cat .ic.e { background:rgba(236,72,153,.18); color:#F9A8D4; }
+  .cat .ic.f { background:rgba(239,68,68,.18); color:#FCA5A5; }
+  .cat .ic.g { background:rgba(168,85,247,.18); color:#D8B4FE; }
+  .cat .ic.h { background:rgba(59,130,246,.18); color:#93C5FD; }
+  .cat .ti { font-size:14px; font-weight:700; }
+  .cat .ct { font-size:11.5px; color:var(--text-dim); margin-top:3px; }
+
+  .layout { display:grid; grid-template-columns:1fr 320px; gap:18px; }
+
+  .faq-card { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:13px; padding:6px 22px; margin-bottom:14px; }
+  .faq-card h2 { font-size:15px; font-weight:700; margin:18px 0 12px; padding-bottom:11px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:8px; }
+  .qa { padding:14px 0; border-bottom:1px solid var(--line); }
+  .qa:last-child { border:none; }
+  .qa .q { font-size:13.5px; font-weight:600; display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
+  .qa .q .ar { font-size:14px; color:var(--text-muted); transition:transform .2s; }
+  .qa.open .q .ar { transform:rotate(180deg); }
+  .qa .a { font-size:12.5px; color:var(--text-dim); line-height:1.7; padding-top:8px; display:none; }
+  .qa.open .a { display:block; }
+  .qa .a b { color:var(--text); }
+  .qa .helpful { display:flex; gap:9px; margin-top:11px; padding-top:9px; border-top:1px dashed var(--line); font-size:11px; color:var(--text-muted); align-items:center; }
+  .qa .helpful .b { padding:3px 9px; background:var(--bg-3); border:1px solid var(--line); border-radius:5px; cursor:pointer; }
+
+  .side { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:13px; padding:18px; margin-bottom:14px; }
+  .side h3 { font-size:13px; font-weight:700; margin:0 0 12px; }
+
+  .pop-row { display:flex; gap:9px; padding:8px 0; border-top:1px solid var(--line); font-size:12.5px; cursor:pointer; }
+  .pop-row:first-of-type { border:none; padding-top:0; }
+  .pop-row .num { color:var(--text-muted); font-weight:700; width:18px; }
+
+  .ct-card { background:linear-gradient(135deg,rgba(34,211,238,.1),rgba(99,102,241,.05)); border:1px solid rgba(34,211,238,.3); }
+  .ct-row { display:flex; gap:11px; align-items:center; padding:10px 0; border-top:1px solid rgba(34,211,238,.18); cursor:pointer; }
+  .ct-row:first-of-type { border:none; padding-top:0; }
+  .ct-row .ic { width:32px; height:32px; border-radius:8px; background:rgba(34,211,238,.2); display:flex; align-items:center; justify-content:center; }
+  .ct-row .l { font-size:11px; color:var(--text-dim); }
+  .ct-row .v { font-size:12.5px; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+    <div class="body">
+      <div class="hero">
+        <h1>ChatOwl 幫助中心</h1>
+        <p>快速找到答案，或聯絡我們的客服團隊。</p>
+        <div class="search">
+          <span class="ic">🔍</span>
+          <input placeholder="搜尋說明文件、常見問題、教學..." />
+        </div>
+        <div class="quick">
+          <span class="q">如何發布專案？</span>
+          <span class="q">付款與退費</span>
+          <span class="q">公司認證流程</span>
+          <span class="q">API 文件</span>
+        </div>
+      </div>
+
+      <div class="cat-grid">
+        <div class="cat"><div class="ic a">🚀</div><div class="ti">入門指南</div><div class="ct">12 篇文章</div></div>
+        <div class="cat"><div class="ic b">🏢</div><div class="ti">公司管理</div><div class="ct">18 篇文章</div></div>
+        <div class="cat"><div class="ic c">💼</div><div class="ti">專案 / 接案</div><div class="ct">24 篇文章</div></div>
+        <div class="cat"><div class="ic d">📋</div><div class="ti">招標流程</div><div class="ct">15 篇文章</div></div>
+        <div class="cat"><div class="ic e">💬</div><div class="ti">訊息與洽談</div><div class="ct">9 篇文章</div></div>
+        <div class="cat"><div class="ic f">💰</div><div class="ti">付款與發票</div><div class="ct">14 篇文章</div></div>
+        <div class="cat"><div class="ic g">🔒</div><div class="ti">帳號安全</div><div class="ct">11 篇文章</div></div>
+        <div class="cat"><div class="ic h">⚙</div><div class="ti">API / 整合</div><div class="ct">7 篇文章</div></div>
+      </div>
+
+      <div class="layout">
+        <div>
+          <div class="faq-card">
+            <h2>📌 最常見問題</h2>
+            <div class="qa open">
+              <div class="q">如何發布專案 / 招標需求？<span class="ar">▾</span></div>
+              <div class="a">登入後從首頁點 <b>「＋ 發布專案」</b>，依序填寫專案類型（接案 / 招標 / 合作）、需求說明、預算範圍、截止日期。送出後系統會自動配對 5–8 家最匹配的供應商，一般在 24 小時內收到第一份提案。<br><br>建議在描述中明確列出：1) 期望交付物、2) 預算範圍、3) 時程要求、4) 評選標準。完整的描述能提高 3 倍的提案品質。
+                <div class="helpful"><span>這個有幫助嗎？</span><span class="b">👍 有用 (84)</span><span class="b">👎 沒幫助 (3)</span></div>
+              </div>
+            </div>
+            <div class="qa">
+              <div class="q">公司認證需要什麼文件？<span class="ar">▾</span></div>
+              <div class="a">需要：營業登記證影本、負責人身分證、公司營業地址證明（水電帳單或租約）。一般 2 個工作天內完成審核。</div>
+            </div>
+            <div class="qa">
+              <div class="q">付款流程與履約保證如何運作？<span class="ar">▾</span></div>
+              <div class="a">採用 <b>第三方履約保證</b>。採購方在合約簽訂後將款項預存平台，依里程碑分階段撥款給供應商。爭議時可申請仲裁。</div>
+            </div>
+            <div class="qa">
+              <div class="q">PRO 會員與免費版的差別？<span class="ar">▾</span></div>
+              <div class="a">PRO 享：無限報告下載、提前 7 天看到新報告、進階搜尋與篩選、優先客服、客製簡報。NT$ 1,580 / 月，年付 8 折。</div>
+            </div>
+            <div class="qa">
+              <div class="q">如何拿到「實名認證」徽章？<span class="ar">▾</span></div>
+              <div class="a">完成：1) 公司認證、2) 手機 OTP 驗證、3) 視訊面談（5 分鐘）、4) 至少完成 1 件交易並獲評價。一般可於 1 週內取得。</div>
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <h2>💼 專案與接案</h2>
+            <div class="qa">
+              <div class="q">提案後對方多久回覆？<span class="ar">▾</span></div>
+              <div class="a">平均 2.4 天。系統會在 7 天無回覆時自動發送提醒。如需加急，可使用「優先標記」功能。</div>
+            </div>
+            <div class="qa">
+              <div class="q">沒有合作機會的專案會發生什麼？<span class="ar">▾</span></div>
+              <div class="a">系統會在 30 天無進展時自動標記為「冷卻中」並發送回收通知。可選擇延長、修改條件，或關閉。</div>
+            </div>
+            <div class="qa">
+              <div class="q">如何處理合約糾紛？<span class="ar">▾</span></div>
+              <div class="a">透過「申請仲裁」功能，提交證據與訴求。平台仲裁團隊會在 5 個工作天內介入處理，必要時轉介法律顧問。</div>
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <h2>🔒 帳號與安全</h2>
+            <div class="qa">
+              <div class="q">忘記密碼怎麼辦？<span class="ar">▾</span></div>
+              <div class="a">至登入頁點「忘記密碼」，輸入註冊 Email，10 分鐘內會收到重設信。</div>
+            </div>
+            <div class="qa">
+              <div class="q">如何啟用兩步驟驗證？<span class="ar">▾</span></div>
+              <div class="a">設定 → 安全 → 兩步驟驗證，支援 Google Authenticator / Authy / 簡訊。</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="side">
+            <h3>🔥 熱門文章</h3>
+            <div class="pop-row"><span class="num">1</span><span>新手快速上手指南（10 分鐘）</span></div>
+            <div class="pop-row"><span class="num">2</span><span>如何寫出高轉換率的提案？</span></div>
+            <div class="pop-row"><span class="num">3</span><span>履約保證機制完整說明</span></div>
+            <div class="pop-row"><span class="num">4</span><span>專案範本下載：RFP / NDA</span></div>
+            <div class="pop-row"><span class="num">5</span><span>API 串接 Step-by-step</span></div>
+          </div>
+          <div class="side ct-card">
+            <h3 style="color:#67E8F9;">💬 還沒找到答案？</h3>
+            <div class="ct-row"><div class="ic">💬</div><div><div class="l">即時客服</div><div class="v">週一至五 09:00–22:00</div></div></div>
+            <div class="ct-row"><div class="ic">📧</div><div><div class="l">Email</div><div class="v">support@chatowl.tw</div></div></div>
+            <div class="ct-row"><div class="ic">📞</div><div><div class="l">電話</div><div class="v">02-2789-1234</div></div></div>
+            <div class="ct-row"><div class="ic">🎓</div><div><div class="l">線上課程</div><div class="v">每月 8 場直播</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+  document.querySelectorAll('.qa .q').forEach(q => q.addEventListener('click', () => q.parentElement.classList.toggle('open')));
+  window.__active='help'; window.__searchPlaceholder='搜尋說明文件...';
+</script>
+<script src="chrome.js"></script>
+</body>
+</html>

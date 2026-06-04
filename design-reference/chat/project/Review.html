@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 結案評價</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  .body { padding:28px 28px 48px; display:grid; grid-template-columns: minmax(0,1fr) 380px; gap:24px; }
+
+  /* Project banner */
+  .banner { background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(236,72,153,.06)); border:1px solid rgba(99,102,241,.3); border-radius:14px; padding:20px 24px; display:grid; grid-template-columns: auto 1fr auto; gap:18px; align-items:center; margin-bottom:18px; }
+  .banner .lg { width:56px; height:56px; font-size:18px; }
+  .banner .ti { font-size:18px; font-weight:700; letter-spacing:-.01em; }
+  .banner .meta { font-size:12.5px; color:var(--text-dim); margin-top:4px; display:flex; gap:10px; flex-wrap:wrap; }
+  .banner .meta .num { font-family:'JetBrains Mono',monospace; }
+  .banner .done { display:flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(16,185,129,.15); border:1px solid rgba(16,185,129,.4); border-radius:999px; font-size:12.5px; color:#6EE7B7; font-weight:600; }
+  .banner .done .ic { width:20px; height:20px; border-radius:999px; background:#10B981; display:flex; align-items:center; justify-content:center; }
+
+  .card { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:14px; padding:22px 26px; margin-bottom:16px; }
+  .card h2 { font-size:17px; font-weight:700; letter-spacing:-.01em; margin:0 0 6px; }
+  .card .h-sub { font-size:12.5px; color:var(--text-dim); margin:0 0 22px; }
+
+  /* Star rating overall */
+  .stars-big { display:flex; gap:8px; margin:8px 0 22px; align-items:center; }
+  .star-btn { width:46px; height:46px; border-radius:10px; background:var(--bg-3); border:1px solid var(--line-strong); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 150ms; }
+  .star-btn.on { background:linear-gradient(135deg,#F59E0B,#FCD34D); border-color:transparent; box-shadow:0 6px 18px rgba(245,158,11,.35); }
+  .star-btn .s { color:var(--text-muted); font-size:24px; }
+  .star-btn.on .s { color:#fff; text-shadow:0 0 4px rgba(255,255,255,.4); }
+  .stars-big .lbl { margin-left:14px; padding:6px 14px; background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.4); border-radius:999px; font-size:13px; font-weight:700; color:#FCD34D; }
+
+  /* Sub-criteria */
+  .sub-grid { display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:22px; }
+  .sub-item { padding:14px; background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:11px; }
+  .sub-item .l { font-size:12.5px; font-weight:600; }
+  .sub-item .d { font-size:11px; color:var(--text-muted); margin-top:2px; }
+  .sub-item .stars-row { display:flex; gap:5px; margin-top:9px; align-items:center; }
+  .sub-item .star { font-size:18px; color:var(--text-muted); cursor:pointer; }
+  .sub-item .star.on { color:#FCD34D; }
+  .sub-item .num { margin-left:auto; font-size:12.5px; font-weight:700; color:#FCD34D; }
+
+  /* Tags / chips */
+  .h-chip { font-size:12px; font-weight:600; margin:18px 0 10px; }
+  .h-chip span { color:var(--text-muted); font-weight:400; font-size:11px; margin-left:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:18px; }
+  .chip { padding:7px 13px; border-radius:999px; font-size:12px; background:var(--bg-3); border:1px solid var(--line-strong); cursor:pointer; color:var(--text-dim); transition:all 150ms; }
+  .chip:hover { color:var(--text); }
+  .chip.on { background:linear-gradient(135deg, rgba(99,102,241,.2), rgba(139,92,246,.1)); border-color:rgba(99,102,241,.4); color:#C7D2FE; font-weight:600; }
+  .chip.on::before { content:"✓ "; color:#A78BFA; }
+  .chip.bad.on { background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.3); color:#FCA5A5; }
+
+  /* Textarea */
+  .ta-w { background:var(--bg-3); border:1px solid var(--line-strong); border-radius:11px; padding:14px 16px; transition:all 150ms; }
+  .ta-w:focus-within { border-color:var(--accent); box-shadow:0 0 0 4px rgba(99,102,241,.15); }
+  .ta-w textarea { width:100%; min-height:130px; resize:vertical; background:transparent; color:var(--text); font-size:13.5px; line-height:1.65; outline:none; border:none; font-family:inherit; }
+  .ta-w textarea::placeholder { color:var(--text-muted); }
+  .ta-meta { display:flex; justify-content:space-between; padding-top:9px; border-top:1px solid var(--line); margin-top:9px; font-size:11px; color:var(--text-muted); }
+
+  /* Privacy + recommend */
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:11px; margin-bottom:10px; }
+  .toggle-row .t { font-size:13px; font-weight:600; }
+  .toggle-row .d { font-size:11.5px; color:var(--text-dim); margin-top:2px; }
+  .switch { width:38px; height:22px; border-radius:999px; background:var(--bg-card-2); border:1px solid var(--line-strong); position:relative; cursor:pointer; flex-shrink:0; }
+  .switch.on { background:linear-gradient(135deg,var(--accent),var(--accent-2)); border-color:transparent; }
+  .switch::after { content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:999px; background:#fff; transition:all 200ms; }
+  .switch.on::after { left:18px; }
+
+  /* Recommend buttons */
+  .rec-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .rec-btn { padding:14px 16px; background:var(--bg-3); border:1.5px solid var(--line-strong); border-radius:11px; text-align:center; cursor:pointer; }
+  .rec-btn.on.yes { background: linear-gradient(135deg, rgba(16,185,129,.15), rgba(34,211,238,.08)); border-color:rgba(16,185,129,.5); }
+  .rec-btn.on.no { background: rgba(239,68,68,.08); border-color:rgba(239,68,68,.4); }
+  .rec-btn .ic { font-size:22px; margin-bottom:5px; }
+  .rec-btn .t { font-size:13px; font-weight:700; }
+  .rec-btn .d { font-size:11px; color:var(--text-dim); margin-top:2px; }
+
+  /* Actions */
+  .actions { display:flex; gap:10px; padding-top:18px; border-top:1px solid var(--line); margin-top:6px; }
+  .actions .btn { padding:11px 22px; font-size:13px; }
+  .btn-skip { background:transparent; color:var(--text-dim); }
+
+  /* Right column */
+  .summary-card { background: linear-gradient(180deg, rgba(15,23,42,.85), rgba(15,23,42,.55)); border:1px solid var(--line-strong); border-radius:14px; padding:20px; margin-bottom:14px; position:sticky; top:80px; }
+  .summary-h { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em; font-weight:700; margin-bottom:14px; }
+  .nps-circ { width:140px; height:140px; margin:6px auto 12px; position:relative; }
+  .nps-circ svg { transform:rotate(-90deg); }
+  .nps-circ .ctr { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .nps-circ .v { font-size:34px; font-weight:800; letter-spacing:-.02em; background:linear-gradient(135deg,#10B981,#67E8F9); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .nps-circ .l { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; }
+
+  .impact { display:flex; flex-direction:column; gap:8px; }
+  .imp-row { display:grid; grid-template-columns:24px 1fr auto; gap:10px; align-items:center; padding:8px 0; border-top:1px solid var(--line); font-size:12px; }
+  .imp-row:first-child { border-top:none; }
+  .imp-row .ic { width:22px; height:22px; border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:11px; }
+  .imp-row .ic.up { background:rgba(16,185,129,.18); color:#6EE7B7; }
+  .imp-row .ic.tr { background:rgba(34,211,238,.18); color:#67E8F9; }
+  .imp-row .ic.bd { background:rgba(245,158,11,.18); color:#FCD34D; }
+  .imp-row .v { font-weight:700; font-feature-settings:"tnum"; color:var(--green); }
+
+  /* Past reviews from this client */
+  .past-card { background:var(--bg-card); border:1px solid var(--line-strong); border-radius:14px; padding:18px; }
+  .past-h { font-size:12px; font-weight:700; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+  .past-h .lk { font-size:11px; color:#A78BFA; }
+  .past-row { padding:10px 0; border-top:1px solid var(--line); font-size:12px; }
+  .past-row:first-child { border-top:none; padding-top:0; }
+  .past-row .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .past-row .ti { font-weight:600; font-size:12.5px; }
+  .past-row .st { font-size:11px; color:#FCD34D; }
+  .past-row .qu { color:var(--text-dim); font-size:11.5px; line-height:1.55; font-style:italic; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div id="chrome-sidebar"></div>
+  <main class="main">
+    <div id="chrome-topbar"></div>
+    <div class="page-head">
+      <div class="head-row">
+        <div>
+          <div class="crumb">合約 / DKSH 大昌華嘉資料倉儲建置 / 結案評價</div>
+          <h1>專案結案評價</h1>
+          <p class="desc">給予誠實回饋，幫助 ChatOwl 為您媒合更精準的合作對象。雙向評價將於雙方提交後同步公開。</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-ghost">稍後填寫</button>
+          <button class="btn btn-primary">送出評價 →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <div style="grid-column: 1 / -1;">
+        <div class="banner">
+          <div class="lg lg-green">D</div>
+          <div>
+            <div class="ti">DKSH 大昌華嘉 — 資料倉儲建置專案</div>
+            <div class="meta">
+              <span class="num">CO-2025-0218</span>
+              <span>•</span>
+              <span>2025/11/15 — 2026/04/15</span>
+              <span>•</span>
+              <span>NT$ 3,250,000</span>
+              <span>•</span>
+              <span>5 個月</span>
+            </div>
+          </div>
+          <div class="done">
+            <div class="ic"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            專案已結案
+          </div>
+        </div>
+      </div>
+
+      <!-- LEFT: form -->
+      <div>
+
+        <div class="card">
+          <h2>整體合作體驗如何？</h2>
+          <p class="h-sub">這個分數會出現在對方公司頁面（匿名）並影響我方信用分數</p>
+
+          <div class="stars-big">
+            <div class="star-btn on"><span class="s">★</span></div>
+            <div class="star-btn on"><span class="s">★</span></div>
+            <div class="star-btn on"><span class="s">★</span></div>
+            <div class="star-btn on"><span class="s">★</span></div>
+            <div class="star-btn"><span class="s">☆</span></div>
+            <span class="lbl">4.0 — 很滿意</span>
+          </div>
+
+          <div class="h-chip">分項評分</div>
+          <div class="sub-grid">
+            <div class="sub-item">
+              <div class="l">📅 進度準時度</div>
+              <div class="d">里程碑是否準時交付</div>
+              <div class="stars-row">
+                <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span>
+                <span class="num">5.0</span>
+              </div>
+            </div>
+            <div class="sub-item">
+              <div class="l">💎 交付品質</div>
+              <div class="d">驗收項目達成度與完整性</div>
+              <div class="stars-row">
+                <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star">☆</span>
+                <span class="num">4.0</span>
+              </div>
+            </div>
+            <div class="sub-item">
+              <div class="l">💬 溝通效率</div>
+              <div class="d">回應速度、需求理解、會議紀律</div>
+              <div class="stars-row">
+                <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span>
+                <span class="num">5.0</span>
+              </div>
+            </div>
+            <div class="sub-item">
+              <div class="l">🤝 專業度</div>
+              <div class="d">產業知識、技術深度、提案品質</div>
+              <div class="stars-row">
+                <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star">☆</span>
+                <span class="num">4.0</span>
+              </div>
+            </div>
+            <div class="sub-item">
+              <div class="l">💰 預算掌控</div>
+              <div class="d">是否在預算內完成、變更管理</div>
+              <div class="stars-row">
+                <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star">☆</span><span class="star">☆</span>
+                <span class="num">3.0</span>
+              </div>
+            </div>
+            <div class="sub-item">
+              <div class="l">🎯 結案完整度</div>
+              <div class="d">文件、移交、教育訓練、保固</div>
+              <div class="stars-row">
+                <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span><span class="star on">★</span>
+                <span class="num">5.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>具體優點</h2>
+          <p class="h-sub">選擇對方表現出色的地方（可複選）</p>
+          <div class="chips">
+            <div class="chip on">準時交付</div>
+            <div class="chip on">技術紮實</div>
+            <div class="chip on">主動溝通</div>
+            <div class="chip on">文件完整</div>
+            <div class="chip">願意客製</div>
+            <div class="chip on">會議高效</div>
+            <div class="chip">提案有創意</div>
+            <div class="chip">現場 Support</div>
+            <div class="chip on">配合度高</div>
+            <div class="chip">客戶導向</div>
+            <div class="chip">產業 know-how</div>
+            <div class="chip">成本透明</div>
+          </div>
+
+          <div class="h-chip">需要改進的地方 <span>選填、僅雙方可見</span></div>
+          <div class="chips">
+            <div class="chip bad on">期中變更應對偏慢</div>
+            <div class="chip bad">超出預算</div>
+            <div class="chip bad">回應較慢</div>
+            <div class="chip bad">驗收標準不清</div>
+            <div class="chip bad">文件不全</div>
+            <div class="chip bad">人員異動頻繁</div>
+            <div class="chip bad">技術深度不足</div>
+            <div class="chip bad">逾期交付</div>
+          </div>
+
+          <div class="h-chip">公開推薦評語 <span>會顯示在對方公司頁面（您可選擇匿名）</span></div>
+          <div class="ta-w">
+            <textarea placeholder="例如：技術團隊在 ETL 設計上展現深厚經驗，數據遷移期間零停機，超出預期。期中需求變更時若能更快回應會更完美。整體來說會推薦給有類似需求的同業。">技術團隊在 ETL 設計上展現深厚經驗，數據遷移期間零停機，超出預期。期中需求變更時若能更快回應會更完美。整體來說會推薦給有類似需求的同業。</textarea>
+            <div class="ta-meta">
+              <span>👁 預覽</span>
+              <span>72 / 500 字</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>會推薦給朋友嗎？</h2>
+          <p class="h-sub">用於計算企業 NPS 推薦指數，影響媒合排序</p>
+
+          <div class="rec-grid" style="margin-bottom:14px;">
+            <div class="rec-btn on yes">
+              <div class="ic">👍</div>
+              <div class="t">會推薦</div>
+              <div class="d">下次有需要會優先合作</div>
+            </div>
+            <div class="rec-btn">
+              <div class="ic">🤔</div>
+              <div class="t">看情況</div>
+              <div class="d">特定類型專案才適合</div>
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <div class="t">公開顯示我的公司名稱</div>
+              <div class="d">關閉時，將顯示為「驗證企業（軟體業）」</div>
+            </div>
+            <div class="switch on"></div>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="t">允許對方做為案例展示</div>
+              <div class="d">對方可在公司頁面標示「曾合作」並展示專案概要</div>
+            </div>
+            <div class="switch on"></div>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="t">作為 ChatOwl 公開案例</div>
+              <div class="d">ChatOwl 可能將此案例使用於行銷材料（會事先確認）</div>
+            </div>
+            <div class="switch"></div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-skip">放棄並關閉</button>
+            <span style="flex:1;"></span>
+            <button class="btn btn-secondary">儲存草稿</button>
+            <button class="btn btn-primary">送出評價 →</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="summary-card">
+          <div class="summary-h">即時 NPS 預覽</div>
+          <div class="nps-circ">
+            <svg width="140" height="140" viewBox="0 0 140 140">
+              <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(148,163,184,.12)" stroke-width="10"/>
+              <circle cx="70" cy="70" r="60" fill="none" stroke="url(#g)" stroke-width="10" stroke-dasharray="377" stroke-dashoffset="98" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient>
+              </defs>
+            </svg>
+            <div class="ctr">
+              <div class="v">+74</div>
+              <div class="l">本次貢獻</div>
+            </div>
+          </div>
+
+          <div class="impact">
+            <div class="imp-row"><div class="ic up">↗</div><div>奇點 → DKSH 信任分數</div><div class="v">+1.8</div></div>
+            <div class="imp-row"><div class="ic tr">★</div><div>本季企業總評分</div><div class="v">→ 4.7</div></div>
+            <div class="imp-row"><div class="ic bd">🏅</div><div>解鎖徽章「準時交付者」</div><div class="v" style="color:#FCD34D;">NEW</div></div>
+          </div>
+
+          <div style="margin-top:14px; padding:12px 14px; background:rgba(99,102,241,.08); border:1px solid rgba(99,102,241,.25); border-radius:10px; font-size:11.5px; color:var(--text-dim); line-height:1.55;">
+            💡 雙方都送出評價後，分數才會公開。對方提交時間：<b style="color:#A78BFA;">已於 2 小時前完成</b>
+          </div>
+        </div>
+
+        <div class="past-card">
+          <div class="past-h">與此客戶的歷史評價 <span class="lk">2 件</span></div>
+          <div class="past-row">
+            <div class="top">
+              <span class="ti">前次：CRM 整合 PoC</span>
+              <span class="st">★★★★★ 5.0</span>
+            </div>
+            <div class="qu">"從 PoC 階段就展現出色的需求釐清能力，期中里程碑全數提前。"</div>
+          </div>
+          <div class="past-row">
+            <div class="top">
+              <span class="ti">2024 — 行銷數據儀表板</span>
+              <span class="st">★★★★☆ 4.0</span>
+            </div>
+            <div class="qu">"視覺呈現專業，數據介接稍微延遲，但最終有補上。"</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+<script src="chrome.js"></script>
+<script>renderChrome({ active:'contracts' });</script>
+</body></html>

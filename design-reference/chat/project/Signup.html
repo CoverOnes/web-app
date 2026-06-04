@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>ChatOwl — 企業註冊</title>
+<meta name="viewport" content="width=1440,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg:#060A14; --bg-2:#0B1220; --bg-3:#0F172A; --line:rgba(148,163,184,.12); --line-strong:rgba(148,163,184,.2); --text:#E5E7EB; --text-dim:#94A3B8; --text-muted:#64748B; --accent:#6366F1; --accent-2:#8B5CF6; --cyan:#22D3EE; --green:#10B981; --amber:#F59E0B; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; padding:0; background:#000; color:var(--text); font-family:'Inter','Noto Sans TC',-apple-system,sans-serif; -webkit-font-smoothing:antialiased; }
+  button { cursor:pointer; border:none; background:none; color:inherit; font:inherit; }
+  input, select { font:inherit; color:inherit; outline:none; border:none; background:none; }
+  a { color:inherit; text-decoration:none; }
+
+  .page { width:1440px; min-height:1024px; background: radial-gradient(1100px 700px at 20% 20%, rgba(99,102,241,.18), transparent 60%), radial-gradient(900px 600px at 90% 80%, rgba(139,92,246,.12), transparent 60%), var(--bg); position:relative; overflow:hidden; display:grid; grid-template-columns: 1fr 620px; }
+  .page::before { content:""; position:absolute; inset:0; background-image: linear-gradient(rgba(148,163,184,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.04) 1px, transparent 1px); background-size:64px 64px; mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%); -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%); pointer-events:none; }
+
+  /* Left: hero */
+  .hero { padding:38px 56px; display:flex; flex-direction:column; min-height:1024px; position:relative; }
+  .brand { display:flex; align-items:center; gap:10px; }
+  .brand .mark { width:36px; height:36px; border-radius:10px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display:flex; align-items:center; justify-content:center; box-shadow: 0 6px 24px rgba(99,102,241,.4); }
+  .brand .name { font-size:18px; font-weight:800; letter-spacing:-.02em; }
+  .brand .sub { font-size:11px; color:var(--text-dim); }
+
+  .hero-content { margin-top:auto; margin-bottom:auto; max-width:560px; position:relative; z-index:2; }
+  .tag { display:inline-flex; gap:8px; align-items:center; padding:6px 12px; border-radius:999px; background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.3); font-size:11.5px; color:#C7D2FE; font-weight:600; margin-bottom:18px; }
+  .tag .dot { width:6px; height:6px; border-radius:999px; background:var(--accent); box-shadow:0 0 8px var(--accent); }
+
+  h1 { font-size:48px; font-weight:800; letter-spacing:-.03em; line-height:1.1; margin:0 0 18px; }
+  h1 .grad { background: linear-gradient(135deg, #67E8F9 0%, #A78BFA 50%, #F9A8D4 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color: transparent; }
+  .lead { font-size:16px; color:var(--text-dim); line-height:1.65; margin:0 0 32px; }
+
+  .stats { display:grid; grid-template-columns: repeat(3, auto); gap:32px; margin-bottom:32px; }
+  .stat .v { font-size:28px; font-weight:800; letter-spacing:-.02em; background: linear-gradient(135deg, #67E8F9, #A78BFA); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .stat .l { font-size:12px; color:var(--text-dim); margin-top:2px; }
+
+  .logos { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:14px; font-weight:600; }
+  .logo-row { display:flex; gap:14px; align-items:center; }
+  .logo-pill { padding:8px 14px; background:rgba(15,23,42,.6); border:1px solid var(--line); border-radius:8px; font-size:12.5px; font-weight:600; color:var(--text-dim); }
+
+  /* Right: form */
+  .right { background: linear-gradient(180deg, rgba(11,18,32,.95), rgba(6,10,20,.99)); border-left:1px solid var(--line-strong); padding:36px 48px 40px; overflow-y:auto; max-height:1024px; }
+
+  .top-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+  .top-meta .step-info { font-size:11.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; }
+  .top-meta a { font-size:13px; color:var(--text-dim); }
+  .top-meta a b { color:#A78BFA; }
+
+  /* Stepper */
+  .stepper { display:flex; gap:0; margin-bottom:24px; background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:11px; padding:5px; }
+  .step-cell { flex:1; padding:9px 10px; border-radius:7px; display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--text-muted); }
+  .step-cell.active { background:linear-gradient(135deg, rgba(99,102,241,.18), rgba(139,92,246,.1)); color:#fff; }
+  .step-cell.done { color:var(--green); }
+  .step-cell .n { width:20px; height:20px; border-radius:5px; background:var(--bg-3); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:700; flex-shrink:0; }
+  .step-cell.active .n { background:linear-gradient(135deg,var(--accent),var(--accent-2)); border-color:transparent; color:#fff; }
+  .step-cell.done .n { background:rgba(16,185,129,.18); border-color:var(--green); color:var(--green); }
+
+  h2 { font-size:24px; font-weight:700; letter-spacing:-.02em; margin:0 0 6px; }
+  .sub { font-size:13px; color:var(--text-dim); margin:0 0 22px; line-height:1.55; }
+
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:12px; font-weight:600; margin-bottom:6px; color:var(--text); }
+  .field label .req { color:#FCA5A5; margin-left:3px; }
+  .field label .opt { color:var(--text-muted); font-weight:400; margin-left:6px; font-size:11px; }
+  .field .hint { font-size:11px; color:var(--text-muted); margin-top:5px; }
+  .field .hint.ok { color:var(--green); }
+  .input-w { display:flex; align-items:center; gap:10px; padding:11px 13px; background:var(--bg-3); border:1px solid var(--line-strong); border-radius:10px; transition:all 150ms; }
+  .input-w:focus-within { border-color:var(--accent); box-shadow: 0 0 0 4px rgba(99,102,241,.15); }
+  .input-w svg { color:var(--text-muted); flex-shrink:0; }
+  .input-w input, .input-w select { flex:1; font-size:13.5px; }
+  .input-w input::placeholder { color:var(--text-muted); }
+  .input-w .verify-tag { padding:3px 8px; border-radius:5px; font-size:10.5px; font-weight:600; background:rgba(16,185,129,.18); color:var(--green); border:1px solid rgba(16,185,129,.3); }
+
+  .row-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  /* Auto-fill highlight */
+  .filled-card { background: linear-gradient(135deg, rgba(16,185,129,.06), rgba(34,211,238,.04)); border:1px solid rgba(16,185,129,.3); border-radius:11px; padding:13px 14px; margin-bottom:14px; }
+  .filled-card .h { display:flex; align-items:center; gap:8px; margin-bottom:4px; font-size:11.5px; color:var(--green); font-weight:600; }
+  .filled-card .h::before { content:"✓"; }
+  .filled-card .v { font-size:13px; color:var(--text); margin-bottom:2px; }
+  .filled-card .v b { font-weight:600; }
+  .filled-card .meta { font-size:11px; color:var(--text-dim); }
+
+  .check-list { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .check-item { padding:11px 13px; background:rgba(15,23,42,.5); border:1px solid var(--line); border-radius:9px; display:grid; grid-template-columns:24px 1fr; gap:10px; cursor:pointer; align-items:flex-start; }
+  .check-item.on { background:linear-gradient(135deg, rgba(99,102,241,.1), rgba(139,92,246,.05)); border-color:rgba(99,102,241,.4); }
+  .check-item .box { width:18px; height:18px; border-radius:5px; border:1.5px solid var(--line-strong); display:flex; align-items:center; justify-content:center; margin-top:1px; }
+  .check-item.on .box { background:linear-gradient(135deg,var(--accent),var(--accent-2)); border-color:transparent; color:#fff; }
+  .check-item .t { font-size:13px; font-weight:600; }
+  .check-item .d { font-size:11px; color:var(--text-dim); margin-top:2px; line-height:1.5; }
+
+  .btn { padding:13px; border-radius:10px; font-size:14px; font-weight:600; transition:all 150ms; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; }
+  .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; box-shadow:0 8px 26px rgba(99,102,241,.35); }
+  .btn-primary:hover { transform:translateY(-1px); box-shadow:0 12px 30px rgba(99,102,241,.45); }
+  .btn-ghost { background:transparent; border:1px solid var(--line-strong); color:var(--text-dim); }
+
+  .footer-nav { display:grid; grid-template-columns: 110px 1fr; gap:10px; margin-top:6px; }
+  .terms { font-size:11.5px; color:var(--text-muted); margin-top:14px; text-align:center; line-height:1.55; }
+  .terms a { color:#A78BFA; }
+
+  .alt-divide { display:flex; align-items:center; gap:10px; margin:18px 0; font-size:11px; color:var(--text-muted); }
+  .alt-divide::before, .alt-divide::after { content:""; flex:1; height:1px; background:var(--line); }
+
+  .login-link { text-align:center; font-size:13px; color:var(--text-dim); margin-top:14px; }
+  .login-link a { color:#A78BFA; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- LEFT: hero -->
+  <div class="hero">
+    <div class="brand">
+      <div class="mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <circle cx="9" cy="10" r="2.4" fill="#fff"/><circle cx="15" cy="10" r="2.4" fill="#fff"/>
+        <circle cx="9" cy="10" r="1" fill="#0B1220"/><circle cx="15" cy="10" r="1" fill="#0B1220"/>
+        <path d="M11 14.5 L12 16 L13 14.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg></div>
+      <div><div class="name">ChatOwl</div><div class="sub">B2B 接案媒合</div></div>
+    </div>
+
+    <div class="hero-content">
+      <div class="tag"><span class="dot"></span>限時優惠 · 開戶送 90 天 PRO 試用</div>
+      <h1>讓您的公司<br><span class="grad">被對的買家發現</span></h1>
+      <p class="lead">ChatOwl 為台灣 B2B 而生。從統編一鍵驗證、AI 智慧媒合，到合約簽署、發票結算 — 全流程數位化。</p>
+
+      <div class="stats">
+        <div class="stat"><div class="v">3,420+</div><div class="l">已驗證企業</div></div>
+        <div class="stat"><div class="v">NT$ 2.8B</div><div class="l">媒合金額</div></div>
+        <div class="stat"><div class="v">2.4 天</div><div class="l">平均媒合時間</div></div>
+      </div>
+
+      <div class="logos">合作夥伴</div>
+      <div class="logo-row">
+        <div class="logo-pill">台積電子</div>
+        <div class="logo-pill">沛星互動</div>
+        <div class="logo-pill">中華電信</div>
+        <div class="logo-pill">玉山銀行</div>
+        <div class="logo-pill">+ 218 家</div>
+      </div>
+    </div>
+
+    <div style="margin-top:auto; font-size:11.5px; color:var(--text-muted); display:flex; gap:18px;">
+      <a href="#" style="color:var(--text-muted);">服務條款</a>
+      <a href="#" style="color:var(--text-muted);">隱私政策</a>
+      <span>© 2026 ChatOwl Inc.</span>
+    </div>
+  </div>
+
+  <!-- RIGHT: form -->
+  <div class="right">
+    <div class="top-meta">
+      <div class="step-info">Step 2 of 4 · 約需 3 分鐘</div>
+      <a>已有帳號？<b>登入</b></a>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step-cell done"><div class="n"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>公司</div>
+      <div class="step-cell active"><div class="n">2</div>負責人</div>
+      <div class="step-cell"><div class="n">3</div>密碼</div>
+      <div class="step-cell"><div class="n">4</div>邀請團隊</div>
+    </div>
+
+    <h2>填寫負責人資料</h2>
+    <p class="sub">這些資訊將用於企業認證與合約簽署，請使用負責人本人資料。</p>
+
+    <!-- Auto-filled company card from step 1 -->
+    <div class="filled-card">
+      <div class="h">統編驗證通過 — 公司資料已自動帶入</div>
+      <div class="v"><b>奇點科技股份有限公司</b> · 統編 24561289</div>
+      <div class="meta">營業項目：軟體設計服務業 · 設立日期：2022/03/15 · 資本額 NT$ 5,000,000</div>
+    </div>
+
+    <div class="field">
+      <label>負責人姓名<span class="req">*</span><span class="opt">需與身分證一致</span></label>
+      <div class="input-w">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <input value="陳俊宇" />
+        <span class="verify-tag">✓ 統編比對通過</span>
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label>職稱<span class="req">*</span></label>
+        <div class="input-w">
+          <select style="background:transparent;">
+            <option>產品總監 / CPO</option>
+            <option>執行長 / CEO</option>
+            <option>技術長 / CTO</option>
+            <option>採購主管</option>
+            <option>業務主管</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>部門</label>
+        <div class="input-w">
+          <input value="產品策略部" />
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>企業 Email<span class="req">*</span><span class="opt">用於接收驗證碼與通知</span></label>
+      <div class="input-w">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 7 9-7"/></svg>
+        <input value="chen@singularity.tw" />
+      </div>
+      <div class="hint ok">✓ 網域 singularity.tw 與公司主網域一致</div>
+    </div>
+
+    <div class="field">
+      <label>聯絡電話<span class="req">*</span></label>
+      <div class="input-w">
+        <span style="font-size:13.5px; color:var(--text-dim); padding-right:10px; border-right:1px solid var(--line);">🇹🇼 +886</span>
+        <input value="912-345-678" />
+      </div>
+    </div>
+
+    <!-- Identity verification -->
+    <div class="field">
+      <label>身分驗證方式<span class="req">*</span></label>
+      <div class="check-list" style="margin-top:6px;">
+        <div class="check-item on">
+          <div class="box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div>
+            <div class="t">自然人憑證 OAuth <span style="font-size:10px; color:var(--green); margin-left:6px;">⚡ 推薦 · 30 秒完成</span></div>
+            <div class="d">透過內政部憑證即時驗證身分，可獲得「實名認證」徽章與更高媒合優先級</div>
+          </div>
+        </div>
+        <div class="check-item">
+          <div class="box"></div>
+          <div>
+            <div class="t">手動審核（上傳身分證影本）</div>
+            <div class="d">需 1-2 個工作日人工審核。可先進入平台瀏覽，但無法主動投標。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="btn btn-ghost">← 上一步</button>
+      <button class="btn btn-primary">下一步：設定密碼 →</button>
+    </div>
+
+    <div class="terms">
+      點擊「下一步」表示您同意 <a>服務條款</a>、<a>隱私政策</a> 及 <a>B2B 商業條款</a>
+    </div>
+
+    <div class="login-link">
+      已有帳號？<a href="Login.html">直接登入 →</a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
