@@ -12,7 +12,7 @@ import { PageHead } from '../components/layout/PageHead';
 import { Icon } from '../components/ui/Icon';
 import { formatDistanceToNow } from 'date-fns';
 import type { AxiosError } from 'axios';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Bid } from '../lib/api/coverones';
 
@@ -43,6 +43,19 @@ const JobDetailPage = () => {
   const [contractNotReadyMsg, setContractNotReadyMsg] = useState('');
   // Retry count ref for the bounded contract discovery poll.
   const contractRetryCount = useRef(0);
+  // Holds the pending retry timer so we can cancel it on unmount and avoid a
+  // setState-after-unmount warning if the user navigates away mid-poll.
+  const contractRetryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cancel any in-flight contract-discovery retry timer when the page unmounts.
+  useEffect(() => {
+    return () => {
+      if (contractRetryTimer.current !== null) {
+        clearTimeout(contractRetryTimer.current);
+        contractRetryTimer.current = null;
+      }
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -142,31 +155,40 @@ const JobDetailPage = () => {
       return found?.id ?? null;
     };
 
+    // The try/catch lives INSIDE attempt so EVERY attempt (including the 2nd/3rd
+    // retries fired via setTimeout) is guarded. Previously only the first attempt
+    // was wrapped, so a rejection on a retried attempt was an unhandled rejection
+    // and the "前往合約" spinner (navigationBidId) never cleared.
     const attempt = async () => {
-      const contractId = await tryFind();
-      if (contractId) {
-        setNavigationBidId(null);
-        navigate(`/contracts/${contractId}`);
-        return;
-      }
+      try {
+        const contractId = await tryFind();
+        if (contractId) {
+          setNavigationBidId(null);
+          navigate(`/contracts/${contractId}`);
+          return;
+        }
 
-      contractRetryCount.current += 1;
-      if (contractRetryCount.current < MAX_CONTRACT_RETRIES) {
-        // Wait 1s and retry — the contract is created async and may not exist yet.
-        setTimeout(attempt, 1000);
-      } else {
-        // Exhausted retries: show a friendly fallback message.
+        contractRetryCount.current += 1;
+        if (contractRetryCount.current < MAX_CONTRACT_RETRIES) {
+          // Wait 1s and retry — the contract is created async and may not exist yet.
+          // Store the timer id so unmount can cancel it (avoids setState-after-unmount).
+          contractRetryTimer.current = setTimeout(() => {
+            contractRetryTimer.current = null;
+            void attempt();
+          }, 1000);
+        } else {
+          // Exhausted retries: show a friendly fallback message.
+          setNavigationBidId(null);
+          setContractNotReadyMsg('合約建立中，請稍候後至「合約管理」頁面查看，或重新整理此頁面。');
+        }
+      } catch {
+        // Any attempt's failure clears the spinner + surfaces the not-ready message.
         setNavigationBidId(null);
-        setContractNotReadyMsg('合約建立中，請稍候後至「合約管理」頁面查看，或重新整理此頁面。');
+        setContractNotReadyMsg('無法載入合約，請稍後重試。');
       }
     };
 
-    try {
-      await attempt();
-    } catch {
-      setNavigationBidId(null);
-      setContractNotReadyMsg('無法載入合約，請稍後重試。');
-    }
+    await attempt();
   };
 
   const letter = listing.title.charAt(0).toUpperCase();
