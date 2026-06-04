@@ -34,15 +34,17 @@ const NotFoundPage = () => {
         404
       </div>
 
-      <div
+      <h1
         style={{
           fontSize: 22,
           fontWeight: 700,
           letterSpacing: '-0.02em',
+          margin: 0,
+          color: 'var(--co-text)',
         }}
       >
         找不到頁面
-      </div>
+      </h1>
 
       <p
         style={{
@@ -63,7 +65,7 @@ const NotFoundPage = () => {
           padding: '10px 24px',
           borderRadius: 'var(--co-btn-r)',
           background: 'linear-gradient(135deg, var(--co-btn-primary-from), var(--co-btn-primary-to))',
-          color: '#fff',
+          color: 'var(--co-text-on-accent)',
           fontSize: 13,
           fontWeight: 600,
           border: 'none',

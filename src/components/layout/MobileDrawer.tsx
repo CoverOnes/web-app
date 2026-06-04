@@ -100,6 +100,7 @@ const MobileDrawer = ({ open, onClose }: MobileDrawerProps) => {
       {/* Drawer panel — width 300px per mobile.jsx spec */}
       <div
         ref={drawerRef}
+        id="mobile-drawer"
         role="dialog"
         aria-modal="true"
         aria-label="選單"

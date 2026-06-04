@@ -95,7 +95,7 @@ const ForgotPasswordPage = () => {
               padding: '11px 16px',
               borderRadius: 'var(--co-btn-r)',
               background: 'linear-gradient(135deg, var(--co-btn-primary-from), var(--co-btn-primary-to))',
-              color: '#fff',
+              color: 'var(--co-text-on-accent)',
               fontSize: 14,
               fontWeight: 600,
               border: 'none',
@@ -151,7 +151,7 @@ const ForgotPasswordPage = () => {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path
                 d="M20 12c0 4.418-3.582 8-8 8-2.548 0-4.82-1.194-6.3-3.065M4 12C4 7.582 7.582 4 12 4c2.548 0 4.82 1.194 6.3 3.065"
-                stroke="#fff"
+                style={{ stroke: 'var(--co-text-on-accent)' }}
                 strokeWidth="2.2"
                 strokeLinecap="round"
               />
@@ -232,7 +232,7 @@ const ForgotPasswordPage = () => {
               padding: '11px 16px',
               borderRadius: 'var(--co-btn-r)',
               background: 'linear-gradient(135deg, var(--co-btn-primary-from), var(--co-btn-primary-to))',
-              color: '#fff',
+              color: 'var(--co-text-on-accent)',
               fontSize: 14,
               fontWeight: 600,
               border: 'none',

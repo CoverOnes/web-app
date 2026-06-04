@@ -4,22 +4,7 @@
  * Per locked decision (2026-06-04): 訊息 tab routes here, NOT to the real chat UI.
  * Un-parking is tracked as a separate task (P3).
  */
-
-const ChatIcon = () => (
-  <svg
-    width={48}
-    height={48}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
-);
+import { Icon } from '../components/ui/Icon';
 
 const MessagesPlaceholderPage = () => {
   return (
@@ -51,7 +36,7 @@ const MessagesPlaceholderPage = () => {
           marginBottom: 8,
         }}
       >
-        <ChatIcon />
+        <Icon.Chat size={48} />
       </div>
 
       <div

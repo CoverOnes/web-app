@@ -147,6 +147,9 @@
   --co-red:          #EF4444;
   --co-pink:         #EC4899;
 
+  /* --- Text on accent/gradient backgrounds --- */
+  --co-text-on-accent: #fff;
+
   /* --- Button gradient (shared.css .btn-primary) --- */
   --co-btn-primary-from: #2563EB;
   --co-btn-primary-to:   #8B5CF6;
@@ -253,6 +256,17 @@ html, body { background: #000; color: var(--co-text); }
   --density-row: 60px;
   --density-gap: 14px;
   --density-pad: 20px;
+}
+
+/* ===== Mobile-only component visibility (replaces per-component injected <style> tags) ===== */
+/* Hide mobile-only components on desktop */
+@media (min-width: 768px) {
+  .mobile-screen-header { display: none; }
+  .mobile-fab { display: none; }
+}
+/* Show topbar hamburger on mobile only (overrides inline display:none) */
+@media (max-width: 767px) {
+  .topbar-hamburger { display: flex !important; }
 }
 
 /* ===== Base ===== */

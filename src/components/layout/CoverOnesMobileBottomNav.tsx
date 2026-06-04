@@ -1,41 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
-/* --- Icons (22×22, 1.75 stroke) --- */
-
-const HomeIcon = () => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-    <polyline points="9 22 9 12 15 12 15 22" />
-  </svg>
-);
-
-const BriefcaseIcon = () => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-  </svg>
-);
-
-const TagIcon = () => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-    <line x1="7" y1="7" x2="7.01" y2="7" />
-  </svg>
-);
-
-const FileTextIcon = () => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-  </svg>
-);
-
-const MessageSquareIcon = () => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
-);
+import { Icon } from '../ui/Icon';
 
 /* --- Tab definition --- */
 
@@ -52,28 +17,34 @@ interface TabItem {
  *   首頁 · 案件 · 招標 · 合約 · 訊息
  * 訊息 routes to the placeholder page (chat deferred).
  * Unread badges are zero-initialized; future: connect to notification store.
+ *
+ * 首頁 points to /jobs (the real landing route) so isActive works correctly.
+ * TODO P2: point 首頁 at '/' when a Homepage dashboard renders at that route.
  */
 const TABS: TabItem[] = [
-  { id: 'home',      path: '/',          label: '首頁', icon: <HomeIcon /> },
-  { id: 'jobs',      path: '/jobs',      label: '案件', icon: <BriefcaseIcon /> },
-  { id: 'bids',      path: '/bids',      label: '招標', icon: <TagIcon /> },
-  { id: 'contracts', path: '/contracts', label: '合約', icon: <FileTextIcon /> },
-  { id: 'messages',  path: '/messages',  label: '訊息', icon: <MessageSquareIcon />, badge: 0 },
+  { id: 'home',      path: '/jobs',      label: '首頁', icon: <Icon.Home size={22} /> },
+  { id: 'jobs',      path: '/jobs',      label: '案件', icon: <Icon.Briefcase size={22} /> },
+  { id: 'bids',      path: '/bids',      label: '招標', icon: <Icon.Tag size={22} /> },
+  { id: 'contracts', path: '/contracts', label: '合約', icon: <Icon.FileText size={22} /> },
+  { id: 'messages',  path: '/messages',  label: '訊息', icon: <Icon.Chat size={22} />, badge: 0 },
 ];
 
 const CoverOnesMobileBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // "/" (index) only matches the root exactly; others use startsWith
-  const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/';
-    return location.pathname.startsWith(path);
-  };
+  // Only the first matching tab is considered active (prevents both 首頁 and 案件 from being active
+  // when both point to /jobs; TODO P2: separate once '/' renders a Homepage dashboard).
+  const activeTabId = (() => {
+    for (const tab of TABS) {
+      if (location.pathname.startsWith(tab.path)) return tab.id;
+    }
+    return null;
+  })();
 
   return (
     <nav
-      aria-label="モバイル主要ナビゲーション"
+      aria-label="主要導覽"
       style={{
         position: 'fixed',
         bottom: 0,
@@ -90,7 +61,7 @@ const CoverOnesMobileBottomNav = () => {
       }}
     >
       {TABS.map((tab) => {
-        const active = isActive(tab.path);
+        const active = activeTabId === tab.id;
         return (
           <button
             key={tab.id}
@@ -142,7 +113,7 @@ const CoverOnesMobileBottomNav = () => {
                     lineHeight: '14px',
                     borderRadius: 999,
                     background: 'var(--co-red)',
-                    color: '#fff',
+                    color: 'var(--co-text-on-accent)',
                     textAlign: 'center',
                     boxShadow: '0 0 0 2px var(--co-bg-card-2)',
                   }}

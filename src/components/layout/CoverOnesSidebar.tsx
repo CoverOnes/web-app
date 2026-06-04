@@ -2,52 +2,7 @@ import { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { isFeatureEnabled } from '../../features/flags/featureFlags';
-
-/* --- Inline SVG icon components (1.75 stroke weight per design) --- */
-
-const BriefcaseIcon = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-    <line x1="8" y1="12" x2="16" y2="12" />
-  </svg>
-);
-
-const TagIcon = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-    <line x1="7" y1="7" x2="7.01" y2="7" />
-  </svg>
-);
-
-const FileTextIcon = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <line x1="16" y1="13" x2="8" y2="13" />
-    <line x1="16" y1="17" x2="8" y2="17" />
-  </svg>
-);
-
-const MessageSquareIcon = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
-);
-
-const ShieldIcon = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    <polyline points="9 12 11 14 15 10" />
-  </svg>
-);
-
-const SettingsIcon = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-  </svg>
-);
+import { Icon } from '../ui/Icon';
 
 /* --- Nav item definition --- */
 
@@ -105,7 +60,7 @@ const NavItem = ({ entry, active, onClick }: NavItemProps) => {
           border: 'none',
           cursor: entry.disabled ? 'not-allowed' : 'pointer',
           opacity: entry.disabled ? 0.6 : 1,
-          color: active ? '#fff' : 'var(--co-text-dim)',
+          color: active ? 'var(--co-text-on-accent)' : 'var(--co-text-dim)',
           background: active
             ? 'linear-gradient(90deg, rgba(99,102,241,0.18), rgba(99,102,241,0.04))'
             : 'transparent',
@@ -148,7 +103,7 @@ const NavItem = ({ entry, active, onClick }: NavItemProps) => {
               padding: '1px 6px',
               borderRadius: 999,
               background: 'var(--co-red)',
-              color: '#fff',
+              color: 'var(--co-text-on-accent)',
               fontWeight: 600,
               minWidth: 16,
               textAlign: 'center',
@@ -200,20 +155,20 @@ const CoverOnesSidebar = () => {
 
   // Core nav items (主選單)
   const coreNav: NavEntry[] = [
-    { path: '/jobs',      label: '案件看板',  icon: (s) => <BriefcaseIcon size={s} /> },
-    { path: '/bids',      label: '招標進度',  icon: (s) => <TagIcon size={s} /> },
-    { path: '/contracts', label: '合約管理',  icon: (s) => <FileTextIcon size={s} /> },
+    { path: '/jobs',      label: '案件看板',  icon: (s) => <Icon.Briefcase size={s} /> },
+    { path: '/bids',      label: '招標進度',  icon: (s) => <Icon.Tag size={s} /> },
+    { path: '/contracts', label: '合約管理',  icon: (s) => <Icon.FileText size={s} /> },
     // 訊息: shown in sidebar pointing to placeholder page (chat deferred)
-    { path: '/messages',  label: '訊息',      icon: (s) => <MessageSquareIcon size={s} /> },
+    { path: '/messages',  label: '訊息',      icon: (s) => <Icon.MessageSquare size={s} /> },
   ];
 
   // Account nav items (帳號)
   const accountNav: NavEntry[] = [
-    ...(kycTier < 2 ? [{ path: '/kyc', label: '身分認證', icon: (s: number | undefined) => <ShieldIcon size={s} /> }] : []),
+    ...(kycTier < 2 ? [{ path: '/kyc', label: '身分認證', icon: (s: number | undefined) => <Icon.Shield size={s} /> }] : []),
     {
       path: '/settings',
       label: '設定',
-      icon: (s: number | undefined) => <SettingsIcon size={s} />,
+      icon: (s: number | undefined) => <Icon.Settings size={s} />,
       disabled: !settingsEnabled,
       disabledLabel: '設定功能即將推出',
     },
@@ -281,7 +236,7 @@ const CoverOnesSidebar = () => {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path
                 d="M20 12c0 4.418-3.582 8-8 8-2.548 0-4.82-1.194-6.3-3.065M4 12C4 7.582 7.582 4 12 4c2.548 0 4.82 1.194 6.3 3.065"
-                stroke="#fff"
+                style={{ stroke: 'var(--co-text-on-accent)' }}
                 strokeWidth="2.2"
                 strokeLinecap="round"
               />
@@ -324,13 +279,13 @@ const CoverOnesSidebar = () => {
             width: 30,
             height: 30,
             borderRadius: 7,
-            background: 'linear-gradient(135deg, #F59E0B, #EF4444)',
+            background: 'linear-gradient(135deg, var(--co-amber), var(--co-red))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontWeight: 700,
             fontSize: 12,
-            color: '#fff',
+            color: 'var(--co-text-on-accent)',
             flexShrink: 0,
           }}
           aria-hidden="true"
@@ -406,13 +361,13 @@ const CoverOnesSidebar = () => {
             width: 30,
             height: 30,
             borderRadius: 8,
-            background: 'linear-gradient(135deg, #2563EB, #6366F1)',
+            background: 'linear-gradient(135deg, var(--co-accent-blue), var(--co-accent))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 11,
             fontWeight: 700,
-            color: '#fff',
+            color: 'var(--co-text-on-accent)',
             flexShrink: 0,
           }}
           aria-hidden="true"

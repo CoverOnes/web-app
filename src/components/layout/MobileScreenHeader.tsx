@@ -1,16 +1,11 @@
 import type { ReactNode } from 'react';
-
-const MenuIcon = () => (
-  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="3" y1="6" x2="21" y2="6" />
-    <line x1="3" y1="12" x2="21" y2="12" />
-    <line x1="3" y1="18" x2="21" y2="18" />
-  </svg>
-);
+import { Icon } from '../ui/Icon';
 
 interface MobileScreenHeaderProps {
   title: string;
   onMenuOpen: () => void;
+  /** Reflects the drawer open state for aria-expanded on the hamburger button */
+  open?: boolean;
   action?: ReactNode;
 }
 
@@ -20,11 +15,10 @@ interface MobileScreenHeaderProps {
  * Layout: hamburger | title (flex 1) | optional right action.
  * Hidden on desktop via media query.
  */
-const MobileScreenHeader = ({ title, onMenuOpen, action }: MobileScreenHeaderProps) => {
+const MobileScreenHeader = ({ title, onMenuOpen, open = false, action }: MobileScreenHeaderProps) => {
   return (
-    <>
-      <div
-        className="mobile-screen-header"
+    <div
+      className="mobile-screen-header"
         style={{
           height: 52,
           padding: '0 16px',
@@ -41,6 +35,8 @@ const MobileScreenHeader = ({ title, onMenuOpen, action }: MobileScreenHeaderPro
           type="button"
           onClick={onMenuOpen}
           aria-label="開啟選單"
+          aria-expanded={open}
+          aria-controls="mobile-drawer"
           style={{
             width: 36,
             height: 36,
@@ -57,7 +53,7 @@ const MobileScreenHeader = ({ title, onMenuOpen, action }: MobileScreenHeaderPro
             minHeight: 44,
           }}
         >
-          <MenuIcon />
+          <Icon.Menu size={20} />
         </button>
 
         {/* Page title */}
@@ -81,12 +77,7 @@ const MobileScreenHeader = ({ title, onMenuOpen, action }: MobileScreenHeaderPro
             {action}
           </div>
         )}
-      </div>
-      {/* Hide on desktop */}
-      <style>{`
-        @media (min-width: 768px) { .mobile-screen-header { display: none !important; } }
-      `}</style>
-    </>
+    </div>
   );
 };
 

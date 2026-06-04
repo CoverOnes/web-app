@@ -23,6 +23,9 @@ export function useFAB(config: FABConfig | null) {
       setFAB(null);
     }
     return () => setFAB(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // `config` object is intentionally omitted from deps: we track only its stable primitives (label,
+  // onClick) to avoid re-registration on every render. `config.icon` is a static ReactNode; tracking
+  // the full config object would force useMemo at every call site.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setFAB, label, onClick]);
 }

@@ -46,6 +46,13 @@ describe('CoverOnesMobileBottomNav', () => {
     expect(screen.getByRole('button', { name: '案件' })).not.toHaveAttribute('aria-current', 'page');
   });
 
+  it('首頁 tab is active on /jobs (first-match wins; 案件 tab is not active)', () => {
+    // TODO P2: once '/' renders a Homepage dashboard, 首頁 points at '/' and this test changes.
+    renderNav('/jobs');
+    expect(screen.getByRole('button', { name: '首頁' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('button', { name: '案件' })).not.toHaveAttribute('aria-current', 'page');
+  });
+
   it('marks /contracts tab as active on /contracts/:id route', () => {
     renderNav('/contracts/abc123');
     expect(screen.getByRole('button', { name: '合約' })).toHaveAttribute('aria-current', 'page');
@@ -65,13 +72,16 @@ describe('CoverOnesMobileBottomNav', () => {
     expect(screen.getByTestId('path')).toHaveTextContent('/messages');
   });
 
-  it('all tab buttons have minimum accessible touch target (minWidth/minHeight)', () => {
+  it.todo(
+    'all tab buttons have minimum computed touch target (minWidth/minHeight ≥ 44px) ' +
+    '— requires a layout engine (jsdom does not compute CSS; use Playwright/Cypress for this assertion)',
+  );
+
+  it('all tab buttons have aria-label (accessibility)', () => {
     renderNav('/jobs');
-    // Each button should have minWidth and minHeight ≥ 44 set (we verify the DOM exists)
     const buttons = screen.getAllByRole('button');
     expect(buttons).toHaveLength(5);
     buttons.forEach((btn) => {
-      // aria-label present (accessibility)
       expect(btn).toHaveAttribute('aria-label');
     });
   });

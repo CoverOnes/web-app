@@ -67,15 +67,18 @@ const CoverOnesLayout = () => {
             flexDirection: 'column',
             minWidth: 0,
             overflow: 'hidden',
-            /* Bottom padding reserves space for mobile bottom-nav (72px) */
-            paddingBottom: isMobile ? 72 : 0,
+            /* Bottom padding reserves space for mobile bottom-nav (72px + safe-area-inset-bottom) */
+            paddingBottom: isMobile ? 'calc(72px + env(safe-area-inset-bottom))' : 0,
             background: 'var(--co-bg)',
             /* Main column fills the grid cell height on desktop */
             height: '100dvh',
           }}
         >
-          {/* Topbar — sticky within the main column */}
-          <CoverOnesTopbar />
+          {/* Topbar — sticky within the main column; passes hamburger handler on mobile */}
+          <CoverOnesTopbar
+            drawerOpen={drawerOpen}
+            onMenuOpen={isMobile ? () => setDrawerOpen(true) : undefined}
+          />
 
           {/* Email verification banner */}
           <UnverifiedBanner />
