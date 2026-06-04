@@ -1,4 +1,5 @@
 import { useMyBids, useWithdrawBid } from '../lib/query';
+import { useAuthStore } from '../store/authStore';
 import { PipelineCard } from '../components/marketplace/PipelineCard';
 import { PageHead } from '../components/layout/PageHead';
 import { StatCard } from '../components/ui/StatCard';
@@ -18,9 +19,20 @@ const PIPELINE_COLUMNS: { id: BidStatus | 'ALL'; label: string }[] = [
 ];
 
 const MyBidsPage = () => {
-  const { data: bids, isLoading, isError } = useMyBids();
+  // FIX A — bids「載入失敗」race. useMyBids is gated on auth-ready (see lib/query):
+  // during the hydration window the query is disabled (status 'pending',
+  // fetchStatus 'idle'), so isLoading is false even though we have no data yet.
+  // Treat "auth still hydrating" as a loading state too, so the first paint
+  // shows skeletons instead of a misleading "尚無投標記錄"/"載入失敗".
+  const isHydrating = useAuthStore((s) => s.isHydrating);
+  const { data: bids, isLoading, isError, isPending, fetchStatus } = useMyBids();
   const withdrawBid = useWithdrawBid();
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+
+  // Loading = the query is actively fetching, OR auth is still hydrating, OR the
+  // query is parked pending (disabled until auth-ready) and has no data yet.
+  const showLoading =
+    isLoading || isHydrating || (isPending && fetchStatus === 'idle' && !bids);
 
   const handleWithdraw = async (bidId: string) => {
     setWithdrawingId(bidId);
@@ -55,7 +67,7 @@ const MyBidsPage = () => {
       </div>
 
       <div style={{ flex: 1, padding: '20px 28px 40px 28px' }}>
-        {isLoading ? (
+        {showLoading ? (
           <div style={{ display: 'flex', gap: 12 }}>
             {PIPELINE_COLUMNS.map((col) => (
               <div key={col.id} style={{ flex: 1 }}>

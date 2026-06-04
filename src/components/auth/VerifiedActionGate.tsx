@@ -1,14 +1,21 @@
-import { cloneElement, type ReactElement } from 'react';
+import { cloneElement, type MouseEvent, type ReactElement } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { Tooltip } from '../ui/Tooltip';
 
+interface GatedControlProps {
+  disabled?: boolean;
+  'aria-disabled'?: boolean | 'true' | 'false';
+  onClick?: (e: MouseEvent<HTMLElement>) => void;
+  className?: string;
+}
+
 interface VerifiedActionGateProps {
   /**
-   * The write-action control to gate. Receives a `disabled` prop merged with the
-   * unverified state. When unverified, the control is force-disabled and wrapped
-   * in a tooltip explaining why.
+   * The write-action control to gate. When blocked it is rendered with
+   * aria-disabled (NOT the native `disabled` attribute) and its onClick is
+   * suppressed, then wrapped in a tooltip explaining why.
    */
-  children: ReactElement<{ disabled?: boolean }>;
+  children: ReactElement<GatedControlProps>;
   /** Tooltip text shown when the action is blocked. */
   message?: string;
   /**
@@ -19,10 +26,17 @@ interface VerifiedActionGateProps {
 }
 
 /**
- * auth Increment 1: wraps a write-action button (發案/投標/KYC/合約 submit) and
- * disables it with an explanatory tooltip when the logged-in user's email is not
+ * auth Increment 1 / Inc2: wraps a write-action button (發案/投標/KYC submit) and
+ * blocks it with an explanatory tooltip when the logged-in user's email is not
  * yet verified. The backend independently enforces 403 EMAIL_NOT_VERIFIED — this
  * is the proactive UX layer that prevents the user from triggering that error.
+ *
+ * FIX B: the native `disabled` attribute combined with the Button's
+ * `disabled:pointer-events-none` swallowed hover/focus events, so the tooltip
+ * never appeared — the user saw a dead button with no reason. We now use
+ * `aria-disabled` + a suppressed onClick instead. The control stays
+ * hover/focus-able (so the tooltip shows and screen readers announce the
+ * disabled state) while the action itself is still prevented.
  *
  * When the user IS verified (or auth is still hydrating), children render
  * untouched so existing disabled/loading logic is preserved.
@@ -43,10 +57,28 @@ export function VerifiedActionGate({
     return children;
   }
 
-  // Force-disable the child control and wrap it in a tooltip.
+  // aria-disabled instead of native disabled: keeps the control focus/hover-able
+  // so the tooltip reason actually shows, while we hard-suppress the click and
+  // dim it visually via the gate's own class.
+  const blockClassName = [
+    children.props.className ?? '',
+    'opacity-50 cursor-not-allowed',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <Tooltip content={message} className={wrapperClassName}>
-      {cloneElement(children, { disabled: true })}
+      {cloneElement(children, {
+        'aria-disabled': true,
+        className: blockClassName,
+        onClick: (e: MouseEvent<HTMLElement>) => {
+          // Prevent the gated action without relying on the native disabled
+          // attribute (which would suppress the tooltip's hover events).
+          e.preventDefault();
+          e.stopPropagation();
+        },
+      })}
     </Tooltip>
   );
 }

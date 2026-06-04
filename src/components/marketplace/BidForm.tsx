@@ -30,7 +30,9 @@ export function BidForm({ onSubmit, isSubmitting, error }: BidFormProps) {
     return (
       <KycRequiredBanner
         requiredTier={1}
-        message="KYC Tier 1 required to place bids. Complete basic identity verification to unlock bidding."
+        message="需要完成 KYC 認證才能投標。完成身分驗證即可解鎖投標功能。"
+        ctaLink="/kyc"
+        ctaLabel="完成 KYC 認證"
       />
     );
   }

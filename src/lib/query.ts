@@ -1,10 +1,13 @@
 import { QueryClient, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   authApi,
+  kycApi,
   marketplaceApi,
   workspaceApi,
   type ContractStatus,
+  type KycSubmitRequest,
 } from './api/coverones';
+import { useAuthStore } from '../store/authStore';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,10 +64,61 @@ export function useListingBids(listingId: string, enabled = false) {
   });
 }
 
+// FIX A — bids「載入失敗」race. On a hard reload the in-memory access token is
+// null until ProtectedRoute hydrates it (via /me → 401 → /v1/auth/refresh). If
+// the list query fired before that, the first request 401'd and surfaced as
+// "載入失敗" instead of retrying. We now:
+//   1. Gate the query on auth-ready (not hydrating AND a token is present), so
+//      it never fires during the hydration window.
+//   2. Retry transient 401s a couple of times (the interceptor refreshes the
+//      token on the way), so a momentary auth gap recovers instead of erroring.
 export function useMyBids() {
+  const isHydrating = useAuthStore((s) => s.isHydrating);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
+  // Auth is "ready" once hydration finished and we hold a token to send. The
+  // refreshToken alone is enough — the 401 interceptor mints an access token.
+  const authReady = !isHydrating && (!!accessToken || !!refreshToken);
+
   return useQuery({
     queryKey: ['my-bids'],
     queryFn: () => marketplaceApi.getMyBids(),
+    enabled: authReady,
+    retry: (failureCount, error) => {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      // Transient auth gap → retry (token may still be refreshing). Other errors
+      // fall back to the default single retry.
+      if (status === 401 || status === 403) return failureCount < 2;
+      return failureCount < 1;
+    },
+    retryDelay: (attempt) => Math.min(400 * 2 ** attempt, 2000),
+  });
+}
+
+// ===== KYC hooks (Increment 2) =====
+
+export function useKycStatus() {
+  const isHydrating = useAuthStore((s) => s.isHydrating);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
+  const authReady = !isHydrating && (!!accessToken || !!refreshToken);
+
+  return useQuery({
+    queryKey: ['kyc-status'],
+    queryFn: () => kycApi.getStatus(),
+    enabled: authReady,
+    staleTime: 0,
+  });
+}
+
+export function useSubmitKyc() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: KycSubmitRequest) => kycApi.submit(data),
+    // retry:false — 403 EMAIL_NOT_VERIFIED / 429 RATE_LIMITED are deterministic
+    // and must surface to the caller for an inline message, not be auto-retried.
+    retry: false,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['kyc-status'] }),
   });
 }
 

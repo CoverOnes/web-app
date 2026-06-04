@@ -100,6 +100,30 @@ export const validateNationalId = (value: string): string | null => {
 };
 
 /**
+ * 驗證統一編號 (TW business ID) — Increment 2 KYC for COMPANY accounts.
+ * Format: exactly 8 digits + official checksum. Returns a zh-TW error string,
+ * or null when valid. The backend re-validates; this gives immediate feedback.
+ *
+ * Checksum: weights [1,2,1,2,1,2,4,1]. Each digit×weight is reduced to its digit
+ * sum, then totalled. Valid when total % 10 === 0, OR (special-case for a 7th
+ * digit of 7) when (total + 1) % 10 === 0.
+ */
+export const validateBusinessId = (value: string): string | null => {
+  const id = value.trim();
+  if (id.length === 0) return '請輸入統一編號。';
+  if (!/^\d{8}$/.test(id)) return '統一編號需為 8 位數字。';
+
+  const weights = [1, 2, 1, 2, 1, 2, 4, 1];
+  const digits = id.split('').map((c) => Number(c));
+  const digitSum = (n: number) => Math.floor(n / 10) + (n % 10);
+  const total = digits.reduce((acc, d, i) => acc + digitSum(d * weights[i]), 0);
+
+  const valid = total % 10 === 0 || (digits[6] === 7 && (total + 1) % 10 === 0);
+  if (!valid) return '統一編號檢查碼錯誤。';
+  return null;
+};
+
+/**
  * 驗證公司名稱 — required for COMPANY accounts, 1-100 chars.
  * Returns a zh-TW error string, or null when valid.
  */

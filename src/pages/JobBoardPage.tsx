@@ -66,30 +66,24 @@ const JobBoardPage = () => {
               + 發布案件
             </Button>
           ) : (
-            <Tooltip content="需要 KYC Tier 2 驗證才能發布案件。">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* 發布案件 stays disabled (needs Tier 2) but now sits next to a
+                  visible CTA so the user knows HOW to unlock it. */}
+              <Tooltip content="需要 KYC Tier 2 驗證才能發布案件。">
                 <Button variant="primary" size="md" disabled aria-label="發布案件 (需要 KYC)">
                   + 發布案件
                 </Button>
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    padding: '3px 8px',
-                    borderRadius: 999,
-                    background: 'rgba(245,158,11,0.15)',
-                    color: 'var(--co-amber)',
-                    fontSize: 11,
-                    fontWeight: 500,
-                    border: '1px solid rgba(245,158,11,0.25)',
-                  }}
-                >
-                  <Icon.Lock size={11} />
-                  Tier 2
-                </span>
-              </div>
-            </Tooltip>
+              </Tooltip>
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => navigate('/kyc')}
+                aria-label="完成 KYC 認證以解鎖發布案件"
+              >
+                <Icon.Lock size={13} />
+                完成 KYC 認證
+              </Button>
+            </div>
           )
         }
       />

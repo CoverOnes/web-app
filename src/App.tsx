@@ -12,6 +12,7 @@ import JobDetailPage from './pages/JobDetailPage';
 import MyBidsPage from './pages/MyBidsPage';
 import MyContractsPage from './pages/MyContractsPage';
 import ContractDetailPage from './pages/ContractDetailPage';
+import KycPage from './pages/KycPage';
 import Messages from './pages/Messages';
 import Contacts from './pages/Contacts';
 import Settings from './pages/Settings';
@@ -53,6 +54,9 @@ function App() {
 
             {/* Bids */}
             <Route path="bids" element={<MyBidsPage />} />
+
+            {/* KYC onboarding (Increment 2) — climb to tier-2 to unlock 發案/投標 */}
+            <Route path="kyc" element={<KycPage />} />
 
             {/* Contracts */}
             <Route path="contracts" element={<MyContractsPage />} />

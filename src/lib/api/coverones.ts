@@ -234,12 +234,79 @@ export const marketplaceApi = {
     http.post<Bid>(`/api/marketplace/v1/bids/${bidId}/withdraw`).then((r) => r.data),
 };
 
+// ===== KYC (Increment 2) =====
+// Routes through the gateway with the /api/:svc/* pattern: /api/kyc/v1/kyc/*
+// (gateway strips /api/kyc → kyc service receives /v1/kyc/*). The user must
+// already have a verified email (gateway injects X-Email-Verified); the backend
+// returns 403 EMAIL_NOT_VERIFIED otherwise, and 429 when rate-limited (3/15min).
+
+export type KycSubmissionStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface KycSubmission {
+  id: string;
+  accountType: AccountType;
+  status: KycSubmissionStatus;
+  // Present once a tier has been granted (dev auto-approves at tier 2).
+  tierGranted?: number;
+  submittedAt: string;
+  reviewedAt?: string;
+}
+
+export interface KycStatusResponse {
+  currentTier: number;
+  kycType: string;
+  // null when the user has never submitted a KYC application.
+  submission: KycSubmission | null;
+}
+
+// Discriminated union on accountType so each variant only carries its own id
+// field — PERSONAL → nationalId, COMPANY → businessId (統一編號). legalName is
+// the registrant's real name for both.
+interface KycSubmitBase {
+  legalName: string;
+}
+
+export interface KycSubmitPersonalRequest extends KycSubmitBase {
+  accountType: 'PERSONAL';
+  nationalId: string;
+}
+
+export interface KycSubmitCompanyRequest extends KycSubmitBase {
+  accountType: 'COMPANY';
+  // 統一編號 — 8-digit Taiwan business ID.
+  businessId: string;
+}
+
+export type KycSubmitRequest = KycSubmitPersonalRequest | KycSubmitCompanyRequest;
+
+export interface KycSubmitResponse {
+  submission: KycSubmission;
+  currentTier: number;
+  // true when this submission promoted the user to a higher tier.
+  promoted: boolean;
+}
+
+export const kycApi = {
+  // GET /api/kyc/v1/kyc/status → { data: { currentTier, kycType, submission } }
+  getStatus: () =>
+    http.get<KycStatusResponse>('/api/kyc/v1/kyc/status').then((r) => r.data),
+
+  // POST /api/kyc/v1/kyc/submit — dev returns 201 with promoted=true, tierGranted=2.
+  submit: (data: KycSubmitRequest) =>
+    http.post<KycSubmitResponse>('/api/kyc/v1/kyc/submit', data).then((r) => r.data),
+};
+
 export const workspaceApi = {
   listContracts: (params?: { status?: ContractStatus }) =>
     http.get<Contract[]>('/api/workspace/v1/contracts', { params }).then((r) => r.data),
 
   getContract: (id: string) =>
     http.get<Contract>(`/api/workspace/v1/contracts/${id}`).then((r) => r.data),
+
+  // DRAFT -> PENDING_SIGNATURE. Client-only on the backend; a non-client party
+  // or non-party receives 404 (IDOR-safe).
+  submitContractForSignature: (id: string) =>
+    http.post<Contract>(`/api/workspace/v1/contracts/${id}/submit-for-signature`).then((r) => r.data),
 
   signContract: (id: string, signedContentHash: string) =>
     http.post<Contract>(`/api/workspace/v1/contracts/${id}/sign`, { signedContentHash }).then((r) => r.data),
