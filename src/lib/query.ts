@@ -223,6 +223,20 @@ export function useSignContract(contractId: string) {
   });
 }
 
+export function useSubmitForSignature(contractId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => workspaceApi.submitContractForSignature(contractId),
+    // retry:false — 403/404 from the backend are deterministic (wrong party or wrong status)
+    retry: false,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['contract', contractId] });
+      qc.invalidateQueries({ queryKey: ['contracts'] });
+    },
+    onError: (err) => { console.error('[useSubmitForSignature]', err); },
+  });
+}
+
 export function useCancelContract(contractId: string) {
   const qc = useQueryClient();
   return useMutation({

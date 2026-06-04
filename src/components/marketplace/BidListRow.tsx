@@ -10,6 +10,10 @@ interface BidListRowProps {
   onReject: (bidId: string) => void;
   isAccepting: boolean;
   isRejecting: boolean;
+  // Optional callback for the "前往合約" CTA shown when bid is ACCEPTED.
+  // Parent passes this to trigger contract discovery and navigation.
+  onGoToContract?: (bid: Bid) => void;
+  isNavigatingToContract?: boolean;
 }
 
 export function BidListRow({
@@ -19,6 +23,8 @@ export function BidListRow({
   onReject,
   isAccepting,
   isRejecting,
+  onGoToContract,
+  isNavigatingToContract = false,
 }: BidListRowProps) {
   return (
     <div
@@ -78,6 +84,22 @@ export function BidListRow({
             aria-label="Reject bid"
           >
             Reject
+          </Button>
+        </div>
+      )}
+
+      {/* After accepting a bid, show a "前往合約" CTA so the owner can navigate to the
+          auto-created contract (created asynchronously by the workspace service after accept). */}
+      {bid.status === 'ACCEPTED' && onGoToContract && (
+        <div style={{ flexShrink: 0 }}>
+          <Button
+            variant="primary"
+            size="sm"
+            loading={isNavigatingToContract}
+            onClick={() => onGoToContract(bid)}
+            aria-label="前往合約"
+          >
+            前往合約
           </Button>
         </div>
       )}
