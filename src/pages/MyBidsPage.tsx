@@ -45,6 +45,7 @@ const MyBidsPage = () => {
 
   const pendingCount = bids?.filter((b) => b.status === 'PENDING').length ?? 0;
   const acceptedCount = bids?.filter((b) => b.status === 'ACCEPTED').length ?? 0;
+  const rejectedCount = bids?.filter((b) => b.status === 'REJECTED').length ?? 0;
   const totalCount = bids?.length ?? 0;
 
   return (
@@ -59,7 +60,7 @@ const MyBidsPage = () => {
       <div style={{ padding: '16px 28px 0 28px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
           <StatCard label="投標中" value={pendingCount} />
-          <StatCard label="審核中" value={pendingCount} />
+          <StatCard label="未得標" value={rejectedCount} />
           <StatCard label="得標" value={acceptedCount} />
           <StatCard label="總計" value={totalCount} />
           <StatCard label="成功率" value={totalCount > 0 ? `${Math.round((acceptedCount / totalCount) * 100)}%` : '—'} />

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Icon } from '../ui/Icon';
 
 interface KycRequiredBannerProps {
@@ -11,9 +12,9 @@ export function KycRequiredBanner({
   requiredTier,
   message,
   ctaLink,
-  ctaLabel = 'Learn more',
+  ctaLabel = '了解更多',
 }: KycRequiredBannerProps) {
-  const defaultMsg = `KYC Tier ${requiredTier} required. Complete identity verification to unlock this feature.`;
+  const defaultMsg = `需完成 KYC Tier ${requiredTier} 身分驗證後，才能使用此功能。`;
 
   return (
     <div
@@ -26,22 +27,22 @@ export function KycRequiredBanner({
         borderRadius: 10,
         background: 'var(--color-warning-100)',
         border: '1px solid var(--color-amber)',
-        color: '#92400e',
+        color: 'var(--color-warning-900)',
       }}
     >
-      <Icon.Lock size={18} style={{ color: '#d97706', flexShrink: 0, marginTop: 1 }} />
+      <Icon.Lock size={18} style={{ color: 'var(--color-warning-700)', flexShrink: 0, marginTop: 1 }} />
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 2 }}>
-          Verification Required
+          需要身分驗證
         </p>
         <p style={{ fontSize: 13, lineHeight: 1.5 }}>{message ?? defaultMsg}</p>
         {ctaLink && (
-          <a
-            href={ctaLink}
-            style={{ fontSize: 13, color: '#d97706', fontWeight: 600, marginTop: 6, display: 'inline-block' }}
+          <Link
+            to={ctaLink}
+            style={{ fontSize: 13, color: 'var(--color-warning-700)', fontWeight: 600, marginTop: 6, display: 'inline-block' }}
           >
             {ctaLabel}
-          </a>
+          </Link>
         )}
       </div>
     </div>
