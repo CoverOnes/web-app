@@ -43,10 +43,18 @@ export function TierGuard({ requiredTier, children, fullPage = false }: TierGuar
             gap: 20,
           }}
         >
-          <KycRequiredBanner requiredTier={requiredTier} />
-          <Button variant="secondary" size="md" onClick={() => navigate('/jobs')}>
-            Back to Jobs
-          </Button>
+          <KycRequiredBanner
+            requiredTier={requiredTier}
+            message={`需要 KYC Tier ${requiredTier} 認證才能使用此功能。完成身分驗證即可解鎖。`}
+          />
+          <div style={{ display: 'flex', gap: 10 }}>
+            <Button variant="primary" size="md" onClick={() => navigate('/kyc')}>
+              完成 KYC 認證
+            </Button>
+            <Button variant="secondary" size="md" onClick={() => navigate('/jobs')}>
+              返回案件看板
+            </Button>
+          </div>
         </div>
       </div>
     );

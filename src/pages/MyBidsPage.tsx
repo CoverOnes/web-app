@@ -1,4 +1,5 @@
 import { useMyBids, useWithdrawBid } from '../lib/query';
+import { useAuthStore } from '../store/authStore';
 import { PipelineCard } from '../components/marketplace/PipelineCard';
 import { PageHead } from '../components/layout/PageHead';
 import { StatCard } from '../components/ui/StatCard';
@@ -18,9 +19,20 @@ const PIPELINE_COLUMNS: { id: BidStatus | 'ALL'; label: string }[] = [
 ];
 
 const MyBidsPage = () => {
-  const { data: bids, isLoading, isError } = useMyBids();
+  // FIX A — bids「載入失敗」race. useMyBids is gated on auth-ready (see lib/query):
+  // during the hydration window the query is disabled (status 'pending',
+  // fetchStatus 'idle'), so isLoading is false even though we have no data yet.
+  // Treat "auth still hydrating" as a loading state too, so the first paint
+  // shows skeletons instead of a misleading "尚無投標記錄"/"載入失敗".
+  const isHydrating = useAuthStore((s) => s.isHydrating);
+  const { data: bids, isLoading, isError, isPending, fetchStatus } = useMyBids();
   const withdrawBid = useWithdrawBid();
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+
+  // Loading = the query is actively fetching, OR auth is still hydrating, OR the
+  // query is parked pending (disabled until auth-ready) and has no data yet.
+  const showLoading =
+    isLoading || isHydrating || (isPending && fetchStatus === 'idle' && !bids);
 
   const handleWithdraw = async (bidId: string) => {
     setWithdrawingId(bidId);
@@ -33,6 +45,7 @@ const MyBidsPage = () => {
 
   const pendingCount = bids?.filter((b) => b.status === 'PENDING').length ?? 0;
   const acceptedCount = bids?.filter((b) => b.status === 'ACCEPTED').length ?? 0;
+  const rejectedCount = bids?.filter((b) => b.status === 'REJECTED').length ?? 0;
   const totalCount = bids?.length ?? 0;
 
   return (
@@ -47,7 +60,7 @@ const MyBidsPage = () => {
       <div style={{ padding: '16px 28px 0 28px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
           <StatCard label="投標中" value={pendingCount} />
-          <StatCard label="審核中" value={pendingCount} />
+          <StatCard label="未得標" value={rejectedCount} />
           <StatCard label="得標" value={acceptedCount} />
           <StatCard label="總計" value={totalCount} />
           <StatCard label="成功率" value={totalCount > 0 ? `${Math.round((acceptedCount / totalCount) * 100)}%` : '—'} />
@@ -55,7 +68,7 @@ const MyBidsPage = () => {
       </div>
 
       <div style={{ flex: 1, padding: '20px 28px 40px 28px' }}>
-        {isLoading ? (
+        {showLoading ? (
           <div style={{ display: 'flex', gap: 12 }}>
             {PIPELINE_COLUMNS.map((col) => (
               <div key={col.id} style={{ flex: 1 }}>

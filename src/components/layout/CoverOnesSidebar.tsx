@@ -27,6 +27,13 @@ const FileTextIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
+const ShieldIcon = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <polyline points="9 12 11 14 15 10" />
+  </svg>
+);
+
 const SettingsIcon = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="3" />
@@ -59,6 +66,14 @@ const CoverOnesSidebar = () => {
   const isActive = (path: string) => location.pathname.startsWith(path);
 
   const initial = (user?.displayName ?? 'U').charAt(0).toUpperCase();
+
+  // Inc2: surface a KYC entry until the user reaches tier 2 (which unlocks
+  // 發案/投標). Once verified to tier 2 the item drops off the nav.
+  const kycTier = user?.kycTier ?? 0;
+  const navItems: ActiveNavEntry[] =
+    kycTier < 2
+      ? [...ACTIVE_NAV_ITEMS, { path: '/kyc', label: '身分認證', icon: <ShieldIcon /> }]
+      : ACTIVE_NAV_ITEMS;
 
   return (
     <aside
@@ -160,7 +175,7 @@ const CoverOnesSidebar = () => {
 
       {/* Active nav items */}
       <nav aria-label="Primary navigation">
-        {ACTIVE_NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const active = isActive(item.path);
           return (
             <div key={item.path} style={{ position: 'relative' }}>
