@@ -269,6 +269,9 @@ html, body { background: #000; color: var(--co-text); }
   .topbar-hamburger { display: flex !important; }
 }
 
+/* ===== Shared animation keyframes ===== */
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ===== Base ===== */
 @layer base {
   html {
