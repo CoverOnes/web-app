@@ -1,11 +1,13 @@
 import { QueryClient, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   authApi,
+  identitiesApi,
   kycApi,
   marketplaceApi,
   workspaceApi,
   type ContractStatus,
   type KycSubmitRequest,
+  type OAuthProvider,
 } from './api/coverones';
 import { useAuthStore } from '../store/authStore';
 
@@ -119,6 +121,33 @@ export function useSubmitKyc() {
     // and must surface to the caller for an inline message, not be auto-retried.
     retry: false,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['kyc-status'] }),
+  });
+}
+
+// ===== OAuth social-binding hooks (Settings → 社群帳號綁定) =====
+
+export function useIdentities() {
+  const isHydrating = useAuthStore((s) => s.isHydrating);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
+  const authReady = !isHydrating && (!!accessToken || !!refreshToken);
+
+  return useQuery({
+    queryKey: ['identities'],
+    queryFn: () => identitiesApi.list(),
+    enabled: authReady,
+    staleTime: 0,
+  });
+}
+
+export function useUnlinkIdentity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (provider: OAuthProvider) => identitiesApi.unlink(provider),
+    // retry:false — 409 LAST_LOGIN_METHOD / 404 IDENTITY_NOT_FOUND are deterministic
+    // and must surface to the caller for an inline message, not be auto-retried.
+    retry: false,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['identities'] }),
   });
 }
 

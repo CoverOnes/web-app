@@ -47,7 +47,9 @@ const DEFAULTS: Record<FeatureKey, boolean> = {
   chat: false,
   contacts: false,
   payments: false,
-  avatarSettings: false,
+  // Enabled: Settings is now the surface for OAuth social-account binding
+  // (社群帳號綁定). The binding section calls live /v1/me/identities endpoints.
+  avatarSettings: true,
   admin: false,
 };
 

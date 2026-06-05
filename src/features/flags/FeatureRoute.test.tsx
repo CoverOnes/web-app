@@ -20,12 +20,13 @@ describe('featureFlags — KEEP vs TBD defaults', () => {
     expect(isFeatureEnabled('jobBoard')).toBe(true);
     expect(isFeatureEnabled('bids')).toBe(true);
     expect(isFeatureEnabled('contracts')).toBe(true);
+    // Enabled: Settings hosts the OAuth social-account binding section (社群帳號綁定).
+    expect(isFeatureEnabled('avatarSettings')).toBe(true);
   });
 
   it('TBD features are disabled', () => {
     expect(isFeatureEnabled('chat')).toBe(false);
     expect(isFeatureEnabled('contacts')).toBe(false);
-    expect(isFeatureEnabled('avatarSettings')).toBe(false);
     expect(isFeatureEnabled('aiMatching')).toBe(false);
     expect(isFeatureEnabled('payments')).toBe(false);
     expect(isFeatureEnabled('kycOnboarding')).toBe(false);

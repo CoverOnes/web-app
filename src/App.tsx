@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyEmailSent from './pages/VerifyEmailSent';
 import VerifyEmail from './pages/VerifyEmail';
+import OAuthCallback from './pages/OAuthCallback';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import Home from './pages/Home';
 import JobBoardPage from './pages/JobBoardPage';
@@ -36,6 +37,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/register/verify-sent" element={<VerifyEmailSent />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          {/* OAuth social-login landing (receives tokens in URL fragment) */}
+          <Route path="/oauth/callback" element={<OAuthCallback />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* Protected app routes */}

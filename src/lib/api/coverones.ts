@@ -66,6 +66,18 @@ export interface ResendVerificationResponse {
   message: string;
 }
 
+// ===== OAuth social login (Google OIDC + LINE v2.1) =====
+// Identity key is (provider, provider_subject) — NEVER email. See the social-login
+// contract §0/§2. email is masked by the server (e.g. j***@e***.com) and may be
+// null when the provider did not assert one (LINE without email permission).
+export type OAuthProvider = 'google' | 'line';
+
+export interface Identity {
+  provider: 'GOOGLE' | 'LINE';
+  email: string | null;
+  linkedAt: string;
+}
+
 // ===== Marketplace =====
 export interface Listing {
   id: string;
@@ -223,6 +235,43 @@ export const authApi = {
     http.get<AuthUser>('/api/user/v1/me', {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     }).then((r) => r.data),
+};
+
+// ===== OAuth social login API =====
+// The gateway origin (same value http.ts uses as baseURL). Empty string keeps
+// same-origin behaviour when VITE_API_BASE_URL is omitted.
+const OAUTH_GATEWAY = import.meta.env.VITE_API_BASE_URL ?? '';
+
+/**
+ * Build the public OAuth start URL for a provider. This is a BROWSER NAVIGATION
+ * target (window.location.href = ...), NOT an XHR — the user service responds
+ * with a 302 to the provider's authorize URL. `redirect` is the post-login SPA
+ * path the user should land on (validated server-side as a same-origin relative
+ * path; defaults to /jobs).
+ */
+export function oauthStartUrl(provider: OAuthProvider, redirect = '/jobs'): string {
+  return `${OAUTH_GATEWAY}/v1/auth/oauth/${provider}/start?redirect=${encodeURIComponent(redirect)}`;
+}
+
+// Authed XHR helpers — ride the /api/:svc proxy (gateway strips /api/user →
+// user service receives /v1/me/identities*). Account-linking happens ONLY for an
+// already-authenticated user via Settings (contract §2.3–2.7).
+export const identitiesApi = {
+  // GET /api/user/v1/me/identities → { data: [{ provider, email, linkedAt }] }
+  list: () =>
+    http.get<Identity[]>('/api/user/v1/me/identities').then((r) => r.data),
+
+  // POST /api/user/v1/me/identities/:provider/link → { data: { authorizeUrl } }.
+  // The caller then does window.location.href = authorizeUrl (XHR can't 302-navigate).
+  linkStart: (provider: OAuthProvider) =>
+    http
+      .post<{ authorizeUrl: string }>(`/api/user/v1/me/identities/${provider}/link`)
+      .then((r) => r.data),
+
+  // DELETE /api/user/v1/me/identities/:provider → 204. 409 LAST_LOGIN_METHOD if
+  // unlinking would strand the account with no usable login method.
+  unlink: (provider: OAuthProvider) =>
+    http.delete(`/api/user/v1/me/identities/${provider}`),
 };
 
 export const marketplaceApi = {

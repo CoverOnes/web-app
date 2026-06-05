@@ -32,7 +32,11 @@ export const isAuthFlowRequest = (url?: string): boolean =>
   !!url &&
   (url.includes('/v1/auth/login') ||
     url.includes('/v1/auth/register') ||
-    url.includes('/v1/auth/refresh'));
+    url.includes('/v1/auth/refresh') ||
+    // OAuth social-login start/callback are browser navigations, not XHR, but
+    // guard defensively so any future OAuth XHR is never masked by the 401
+    // refresh-retry (contract §5.1).
+    url.includes('/v1/auth/oauth/'));
 
 /**
  * Returns current access token from auth store without a circular import at module init time.

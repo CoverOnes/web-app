@@ -19,7 +19,7 @@ import { useState, useId } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
-import { authApi } from '../lib/api/coverones';
+import { authApi, oauthStartUrl, type OAuthProvider } from '../lib/api/coverones';
 
 // NOTE: No remember-me / remember-device state here — the backend has no
 // persistent session / remember-me API.  The field was removed to avoid
@@ -654,21 +654,30 @@ const Login = () => {
 
               {/* SSO grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                {[
-                  { icon: <IconGoogle />, label: 'Google' },
-                  { icon: <IconApple />, label: 'Apple' },
-                  { icon: <IconLine />, label: 'LINE' },
-                ].map(({ icon, label }) => (
+                {([
+                  // Google + LINE are wired to the OAuth start flow. Apple is out of
+                  // scope this wave (no provider config) → rendered disabled.
+                  { icon: <IconGoogle />, label: 'Google', provider: 'google' as OAuthProvider },
+                  { icon: <IconApple />, label: 'Apple', provider: null },
+                  { icon: <IconLine />, label: 'LINE', provider: 'line' as OAuthProvider },
+                ]).map(({ icon, label, provider }) => (
                   <button
                     key={label}
                     type="button"
                     aria-label={`使用 ${label} 登入`}
+                    disabled={!provider}
+                    onClick={
+                      provider
+                        ? () => { window.location.href = oauthStartUrl(provider, '/jobs'); }
+                        : undefined
+                    }
                     style={{
                       height: 42, borderRadius: 10, border: 'none',
                       background: 'rgba(15,23,42,0.5)', borderStyle: 'solid', borderWidth: 1, borderColor: 'var(--co-line-strong)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                       fontSize: 13, fontWeight: 500, color: 'var(--co-text)',
-                      cursor: 'pointer',
+                      cursor: provider ? 'pointer' : 'not-allowed',
+                      opacity: provider ? 1 : 0.45,
                       transition: 'background 150ms, border-color 150ms',
                     }}
                   >
