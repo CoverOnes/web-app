@@ -18,11 +18,10 @@ interface TabItem {
  * 訊息 routes to the placeholder page (chat deferred).
  * Unread badges are zero-initialized; future: connect to notification store.
  *
- * 首頁 points to /jobs (the real landing route) so isActive works correctly.
- * TODO P2: point 首頁 at '/' when a Homepage dashboard renders at that route.
+ * P2a: 首頁 points to '/' (Homepage dashboard now renders at that route).
  */
 const TABS: TabItem[] = [
-  { id: 'home',      path: '/jobs',      label: '首頁', icon: <Icon.Home size={22} /> },
+  { id: 'home',      path: '/',          label: '首頁', icon: <Icon.Home size={22} /> },
   { id: 'jobs',      path: '/jobs',      label: '案件', icon: <Icon.Briefcase size={22} /> },
   { id: 'bids',      path: '/bids',      label: '招標', icon: <Icon.Tag size={22} /> },
   { id: 'contracts', path: '/contracts', label: '合約', icon: <Icon.FileText size={22} /> },
@@ -33,11 +32,15 @@ const CoverOnesMobileBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Only the first matching tab is considered active (prevents both 首頁 and 案件 from being active
-  // when both point to /jobs; TODO P2: separate once '/' renders a Homepage dashboard).
+  // P2a: 首頁 at '/' uses exact match to avoid matching every sub-path.
+  // Other tabs use prefix match (startsWith) — first match wins.
   const activeTabId = (() => {
     for (const tab of TABS) {
-      if (location.pathname.startsWith(tab.path)) return tab.id;
+      if (tab.path === '/') {
+        if (location.pathname === '/') return tab.id;
+      } else if (location.pathname.startsWith(tab.path)) {
+        return tab.id;
+      }
     }
     return null;
   })();

@@ -46,9 +46,9 @@ describe('CoverOnesMobileBottomNav', () => {
     expect(screen.getByRole('button', { name: '案件' })).not.toHaveAttribute('aria-current', 'page');
   });
 
-  it('首頁 tab is active on /jobs (first-match wins; 案件 tab is not active)', () => {
-    // TODO P2: once '/' renders a Homepage dashboard, 首頁 points at '/' and this test changes.
-    renderNav('/jobs');
+  it('首頁 tab is active on / (P2a: 首頁 points at \'/\'; 案件 tab is active on /jobs)', () => {
+    // P2a: 首頁 now points at '/' (Homepage dashboard); /jobs activates only 案件.
+    renderNav('/');
     expect(screen.getByRole('button', { name: '首頁' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('button', { name: '案件' })).not.toHaveAttribute('aria-current', 'page');
   });

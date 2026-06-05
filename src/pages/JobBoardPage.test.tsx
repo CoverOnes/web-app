@@ -96,7 +96,8 @@ describe('JobBoardPage — onboarding states', () => {
 
     expect(screen.getByText('目前沒有案件')).toBeInTheDocument();
     expect(screen.queryByText('載入失敗')).not.toBeInTheDocument();
+    // P2a: redesigned page shows no post-job button in header for Tier1 users
+    // (the page header only shows "發布需求" for canPost=true, i.e. kycTier>=2)
     expect(screen.queryByRole('button', { name: '發布案件' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '完成 KYC 認證以解鎖發布案件' })).toBeInTheDocument();
   });
 });

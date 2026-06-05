@@ -51,12 +51,39 @@ describe('CoverOnesSidebar', () => {
     expect(companyArea.tagName).toBe('DIV');
   });
 
-  it('renders core nav items (案件, 招標, 合約, 訊息)', () => {
+  it('renders core nav items (首頁, 案件, 招標, 合約, 訊息)', () => {
     renderSidebar();
+    // The main nav uses aria-label="主選單"; find 首頁 within that nav
+    const mainNav = screen.getByRole('navigation', { name: '主選單' });
+    expect(mainNav).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /案件看板/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /招標進度/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /合約管理/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /訊息/ })).toBeInTheDocument();
+    // 首頁 nav item — there are multiple buttons matching /首頁/ (brand + nav)
+    // verify the nav contains the 首頁 text
+    expect(mainNav.textContent).toMatch(/首頁/);
+  });
+
+  it('首頁 nav item is NOT active when on /jobs (exact match guard)', () => {
+    renderSidebar('/jobs');
+    // Find all buttons; the nav-item 首頁 button has no aria-label (only text content)
+    const allButtons = screen.getAllByRole('button');
+    const homeNavBtn = allButtons.find(
+      (btn) => btn.textContent?.trim() === '首頁' && !btn.getAttribute('aria-label'),
+    );
+    expect(homeNavBtn).toBeDefined();
+    expect(homeNavBtn).not.toHaveAttribute('aria-current', 'page');
+  });
+
+  it('首頁 nav item IS active on exact "/" route', () => {
+    renderSidebar('/');
+    const allButtons = screen.getAllByRole('button');
+    const homeNavBtn = allButtons.find(
+      (btn) => btn.textContent?.trim() === '首頁' && !btn.getAttribute('aria-label'),
+    );
+    expect(homeNavBtn).toBeDefined();
+    expect(homeNavBtn).toHaveAttribute('aria-current', 'page');
   });
 
   it('marks /bids nav item as active when on bids route', () => {
