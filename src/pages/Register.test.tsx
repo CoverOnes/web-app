@@ -255,7 +255,7 @@ describe('Register page — error states', () => {
     await user.click(screen.getByRole('button', { name: /建立帳號/i }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('此 email 已被註冊');
+    expect(alert).toHaveTextContent('此 email 已被註冊，請改用其他信箱或直接登入。');
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
@@ -277,5 +277,25 @@ describe('Register page — error states', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('註冊失敗，請稍後再試。');
+  });
+
+  it('shows fallback error when a non-axios (non-network) error is thrown', async () => {
+    const user = userEvent.setup();
+    // Plain Error with no isAxiosError property — hits the else branch in Register.tsx
+    mockRegister.mockRejectedValue(new Error('unexpected failure'));
+
+    renderPage();
+
+    await user.type(screen.getByLabelText(/顯示名稱/), 'Test User');
+    await user.type(screen.getByLabelText(/真實姓名/), '陳俊宇');
+    await user.type(screen.getByLabelText(/企業 Email/), 'test@co.com');
+    await user.type(screen.getByLabelText(/身分證字號/), 'A123456789');
+    await user.type(screen.getByLabelText(/^密碼/), 'strongpassword123');
+    await user.type(screen.getByLabelText(/確認密碼/, { selector: 'input' }), 'strongpassword123');
+    await user.click(screen.getByRole('button', { name: /建立帳號/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('註冊失敗，請稍後再試。');
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

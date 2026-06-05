@@ -202,4 +202,39 @@ describe('Login page — error states', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('登入失敗，請確認您的帳號與密碼。');
   });
+
+  it('shows fallback error when a non-axios (non-network) error is thrown from login', async () => {
+    const user = userEvent.setup();
+    // Plain Error — isAxiosError will be false/undefined, so goes to the else branch
+    mockLogin.mockRejectedValue(new Error('network error'));
+
+    renderPage();
+
+    await user.type(screen.getByLabelText('電子郵件'), 'bad@co.com');
+    await user.type(screen.getByLabelText('密碼'), 'wrongpassword');
+    await user.click(screen.getByRole('button', { name: /登入 CoverOnes/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('登入失敗，請確認您的帳號與密碼。');
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('shows error when login succeeds but me() call fails', async () => {
+    const user = userEvent.setup();
+    mockLogin.mockResolvedValue({ accessToken: 'acc', refreshToken: 'ref', tokenType: 'Bearer', expiresIn: 3600 });
+    // me() throws an axios error after the token is obtained
+    mockMe.mockRejectedValue(
+      Object.assign(new Error('Forbidden'), { isAxiosError: true, response: { data: { message: '帳號已停用。' } } }),
+    );
+
+    renderPage();
+
+    await user.type(screen.getByLabelText('電子郵件'), 'test@co.com');
+    await user.type(screen.getByLabelText('密碼'), 'strongpassword123');
+    await user.click(screen.getByRole('button', { name: /登入 CoverOnes/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('帳號已停用。');
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
 });

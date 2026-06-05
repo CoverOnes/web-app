@@ -21,6 +21,10 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { authApi } from '../lib/api/coverones';
 
+// NOTE: No remember-me / remember-device state here — the backend has no
+// persistent session / remember-me API.  The field was removed to avoid
+// misleading users (auth-honesty PR requirement).
+
 // ─── Inline SVG atoms ────────────────────────────────────────────────────────
 
 const IconMail = () => (
@@ -40,12 +44,6 @@ const IconLock = () => (
 const IconArrowRight = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M5 12h14M13 5l7 7-7 7"/>
-  </svg>
-);
-
-const IconCheck = ({ size = 11 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
-    <path d="M5 12.5 10 17l9-10"/>
   </svg>
 );
 
@@ -292,7 +290,6 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [emailFocus, setEmailFocus] = useState(false);
   const [passwordFocus, setPasswordFocus] = useState(false);
-  const [rememberDevice, setRememberDevice] = useState(true);
 
   const emailId = useId();
   const passwordId = useId();
@@ -602,30 +599,8 @@ const Login = () => {
                   </div>
                 </div>
 
-                {/* Remember + forgot */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '4px 0 22px 0' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--co-text-dim)', cursor: 'pointer' }}>
-                    <span
-                      aria-hidden="true"
-                      onClick={() => setRememberDevice((v) => !v)}
-                      style={{
-                        width: 16, height: 16, borderRadius: 5,
-                        background: rememberDevice ? 'var(--co-accent)' : 'transparent',
-                        border: rememberDevice ? 'none' : '1.5px solid rgba(148,163,184,0.3)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0, cursor: 'pointer',
-                      }}
-                    >
-                      {rememberDevice && <IconCheck size={11} />}
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={rememberDevice}
-                      onChange={(e) => setRememberDevice(e.target.checked)}
-                      style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
-                      aria-label="記住此裝置 30 天"
-                    />
-                    記住此裝置 30 天
-                  </label>
+                {/* Forgot password */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '4px 0 22px 0' }}>
                   <Link to="/forgot-password" style={{ fontSize: 13, color: '#C7D2FE' }}>
                     忘記密碼？
                   </Link>
