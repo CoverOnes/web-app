@@ -20,10 +20,10 @@
 
 import { useState, useId, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { useCreateListing } from '../lib/query';
 import { TierGuard } from '../components/auth/TierGuard';
-import type { AxiosError } from 'axios';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -43,10 +43,10 @@ interface Category {
 }
 
 const CATEGORIES: Category[] = [
-  { value: 'DEV',    label: '技術接案', sub: '後端 / 前端 / DevOps', ico: '</>',  gradient: 'linear-gradient(135deg,#6366F1,#8B5CF6)' },
-  { value: 'DESIGN', label: '設計創意', sub: 'UI/UX / 平面 / 品牌',  ico: '✦',   gradient: 'linear-gradient(135deg,#EC4899,#F43F5E)' },
-  { value: 'MFG',    label: '硬體製造', sub: 'PCB / 模具 / 代工',    ico: '⚙',   gradient: 'linear-gradient(135deg,#F59E0B,#EF4444)' },
-  { value: 'MKT',    label: '行銷顧問', sub: '數位行銷 / 公關',      ico: '📊',  gradient: 'linear-gradient(135deg,#10B981,#22D3EE)' },
+  { value: 'DEV',    label: '技術接案', sub: '後端 / 前端 / DevOps', ico: '</>',  gradient: 'linear-gradient(135deg,var(--co-accent),var(--co-accent-2))' },
+  { value: 'DESIGN', label: '設計創意', sub: 'UI/UX / 平面 / 品牌',  ico: '✦',   gradient: 'linear-gradient(135deg,var(--co-pink),var(--co-red))' },
+  { value: 'MFG',    label: '硬體製造', sub: 'PCB / 模具 / 代工',    ico: '⚙',   gradient: 'linear-gradient(135deg,var(--co-amber),var(--co-red))' },
+  { value: 'MKT',    label: '行銷顧問', sub: '數位行銷 / 公關',      ico: '📊',  gradient: 'linear-gradient(135deg,var(--co-green),var(--co-cyan))' },
 ];
 
 const WORK_MODES = [
@@ -81,6 +81,10 @@ interface Milestone {
 function makeMilestone(n: number): Milestone {
   return { id: crypto.randomUUID(), title: `里程碑 ${n}`, amount: '' };
 }
+
+// Monotonically increasing counter so deleted-then-added milestones
+// get a new sequential number rather than reusing a previous index.
+let _milestoneCounter = 1;
 
 // ─── Small helper components ─────────────────────────────────────────────────
 
@@ -255,24 +259,29 @@ interface StepperProps {
 
 function Stepper({ current }: StepperProps) {
   return (
-    <nav
-      aria-label="表單步驟"
-      style={{
-        display: 'flex',
-        gap: 0,
-        marginBottom: 18,
-        background: 'var(--co-bg-card)',
-        border: '1px solid var(--co-line-strong)',
-        borderRadius: 14,
-        padding: 8,
-      }}
-    >
+    <nav aria-label="表單步驟">
+      <ol
+        role="tablist"
+        aria-label="表單步驟"
+        style={{
+          display: 'flex',
+          gap: 0,
+          marginBottom: 18,
+          background: 'var(--co-bg-card)',
+          border: '1px solid var(--co-line-strong)',
+          borderRadius: 14,
+          padding: 8,
+          listStyle: 'none',
+          margin: '0 0 18px 0',
+        }}
+      >
       {STEPS.map((step) => {
         const done = step.n < current;
         const active = step.n === current;
         return (
-          <div
+          <li
             key={step.n}
+            id={`step-tab-${step.n}`}
             role="tab"
             aria-selected={active}
             aria-current={active ? 'step' : undefined}
@@ -340,9 +349,10 @@ function Stepper({ current }: StepperProps) {
               </div>
               <div style={{ fontSize: 13, fontWeight: 600 }}>{step.label}</div>
             </div>
-          </div>
+          </li>
         );
       })}
+      </ol>
     </nav>
   );
 }
@@ -457,6 +467,8 @@ interface CategoryGridProps {
 function CategoryGrid({ selected, onSelect }: CategoryGridProps) {
   return (
     <div
+      role="radiogroup"
+      aria-label="專案類別"
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
@@ -800,6 +812,9 @@ function LivePreview({ title, category, skills, milestones, workMode, currency }
       >
         <div style={{ fontSize: 12, fontWeight: 700, color: '#67E8F9', display: 'flex', alignItems: 'center', gap: 6 }}>
           ✨ AI 媒合預測
+          <span style={{ fontSize: 10, fontWeight: 400, color: 'var(--co-text-muted)', marginLeft: 4 }}>
+            依平台均值估算
+          </span>
         </div>
         <div style={{ fontSize: 12.5, color: 'var(--co-text-dim)', marginTop: 6, lineHeight: 1.55 }}>
           根據目前內容，預估可觸及{' '}
@@ -870,7 +885,7 @@ function Step1({
   const skillsId = useId();
   const workModeId = useId();
   const locationId = useId();
-  const descWords = description.trim().length;
+  const descChars = description.trim().length;
 
   return (
     <>
@@ -905,7 +920,7 @@ function Step1({
           label="簡短描述"
           required
           htmlFor={descId}
-          hint={`字數 ${descWords} / 建議 100-300 字`}
+          hint={`字數 ${descChars} / 建議 100-300 字`}
         >
           <TextAreaInput
             id={descId}
@@ -1211,12 +1226,11 @@ interface FooterNavProps {
   step: number;
   onPrev: () => void;
   onNext: () => void;
-  onSaveDraft: () => void;
   isSubmitting: boolean;
   isLastStep: boolean;
 }
 
-function FooterNav({ step, onPrev, onNext, onSaveDraft, isSubmitting, isLastStep }: FooterNavProps) {
+function FooterNav({ step, onPrev, onNext, isSubmitting, isLastStep }: FooterNavProps) {
   return (
     <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
       {/* Prev */}
@@ -1239,21 +1253,22 @@ function FooterNav({ step, onPrev, onNext, onSaveDraft, isSubmitting, isLastStep
         ← 上一步
       </button>
 
-      {/* Save draft */}
+      {/* Save draft — disabled until localStorage persist is implemented */}
       <button
         type="button"
-        onClick={onSaveDraft}
+        disabled
+        title="即將推出"
+        aria-label="儲存草稿（即將推出）"
         style={{
           background: 'var(--co-bg-3)',
-          color: 'var(--co-text-dim)',
+          color: 'var(--co-text-muted)',
           border: '1px solid var(--co-line-strong)',
           padding: '11px 18px',
           borderRadius: 10,
           fontSize: 13,
-          cursor: 'pointer',
+          cursor: 'not-allowed',
+          opacity: 0.55,
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--co-text)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--co-text-dim)'; }}
       >
         儲存草稿
       </button>
@@ -1334,6 +1349,9 @@ const PostJobPage = () => {
   // ── Submit ──
   const [submitError, setSubmitError] = useState('');
 
+  // ── Step validation error (inline, replaces window.alert) ──
+  const [stepError, setStepError] = useState('');
+
   // ── Handlers (must be before any early return) ──
   const addSkill = useCallback((s: string) => setSkills((prev) => [...prev, s]), []);
   const removeSkill = useCallback((s: string) => setSkills((prev) => prev.filter((x) => x !== s)), []);
@@ -1343,7 +1361,8 @@ const PostJobPage = () => {
   }, []);
 
   const addMilestone = useCallback(() => {
-    setMilestones((prev) => [...prev, makeMilestone(prev.length + 1)]);
+    _milestoneCounter += 1;
+    setMilestones((prev) => [...prev, makeMilestone(_milestoneCounter)]);
   }, []);
 
   const deleteMilestone = useCallback((id: string) => {
@@ -1365,9 +1384,11 @@ const PostJobPage = () => {
 
   const validateStep = (): boolean => {
     if (step === 1) {
-      if (!title.trim()) { alert('請填寫專案標題。'); return false; }
-      if (!description.trim()) { alert('請填寫簡短描述。'); return false; }
+      if (!category) { setStepError('請選擇專案類別。'); return false; }
+      if (!title.trim()) { setStepError('請填寫專案標題。'); return false; }
+      if (!description.trim()) { setStepError('請填寫簡短描述。'); return false; }
     }
+    setStepError('');
     return true;
   };
 
@@ -1377,11 +1398,6 @@ const PostJobPage = () => {
   };
 
   const handlePrev = () => setStep((s) => Math.max(s - 1, 1));
-
-  const handleSaveDraft = () => {
-    // TODO: persist draft to localStorage or backend endpoint
-    alert('草稿已儲存（本機）');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1401,17 +1417,22 @@ const PostJobPage = () => {
       // Fields NOT yet sent: category, skills, workMode, location, nda,
       // confidentiality, extraDesc, milestones (breakdown).
       // Only the fields accepted by CreateListingRequest are wired:
+      // budgetMin = milestone total (user-declared lower bound);
+      // budgetMax = undefined (no upper bound declared by user; don't fabricate a range).
       const listing = await createListing.mutateAsync({
         title,
         description: [description, extraDesc].filter(Boolean).join('\n\n'),
         budgetMin: rawTotal > 0 ? String(rawTotal) : undefined,
-        budgetMax: rawTotal > 0 ? String(rawTotal) : undefined,
+        budgetMax: undefined,
         currency,
       });
       navigate(`/jobs/${listing.id}`, { replace: true });
     } catch (err) {
-      const axErr = err as AxiosError<{ message?: string }>;
-      setSubmitError(axErr.response?.data?.message ?? '發布失敗，請稍後重試。');
+      if (axios.isAxiosError<{ message?: string }>(err)) {
+        setSubmitError(err.response?.data?.message ?? '發布失敗，請稍後重試。');
+      } else {
+        setSubmitError('發布失敗，請稍後重試。');
+      }
     }
   };
 
@@ -1419,9 +1440,6 @@ const PostJobPage = () => {
 
   return (
     <>
-      {/* Spin keyframe — injected once for submit/loading indicator */}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-
       <div
         style={{
           display: 'flex',
@@ -1459,24 +1477,26 @@ const PostJobPage = () => {
               完整填寫 RFP 內容，平均可在{' '}
               <strong style={{ color: 'var(--co-green)' }}>3.2 天</strong>{' '}
               內收到第一份報價
+              <span style={{ fontSize: 10.5, color: 'var(--co-text-muted)', marginLeft: 6 }}>（依平台均值估算）</span>
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            {/* Save draft — disabled until localStorage persist is implemented */}
             <button
               type="button"
-              onClick={handleSaveDraft}
-              aria-label="儲存草稿"
+              disabled
+              title="即將推出"
+              aria-label="儲存草稿（即將推出）"
               style={{
                 padding: '8px 14px',
                 borderRadius: 8,
                 border: 'none',
                 background: 'transparent',
-                color: 'var(--co-text-dim)',
+                color: 'var(--co-text-muted)',
                 fontSize: 13,
-                cursor: 'pointer',
+                cursor: 'not-allowed',
+                opacity: 0.55,
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'var(--co-text)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--co-text-dim)'; }}
             >
               儲存草稿
             </button>
@@ -1520,60 +1540,82 @@ const PostJobPage = () => {
               {/* Stepper */}
               <Stepper current={step} />
 
-              {/* Step content */}
-              {step === 1 && (
-                <Step1
-                  category={category} onCategoryChange={setCategory}
-                  title={title} onTitleChange={setTitle}
-                  description={description} onDescriptionChange={setDescription}
-                  skills={skills} onSkillAdd={addSkill} onSkillRemove={removeSkill}
-                  workMode={workMode} onWorkModeChange={setWorkMode}
-                  location={location} onLocationChange={setLocation}
-                />
+              {/* Step error (inline, replaces window.alert) */}
+              {stepError && (
+                <div
+                  role="alert"
+                  style={{
+                    padding: '10px 14px',
+                    marginBottom: 14,
+                    background: 'rgba(239,68,68,0.12)',
+                    border: '1px solid rgba(239,68,68,0.3)',
+                    borderRadius: 8,
+                    fontSize: 13,
+                    color: '#FCA5A5',
+                  }}
+                >
+                  {stepError}
+                </div>
               )}
 
-              {step === 2 && (
-                <Step2
-                  nda={nda} onNdaChange={setNda}
-                  confidentiality={confidentiality} onConfidentialityChange={setConfidentiality}
-                  extraDesc={extraDesc} onExtraDescChange={setExtraDesc}
-                />
-              )}
+              {/* Step content — wrapped in tabpanel pointing to the active stepper tab */}
+              <div
+                role="tabpanel"
+                aria-labelledby={`step-tab-${step}`}
+              >
+                {step === 1 && (
+                  <Step1
+                    category={category} onCategoryChange={setCategory}
+                    title={title} onTitleChange={setTitle}
+                    description={description} onDescriptionChange={setDescription}
+                    skills={skills} onSkillAdd={addSkill} onSkillRemove={removeSkill}
+                    workMode={workMode} onWorkModeChange={setWorkMode}
+                    location={location} onLocationChange={setLocation}
+                  />
+                )}
 
-              {step === 3 && (
-                <Step3
-                  milestones={milestones}
-                  onMilestoneChange={changeMilestone}
-                  onMilestoneAdd={addMilestone}
-                  onMilestoneDelete={deleteMilestone}
-                  currency={currency}
-                  onCurrencyChange={setCurrency}
-                />
-              )}
+                {step === 2 && (
+                  <Step2
+                    nda={nda} onNdaChange={setNda}
+                    confidentiality={confidentiality} onConfidentialityChange={setConfidentiality}
+                    extraDesc={extraDesc} onExtraDescChange={setExtraDesc}
+                  />
+                )}
 
-              {step === 4 && (
-                <Step4
-                  title={title}
-                  description={description}
-                  category={category}
-                  skills={skills}
-                  milestones={milestones}
-                  workMode={workMode}
-                  location={location}
-                  nda={nda}
-                  confidentiality={confidentiality}
-                  currency={currency}
-                  submitError={submitError}
-                  isSubmitting={createListing.isPending}
-                />
-              )}
+                {step === 3 && (
+                  <Step3
+                    milestones={milestones}
+                    onMilestoneChange={changeMilestone}
+                    onMilestoneAdd={addMilestone}
+                    onMilestoneDelete={deleteMilestone}
+                    currency={currency}
+                    onCurrencyChange={setCurrency}
+                  />
+                )}
+
+                {step === 4 && (
+                  <Step4
+                    title={title}
+                    description={description}
+                    category={category}
+                    skills={skills}
+                    milestones={milestones}
+                    workMode={workMode}
+                    location={location}
+                    nda={nda}
+                    confidentiality={confidentiality}
+                    currency={currency}
+                    submitError={submitError}
+                    isSubmitting={createListing.isPending}
+                  />
+                )}
+              </div>
 
               {/* Footer nav */}
               <FooterNav
                 step={step}
                 onPrev={handlePrev}
                 onNext={handleNext}
-                onSaveDraft={handleSaveDraft}
                 isSubmitting={createListing.isPending}
                 isLastStep={isLastStep}
               />
