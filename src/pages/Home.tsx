@@ -28,6 +28,9 @@ const P = {
   /* Section title gradients */
   gradHotTitle: 'linear-gradient(135deg, var(--co-amber), #F472B6)',
   gradNamePill: 'linear-gradient(135deg, var(--co-bdg-dev-text), var(--co-bdg-design-text))',
+  /* Stat card number gradients (stats panel, right column) */
+  gradStatCyan:   'linear-gradient(135deg, var(--co-bdg-design-text), var(--co-accent-blue))',
+  gradStatPurple: 'linear-gradient(135deg, var(--co-bdg-dev-text), var(--co-pink))',
   /* Feed / Q&A company logos */
   gradTSMC:     'linear-gradient(135deg,var(--co-accent-blue),var(--co-accent))',
   gradEslite:   'linear-gradient(135deg,var(--co-pink),var(--co-accent-2))',
@@ -464,7 +467,7 @@ const Home = () => {
               早安，
               <span
                 style={{
-                  background: 'linear-gradient(135deg, #A78BFA, #67E8F9)',
+                  background: P.gradNamePill,
                   WebkitBackgroundClip: 'text',
                   backgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -605,7 +608,7 @@ const Home = () => {
                 🔥{' '}
                 <span
                   style={{
-                    background: 'linear-gradient(135deg, #FB923C, #F472B6)',
+                    background: P.gradHotTitle,
                     WebkitBackgroundClip: 'text',
                     backgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
@@ -1071,8 +1074,8 @@ const Home = () => {
                 { label: '營收 (NT$)', value: '3.2M', colorClass: 'amber',  delta: '▲ 18%' },
               ].map(({ label, value, colorClass, delta }) => {
                 const gradMap: Record<string, React.CSSProperties> = {
-                  cyan:   { background: 'linear-gradient(135deg, #67E8F9, #2563EB)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-                  purple: { background: 'linear-gradient(135deg, #A78BFA, #EC4899)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' },
+                  cyan:   { background: P.gradStatCyan,   WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' },
+                  purple: { background: P.gradStatPurple, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' },
                   green:  { color: 'var(--co-green)' },
                   amber:  { color: 'var(--co-amber)' },
                 };

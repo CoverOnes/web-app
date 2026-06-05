@@ -10,7 +10,7 @@ const P = {
   textIndigoLt:'#C7D2FE',   /* indigo-200; no --co-* token */
   textRedLt:   '#FCA5A5',   /* red-300; no --co-* token */
   textAmberLt: 'var(--co-bdg-mfg-text)',
-  textGreenBright: '#6EE7B7', /* green-300; no --co-* token */
+  textGreenBright: '#4ade80', /* green-400; unified with Home/JobDetail */
   gradBlue:   'linear-gradient(135deg,var(--co-accent-blue),var(--co-accent))',
   gradCyan:   'linear-gradient(135deg,#0EA5E9,var(--co-cyan))',
   gradPurple: 'linear-gradient(135deg,var(--co-pink),var(--co-accent-2))',
@@ -25,15 +25,17 @@ import type { Listing } from '../lib/api/coverones';
 import { formatDistanceToNow } from 'date-fns';
 
 /* ── Types ──────────────────────────────────────────────────────────── */
-type TabId = 'RECOMMEND' | 'ALL' | 'HOT' | 'CLOSING' | 'SAVED' | 'APPLIED';
+type TabId = 'ALL' | 'APPLIED' | 'RECOMMEND' | 'HOT' | 'CLOSING' | 'SAVED';
 
-const TABS: { id: TabId; label: string; count?: number }[] = [
-  { id: 'RECOMMEND', label: '推薦給你',   count: 12 },
-  { id: 'ALL',       label: '全部專案',   count: 347 },
-  { id: 'HOT',       label: '熱門',       count: 28 },
-  { id: 'CLOSING',   label: '即將截止',   count: 15 },
-  { id: 'SAVED',     label: '已收藏',     count: 6 },
-  { id: 'APPLIED',   label: '已應標',     count: 9 },
+const TABS: { id: TabId; label: string; disabled?: true }[] = [
+  // Active tabs — real API filters exist
+  { id: 'ALL',       label: '全部專案' },
+  { id: 'APPLIED',   label: '已應標' },
+  // Coming-soon tabs — no real filter API yet; shown as disabled with hint
+  { id: 'RECOMMEND', label: '推薦給你',  disabled: true },
+  { id: 'HOT',       label: '熱門',      disabled: true },
+  { id: 'CLOSING',   label: '即將截止',  disabled: true },
+  { id: 'SAVED',     label: '已收藏',    disabled: true },
 ];
 
 const FILTER_CHIPS = ['軟體開發', 'UI/UX 設計', '行銷推廣', '硬體製造', '資料分析', '法務財會'];
@@ -278,6 +280,7 @@ const JobBoardPage = () => {
   const user = useAuthStore((s) => s.user);
   const kycTier = user?.kycTier ?? 0;
   const { data: listings, isLoading, isError, error } = useListings({ status: 'OPEN' });
+  // Default to first enabled tab ('ALL'); RECOMMEND is disabled / coming-soon
   const [activeTab, setActiveTab] = useState<TabId>('ALL');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
@@ -291,8 +294,8 @@ const JobBoardPage = () => {
   const totalCount = listings?.length ?? 0;
 
   function filterListings(items: Listing[]): Listing[] {
-    if (activeTab === 'ALL' || activeTab === 'RECOMMEND' || activeTab === 'HOT' || activeTab === 'CLOSING' || activeTab === 'SAVED') return items;
     if (activeTab === 'APPLIED') return items.filter((l) => l.status === 'AWARDED' || l.status === 'CLOSED');
+    // ALL (and any future active tab) shows everything
     return items;
   }
 
@@ -315,8 +318,7 @@ const JobBoardPage = () => {
               專案接案 · 公開招標市場
             </h1>
             <p style={{ fontSize: 13, color: 'var(--co-text-dim)', margin: 0 }}>
-              目前共 <strong style={{ color: 'var(--co-text)' }}>{isLoading ? '…' : totalCount || 347}</strong> 個進行中專案
-              {' · '}為您配對 <strong style={{ color: P.textViolet }}>12</strong> 個高度相關機會
+              目前共 <strong style={{ color: 'var(--co-text)' }}>{isLoading ? '…' : totalCount}</strong> 個進行中專案
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -380,41 +382,61 @@ const JobBoardPage = () => {
         }}
       >
         {TABS.map((tab) => {
-          const isActive = activeTab === tab.id;
-          const liveCount = tab.id === 'ALL' ? (totalCount || tab.count) : (tab.id === 'RECOMMEND' ? 12 : tab.count);
+          const isTabActive = activeTab === tab.id;
+          // Show real count only for tabs with a live filter; disabled tabs show no count
+          const liveCount = tab.id === 'ALL' ? totalCount : tab.id === 'APPLIED' ? displayed.length : undefined;
           return (
             <button
               key={tab.id}
               role="tab"
               id={`jobs-tab-${tab.id}`}
-              aria-selected={isActive}
+              aria-selected={isTabActive}
               aria-controls={`jobs-panel-${tab.id}`}
-              onClick={() => setActiveTab(tab.id)}
+              aria-disabled={tab.disabled}
+              disabled={tab.disabled}
+              onClick={() => { if (!tab.disabled) setActiveTab(tab.id); }}
+              title={tab.disabled ? '即將推出' : undefined}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
                 padding: '12px 16px',
-                borderBottom: isActive ? '2px solid var(--co-accent)' : '2px solid transparent',
-                color: isActive ? 'var(--co-text)' : 'var(--co-text-dim)',
-                fontWeight: isActive ? 600 : 400,
+                borderBottom: isTabActive ? '2px solid var(--co-accent)' : '2px solid transparent',
+                color: tab.disabled ? 'var(--co-text-muted)' : isTabActive ? 'var(--co-text)' : 'var(--co-text-dim)',
+                fontWeight: isTabActive ? 600 : 400,
                 fontSize: 13.5,
                 background: 'none',
                 border: 'none',
-                cursor: 'pointer',
+                cursor: tab.disabled ? 'not-allowed' : 'pointer',
                 whiteSpace: 'nowrap',
+                opacity: tab.disabled ? 0.55 : 1,
                 transition: 'color 150ms',
               }}
             >
               {tab.label}
-              {liveCount != null && (
+              {tab.disabled && (
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    padding: '1px 5px',
+                    borderRadius: 999,
+                    background: 'rgba(148,163,184,0.1)',
+                    color: 'var(--co-text-muted)',
+                    fontWeight: 500,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  即將推出
+                </span>
+              )}
+              {!tab.disabled && liveCount != null && (
                 <span
                   style={{
                     fontSize: 11,
                     padding: '0 6px',
                     borderRadius: 999,
-                    background: isActive ? 'rgba(99,102,241,0.15)' : 'rgba(148,163,184,0.1)',
-                    color: isActive ? P.textViolet : 'var(--co-text-muted)',
+                    background: isTabActive ? 'rgba(99,102,241,0.15)' : 'rgba(148,163,184,0.1)',
+                    color: isTabActive ? P.textViolet : 'var(--co-text-muted)',
                     fontWeight: 600,
                   }}
                 >

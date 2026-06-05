@@ -146,7 +146,10 @@ const CoverOnesSidebar = () => {
     if (settingsEnabled) navigate('/settings');
   }, [navigate, settingsEnabled]);
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
+  // Use exact match for '/' so 首頁 only lights up on the dashboard,
+  // not on every route (mirrors CoverOnesMobileBottomNav's pathname === '/' guard).
+  const isActive = (path: string) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   const initial = (user?.displayName ?? 'U').charAt(0).toUpperCase();
 
@@ -155,6 +158,7 @@ const CoverOnesSidebar = () => {
 
   // Core nav items (主選單)
   const coreNav: NavEntry[] = [
+    { path: '/',          label: '首頁',      icon: (s) => <Icon.Home size={s} /> },
     { path: '/jobs',      label: '案件看板',  icon: (s) => <Icon.Briefcase size={s} /> },
     { path: '/bids',      label: '招標進度',  icon: (s) => <Icon.Tag size={s} /> },
     { path: '/contracts', label: '合約管理',  icon: (s) => <Icon.FileText size={s} /> },
