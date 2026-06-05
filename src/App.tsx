@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import VerifyEmailSent from './pages/VerifyEmailSent';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import Home from './pages/Home';
 import JobBoardPage from './pages/JobBoardPage';
 import PostJobPage from './pages/PostJobPage';
 import JobDetailPage from './pages/JobDetailPage';
@@ -46,8 +47,8 @@ function App() {
               </ProtectedRoute>
             }
           >
-            {/* / redirects to /jobs; Homepage dashboard is P2 */}
-            <Route index element={<Navigate to="/jobs" replace />} />
+            {/* / renders Homepage dashboard (P2a) */}
+            <Route index element={<Home />} />
 
             {/* Marketplace */}
             <Route path="jobs" element={<JobBoardPage />} />
