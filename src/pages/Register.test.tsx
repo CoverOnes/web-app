@@ -104,7 +104,7 @@ describe('Register page — render', () => {
 
   it('renders the submit button', () => {
     renderPage();
-    expect(screen.getByRole('button', { name: /下一步：設定公司資料/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /建立帳號/i })).toBeInTheDocument();
   });
 
   it('renders the login link', () => {
@@ -163,7 +163,7 @@ describe('Register page — interaction', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: /下一步/i }));
+    await user.click(screen.getByRole('button', { name: /建立帳號/i }));
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('請填寫所有必填欄位。');
@@ -180,7 +180,7 @@ describe('Register page — interaction', () => {
     await user.type(screen.getByLabelText(/企業 Email/), 'test@co.com');
     await user.type(screen.getByLabelText(/^密碼/), 'short');
     await user.type(screen.getByLabelText(/確認密碼/, { selector: 'input' }), 'short');
-    await user.click(screen.getByRole('button', { name: /下一步/i }));
+    await user.click(screen.getByRole('button', { name: /建立帳號/i }));
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('密碼強度不足');
@@ -196,7 +196,7 @@ describe('Register page — interaction', () => {
     await user.type(screen.getByLabelText(/企業 Email/), 'test@co.com');
     await user.type(screen.getByLabelText(/^密碼/), 'strongpassword123');
     await user.type(screen.getByLabelText(/確認密碼/, { selector: 'input' }), 'differentpassword123');
-    await user.click(screen.getByRole('button', { name: /下一步/i }));
+    await user.click(screen.getByRole('button', { name: /建立帳號/i }));
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('兩次輸入的密碼不一致。');
@@ -214,7 +214,7 @@ describe('Register page — interaction', () => {
     await user.type(screen.getByLabelText(/身分證字號/), 'A123456789');
     await user.type(screen.getByLabelText(/^密碼/), 'strongpassword123');
     await user.type(screen.getByLabelText(/確認密碼/, { selector: 'input' }), 'strongpassword123');
-    await user.click(screen.getByRole('button', { name: /下一步/i }));
+    await user.click(screen.getByRole('button', { name: /建立帳號/i }));
 
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith(expect.objectContaining({
@@ -240,9 +240,9 @@ describe('Register page — error states', () => {
 
   it('shows EMAIL_TAKEN error from server as role=alert', async () => {
     const user = userEvent.setup();
-    mockRegister.mockRejectedValue({
-      response: { data: { code: 'EMAIL_TAKEN' } },
-    });
+    mockRegister.mockRejectedValue(
+      Object.assign(new Error('EMAIL_TAKEN'), { isAxiosError: true, response: { data: { code: 'EMAIL_TAKEN' } } }),
+    );
 
     renderPage();
 
@@ -252,7 +252,7 @@ describe('Register page — error states', () => {
     await user.type(screen.getByLabelText(/身分證字號/), 'A123456789');
     await user.type(screen.getByLabelText(/^密碼/), 'strongpassword123');
     await user.type(screen.getByLabelText(/確認密碼/, { selector: 'input' }), 'strongpassword123');
-    await user.click(screen.getByRole('button', { name: /下一步/i }));
+    await user.click(screen.getByRole('button', { name: /建立帳號/i }));
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('此 email 已被註冊');
@@ -261,7 +261,9 @@ describe('Register page — error states', () => {
 
   it('shows fallback error message when no code or message', async () => {
     const user = userEvent.setup();
-    mockRegister.mockRejectedValue({ response: { data: {} } });
+    mockRegister.mockRejectedValue(
+      Object.assign(new Error('unknown'), { isAxiosError: true, response: { data: {} } }),
+    );
 
     renderPage();
 
@@ -271,7 +273,7 @@ describe('Register page — error states', () => {
     await user.type(screen.getByLabelText(/身分證字號/), 'A123456789');
     await user.type(screen.getByLabelText(/^密碼/), 'strongpassword123');
     await user.type(screen.getByLabelText(/確認密碼/, { selector: 'input' }), 'strongpassword123');
-    await user.click(screen.getByRole('button', { name: /下一步/i }));
+    await user.click(screen.getByRole('button', { name: /建立帳號/i }));
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('註冊失敗，請稍後再試。');

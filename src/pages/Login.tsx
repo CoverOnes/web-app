@@ -17,9 +17,9 @@
 
 import { useState, useId } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { authApi } from '../lib/api/coverones';
-import type { AxiosError } from 'axios';
 
 // ─── Inline SVG atoms ────────────────────────────────────────────────────────
 
@@ -211,21 +211,21 @@ const FloatingCards = () => (
       aria-hidden="true"
       style={{
         position: 'absolute', right: 80, top: 180, width: 220, zIndex: 3,
-        background: 'rgba(15,23,42,0.85)', border: '1px solid rgba(148,163,184,0.2)',
+        background: 'rgba(15,23,42,0.85)', border: '1px solid var(--co-line-strong)',
         borderRadius: 12, padding: '12px 14px', backdropFilter: 'blur(12px)',
         boxShadow: '0 12px 30px rgba(0,0,0,0.5)', fontSize: 12,
         animation: 'lgFloat1 6s ease-in-out infinite',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, #2563EB, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>台</div>
+        <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, var(--co-accent-blue), var(--co-accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>台</div>
         <div>
-          <div style={{ fontWeight: 600, fontSize: 12.5, color: '#E5E7EB' }}>台積電子</div>
-          <div style={{ fontSize: 10.5, color: '#64748B' }}>已驗證 · 半導體</div>
+          <div style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--co-text)' }}>台積電子</div>
+          <div style={{ fontSize: 10.5, color: 'var(--co-text-muted)' }}>已驗證 · 半導體</div>
         </div>
-        <span style={{ marginLeft: 'auto', width: 16, height: 16, borderRadius: '50%', background: 'rgba(16,185,129,0.2)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>✓</span>
+        <span style={{ marginLeft: 'auto', width: 16, height: 16, borderRadius: '50%', background: 'rgba(16,185,129,0.2)', color: 'var(--co-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>✓</span>
       </div>
-      <div style={{ fontSize: 11.5, color: '#94A3B8', lineHeight: 1.5 }}>徵求 PCB 後段組裝合作夥伴 · 預算 NT$ 2.4M</div>
+      <div style={{ fontSize: 11.5, color: 'var(--co-text-dim)', lineHeight: 1.5 }}>徵求 PCB 後段組裝合作夥伴 · 預算 NT$ 2.4M</div>
     </div>
 
     {/* Card 2 — live match */}
@@ -233,23 +233,27 @@ const FloatingCards = () => (
       aria-hidden="true"
       style={{
         position: 'absolute', right: 320, top: 540, width: 240, zIndex: 3,
-        background: 'rgba(15,23,42,0.85)', border: '1px solid rgba(148,163,184,0.2)',
+        background: 'rgba(15,23,42,0.85)', border: '1px solid var(--co-line-strong)',
         borderRadius: 12, padding: '12px 14px', backdropFilter: 'blur(12px)',
         boxShadow: '0 12px 30px rgba(0,0,0,0.5)', fontSize: 12,
         animation: 'lgFloat2 7s ease-in-out infinite',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5, color: '#22D3EE', marginBottom: 8 }}>
-        <span style={{ width: 6, height: 6, borderRadius: 999, background: '#22D3EE', boxShadow: '0 0 8px #22D3EE', flexShrink: 0 }}></span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'var(--co-cyan)', marginBottom: 8 }}>
+        <span style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--co-cyan)', boxShadow: '0 0 8px var(--co-cyan)', flexShrink: 0 }}></span>
         即時媒合 · 3 家企業正在洽談
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-        {[['鴻', 'linear-gradient(135deg,#F59E0B,#EF4444)'], ['新', 'linear-gradient(135deg,#10B981,#059669)'], ['奇', 'linear-gradient(135deg,#8B5CF6,#EC4899)']].map(([ch, bg], i) => (
-          <div key={ch} style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: '2px solid #0F172A', marginLeft: i > 0 ? -10 : 0, fontSize: 11, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 3 - i }}>{ch}</div>
+        {[
+          ['鴻', 'linear-gradient(135deg,var(--co-amber),var(--co-red))'],
+          ['新', 'linear-gradient(135deg,var(--co-green),#059669)'],
+          ['奇', 'linear-gradient(135deg,var(--co-accent-2),var(--co-pink))'],
+        ].map(([ch, bg], i) => (
+          <div key={ch} style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: '2px solid var(--co-bg-3)', marginLeft: i > 0 ? -10 : 0, fontSize: 11, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 3 - i }}>{ch}</div>
         ))}
       </div>
-      <div style={{ fontSize: 11.5, fontWeight: 500, color: '#E5E7EB' }}>智慧製造 ERP 系統開發案</div>
-      <div style={{ fontSize: 10.5, color: '#64748B', marginTop: 2 }}>預算 NT$ 850K · 截標 4/28</div>
+      <div style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--co-text)' }}>智慧製造 ERP 系統開發案</div>
+      <div style={{ fontSize: 10.5, color: 'var(--co-text-muted)', marginTop: 2 }}>預算 NT$ 850K · 截標 4/28</div>
     </div>
 
     {/* Card 3 — encryption */}
@@ -257,19 +261,19 @@ const FloatingCards = () => (
       aria-hidden="true"
       style={{
         position: 'absolute', left: 60, top: 480, width: 200, zIndex: 3,
-        background: 'rgba(15,23,42,0.85)', border: '1px solid rgba(148,163,184,0.2)',
+        background: 'rgba(15,23,42,0.85)', border: '1px solid var(--co-line-strong)',
         borderRadius: 12, padding: '12px 14px', backdropFilter: 'blur(12px)',
         boxShadow: '0 12px 30px rgba(0,0,0,0.5)', fontSize: 12,
         animation: 'lgFloat1 8s ease-in-out infinite',
       }}
     >
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(34,211,238,0.15)', color: '#22D3EE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(34,211,238,0.15)', color: 'var(--co-cyan)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#E5E7EB' }}>端對端加密</div>
-          <div style={{ fontSize: 10.5, color: '#64748B' }}>商業機密安全傳輸</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--co-text)' }}>端對端加密</div>
+          <div style={{ fontSize: 10.5, color: 'var(--co-text-muted)' }}>商業機密安全傳輸</div>
         </div>
       </div>
     </div>
@@ -308,8 +312,14 @@ const Login = () => {
       login(tokenRes.accessToken, tokenRes.refreshToken, user);
       navigate('/jobs', { replace: true });
     } catch (err) {
-      const axErr = err as AxiosError<{ message?: string }>;
-      setError(axErr.response?.data?.message ?? '登入失敗，請確認您的帳號與密碼。');
+      if (axios.isAxiosError(err)) {
+        setError(
+          (err.response?.data as { message?: string } | undefined)?.message ??
+            '登入失敗，請確認您的帳號與密碼。'
+        );
+      } else {
+        setError('登入失敗，請確認您的帳號與密碼。');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -521,7 +531,7 @@ const Login = () => {
                       display: 'flex', alignItems: 'center', gap: 10,
                       height: 46, padding: '0 14px',
                       background: emailFocus ? 'rgba(6,10,20,0.8)' : 'rgba(6,10,20,0.6)',
-                      border: `1px solid ${emailFocus ? 'var(--co-accent)' : 'rgba(148,163,184,0.2)'}`,
+                      border: `1px solid ${emailFocus ? 'var(--co-accent)' : 'var(--co-line-strong)'}`,
                       borderRadius: 11,
                       boxShadow: emailFocus ? '0 0 0 4px rgba(99,102,241,0.16)' : 'none',
                       transition: 'border-color 150ms, box-shadow 150ms, background 150ms',
@@ -559,7 +569,7 @@ const Login = () => {
                       display: 'flex', alignItems: 'center', gap: 10,
                       height: 46, padding: '0 14px',
                       background: passwordFocus ? 'rgba(6,10,20,0.8)' : 'rgba(6,10,20,0.6)',
-                      border: `1px solid ${passwordFocus ? 'var(--co-accent)' : 'rgba(148,163,184,0.2)'}`,
+                      border: `1px solid ${passwordFocus ? 'var(--co-accent)' : 'var(--co-line-strong)'}`,
                       borderRadius: 11,
                       boxShadow: passwordFocus ? '0 0 0 4px rgba(99,102,241,0.16)' : 'none',
                       transition: 'border-color 150ms, box-shadow 150ms, background 150ms',
@@ -669,7 +679,7 @@ const Login = () => {
                     aria-label={`使用 ${label} 登入`}
                     style={{
                       height: 42, borderRadius: 10, border: 'none',
-                      background: 'rgba(15,23,42,0.5)', borderStyle: 'solid', borderWidth: 1, borderColor: 'rgba(148,163,184,0.2)',
+                      background: 'rgba(15,23,42,0.5)', borderStyle: 'solid', borderWidth: 1, borderColor: 'var(--co-line-strong)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                       fontSize: 13, fontWeight: 500, color: 'var(--co-text)',
                       cursor: 'pointer',

@@ -17,6 +17,7 @@
 
 import { useState, useId } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 import { authApi, type AccountType, type RegisterRequest } from '../lib/api/coverones';
 import {
   validateLegalName,
@@ -24,7 +25,6 @@ import {
   validateCompanyName,
   validatePassword,
 } from '../utils/validation';
-import type { AxiosError } from 'axios';
 
 // ─── Inline SVG atoms ────────────────────────────────────────────────────────
 
@@ -64,12 +64,6 @@ const IconCheckmark = () => (
   </svg>
 );
 
-const IconArrow = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M5 12h14M13 5l7 7-7 7"/>
-  </svg>
-);
-
 // ─── Owl brand mark ──────────────────────────────────────────────────────────
 
 const OwlMark = () => (
@@ -105,8 +99,7 @@ interface StepperProps {
 function Stepper({ currentStep }: StepperProps) {
   return (
     <div
-      role="list"
-      aria-label="Registration steps"
+      aria-hidden="true"
       style={{
         display: 'flex', gap: 0, marginBottom: 24,
         background: 'rgba(15,23,42,0.5)', border: '1px solid var(--co-line)',
@@ -118,8 +111,6 @@ function Stepper({ currentStep }: StepperProps) {
         return (
           <div
             key={step.n}
-            role="listitem"
-            aria-current={status === 'active' ? 'step' : undefined}
             style={{
               flex: 1, padding: '9px 10px', borderRadius: 7,
               display: 'flex', alignItems: 'center', gap: 8,
@@ -287,19 +278,22 @@ const Register = () => {
       await authApi.register(payload);
       navigate('/register/verify-sent', { replace: true, state: { email: email.trim() } });
     } catch (err) {
-      const axErr = err as AxiosError<{ message?: string; code?: string }>;
-      const code = axErr.response?.data?.code;
-      const byCode: Record<string, string> = {
-        EMAIL_TAKEN: '此 email 已被註冊，請改用其他信箱或直接登入。',
-        WEAK_PASSWORD: '密碼強度不足，請使用更長或更複雜的密碼（至少 12 字元）。',
-        VALIDATION_ERROR: '輸入資料有誤，請檢查後再試一次。',
-        RATE_LIMITED: '操作過於頻繁，請稍後再試。',
-      };
-      setError(
-        (code && byCode[code]) ??
-          axErr.response?.data?.message ??
-          '註冊失敗，請稍後再試。'
-      );
+      if (axios.isAxiosError(err)) {
+        const code = (err.response?.data as { code?: string } | undefined)?.code;
+        const byCode: Record<string, string> = {
+          EMAIL_TAKEN: '此 email 已被註冊，請改用其他信箱或直接登入。',
+          WEAK_PASSWORD: '密碼強度不足，請使用更長或更複雜的密碼（至少 12 字元）。',
+          VALIDATION_ERROR: '輸入資料有誤，請檢查後再試一次。',
+          RATE_LIMITED: '操作過於頻繁，請稍後再試。',
+        };
+        setError(
+          (code && byCode[code]) ??
+            (err.response?.data as { message?: string } | undefined)?.message ??
+            '註冊失敗，請稍後再試。'
+        );
+      } else {
+        setError('註冊失敗，請稍後再試。');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -475,14 +469,14 @@ const Register = () => {
           {/* Top meta */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
             <div style={{ fontSize: 11.5, color: 'var(--co-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Step 1 of 4 · 約需 3 分鐘
+              約需 3 分鐘
             </div>
             <Link to="/login" style={{ fontSize: 13, color: 'var(--co-text-dim)' }}>
               已有帳號？<strong style={{ color: '#A78BFA' }}>登入</strong>
             </Link>
           </div>
 
-          {/* Stepper */}
+          {/* Stepper — decorative only; all steps are submitted at once */}
           <Stepper currentStep={1} />
 
           <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 6px', color: 'var(--co-text)' }}>
@@ -685,8 +679,7 @@ const Register = () => {
               )}
               {isLoading ? '建立帳號中…' : (
                 <>
-                  下一步：設定公司資料
-                  <IconArrow />
+                  建立帳號 →
                 </>
               )}
             </button>
@@ -694,7 +687,7 @@ const Register = () => {
 
           {/* Terms */}
           <div style={{ fontSize: 11.5, color: 'var(--co-text-muted)', marginTop: 14, textAlign: 'center', lineHeight: 1.55 }}>
-            點擊「下一步」表示您同意{' '}
+            點擊「建立帳號」表示您同意{' '}
             <Link to="/terms" style={{ color: '#A78BFA' }}>服務條款</Link>、
             <Link to="/privacy" style={{ color: '#A78BFA' }}>隱私政策</Link>{' '}
             及{' '}

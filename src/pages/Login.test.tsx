@@ -151,6 +151,8 @@ describe('Login page — interaction', () => {
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({ email: 'test@co.com', password: 'strongpassword123' });
+      // Two-phase login: after getting the token, authApi.me must be called with the issued token.
+      expect(mockMe).toHaveBeenCalledWith('acc');
       expect(mockNavigate).toHaveBeenCalledWith('/jobs', { replace: true });
     });
   });
@@ -170,9 +172,9 @@ describe('Login page — error states', () => {
   it('shows server error as role=alert when login fails', async () => {
     const user = userEvent.setup();
 
-    mockLogin.mockRejectedValue({
-      response: { data: { message: '帳號或密碼錯誤。' } },
-    });
+    mockLogin.mockRejectedValue(
+      Object.assign(new Error('Unauthorized'), { isAxiosError: true, response: { data: { message: '帳號或密碼錯誤。' } } }),
+    );
 
     renderPage();
 
@@ -187,7 +189,9 @@ describe('Login page — error states', () => {
 
   it('shows fallback error message when no server message', async () => {
     const user = userEvent.setup();
-    mockLogin.mockRejectedValue({ response: { data: {} } });
+    mockLogin.mockRejectedValue(
+      Object.assign(new Error('unknown'), { isAxiosError: true, response: { data: {} } }),
+    );
 
     renderPage();
 
