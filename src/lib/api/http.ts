@@ -22,6 +22,18 @@ const drainQueueFailure = (err: unknown) => {
   refreshQueue = [];
 };
 
+// Auth-flow endpoints issue/validate credentials themselves; a 401 from them
+// (wrong password, or an expired/invalid refresh token) must NOT trigger the
+// access-token refresh retry below. Otherwise a stale refresh token left in
+// storage masks the real error — e.g. a wrong-password login would surface
+// "refresh token has expired" instead of "帳號或密碼錯誤". Let these pass
+// straight through to the calling page's own error handler.
+export const isAuthFlowRequest = (url?: string): boolean =>
+  !!url &&
+  (url.includes('/v1/auth/login') ||
+    url.includes('/v1/auth/register') ||
+    url.includes('/v1/auth/refresh'));
+
 /**
  * Returns current access token from auth store without a circular import at module init time.
  * The store module is loaded lazily after all modules are evaluated.
@@ -87,7 +99,11 @@ const createHttpClient = (): AxiosInstance => {
         return Promise.reject(error);
       }
 
-      if (error.response?.status === 401 && !originalRequest?._retry) {
+      if (
+        error.response?.status === 401 &&
+        !originalRequest?._retry &&
+        !isAuthFlowRequest(originalRequest?.url)
+      ) {
         const { useAuthStore } = await import('../../store/authStore');
         const { refreshToken, refreshTokens, clearStaleSession } = useAuthStore.getState();
 
