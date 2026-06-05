@@ -20,12 +20,15 @@ vi.mock('react-router-dom', async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-// Mock authApi
+// Mock authApi + oauthStartUrl (real implementation kept for the OAuth helper so
+// the button click produces a deterministic URL).
 vi.mock('../lib/api/coverones', () => ({
   authApi: {
     login: vi.fn(),
     me: vi.fn(),
   },
+  oauthStartUrl: (provider: string, redirect = '/jobs') =>
+    `/v1/auth/oauth/${provider}/start?redirect=${encodeURIComponent(redirect)}`,
 }));
 
 import { authApi } from '../lib/api/coverones';
@@ -83,6 +86,43 @@ describe('Login page — render', () => {
     expect(screen.getByRole('button', { name: /使用 Apple 登入/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /使用 LINE 登入/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /企業單一登入/i })).toBeInTheDocument();
+  });
+
+  it('disables the out-of-scope Apple SSO button', () => {
+    renderPage();
+    expect(screen.getByRole('button', { name: /使用 Apple 登入/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /使用 Google 登入/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /使用 LINE 登入/i })).toBeEnabled();
+  });
+});
+
+describe('Login page — OAuth social login', () => {
+  beforeEach(() => {
+    useAuthStore.setState({
+      accessToken: null, refreshToken: null, user: null,
+      isAuthenticated: false, isHydrating: false,
+    });
+  });
+
+  it.each([
+    ['Google', 'google'],
+    ['LINE', 'line'],
+  ])('navigates to the %s OAuth start endpoint on click', async (label, provider) => {
+    const user = userEvent.setup();
+    // jsdom's window.location.href is not writable by default — replace it.
+    const originalLocation = window.location;
+    const hrefSetter = vi.fn();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...originalLocation, set href(v: string) { hrefSetter(v); } },
+    });
+
+    renderPage();
+    await user.click(screen.getByRole('button', { name: new RegExp(`使用 ${label} 登入`) }));
+
+    expect(hrefSetter).toHaveBeenCalledWith(`/v1/auth/oauth/${provider}/start?redirect=%2Fjobs`);
+
+    Object.defineProperty(window, 'location', { configurable: true, value: originalLocation });
   });
 });
 

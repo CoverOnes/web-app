@@ -18,13 +18,15 @@ vi.mock('react-router-dom', async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-// Mock authApi
+// Mock authApi + oauthStartUrl (real helper impl kept for deterministic URL).
 vi.mock('../lib/api/coverones', () => ({
   authApi: {
     register: vi.fn(),
     login: vi.fn(),
     me: vi.fn(),
   },
+  oauthStartUrl: (provider: string, redirect = '/jobs') =>
+    `/v1/auth/oauth/${provider}/start?redirect=${encodeURIComponent(redirect)}`,
 }));
 
 // Mock validation utilities (pass-through by default; override in tests as needed)
@@ -325,5 +327,33 @@ describe('Register page — error states', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('註冊失敗，請稍後再試。');
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('Register page — OAuth social signup', () => {
+  it('renders Google and LINE social signup buttons', () => {
+    renderPage();
+    expect(screen.getByRole('button', { name: /使用 Google 註冊/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /使用 LINE 註冊/i })).toBeInTheDocument();
+  });
+
+  it.each([
+    ['Google', 'google'],
+    ['LINE', 'line'],
+  ])('navigates to the %s OAuth start endpoint on click', async (label, provider) => {
+    const user = userEvent.setup();
+    const originalLocation = window.location;
+    const hrefSetter = vi.fn();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...originalLocation, set href(v: string) { hrefSetter(v); } },
+    });
+
+    renderPage();
+    await user.click(screen.getByRole('button', { name: new RegExp(`使用 ${label} 註冊`) }));
+
+    expect(hrefSetter).toHaveBeenCalledWith(`/v1/auth/oauth/${provider}/start?redirect=%2Fjobs`);
+
+    Object.defineProperty(window, 'location', { configurable: true, value: originalLocation });
   });
 });

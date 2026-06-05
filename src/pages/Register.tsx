@@ -18,7 +18,7 @@
 import { useState, useId } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { authApi, type AccountType, type RegisterRequest } from '../lib/api/coverones';
+import { authApi, oauthStartUrl, type AccountType, type RegisterRequest, type OAuthProvider } from '../lib/api/coverones';
 import {
   validateLegalName,
   validateNationalId,
@@ -55,6 +55,24 @@ const IconId = () => (
 const IconBuilding = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
     <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M15 9h.01M15 13h.01"/>
+  </svg>
+);
+
+// ─── SSO provider logos (Google coloured + LINE) ─────────────────────────────
+
+const IconGoogle = () => (
+  <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
+    <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 1 1-3.3-12.6l5.7-5.7A20 20 0 1 0 44 24a20 20 0 0 0-.4-3.5z"/>
+    <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8A12 12 0 0 1 24 12a12 12 0 0 1 7.7 2.8l5.7-5.7A20 20 0 0 0 6.3 14.7z"/>
+    <path fill="#4CAF50" d="M24 44a20 20 0 0 0 13.5-5.2l-6.2-5.3A12 12 0 0 1 12.7 28l-6.5 5A20 20 0 0 0 24 44z"/>
+    <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.5l6.2 5.3C37 39.8 44 34 44 24a20 20 0 0 0-.4-3.5z"/>
+  </svg>
+);
+
+const IconLine = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="1" y="1" width="22" height="22" rx="5" fill="#06C755"/>
+    <path d="M19 10.7c0-3.1-3.1-5.7-7-5.7s-7 2.6-7 5.7c0 2.8 2.5 5.2 5.9 5.6.2 0 .5.1.6.3.1.2.1.5 0 .7l-.1.5c0 .2-.2.7.6.4 1-.4 4.7-3 4.9-3.1 1.3-1.1 2.1-2.6 2.1-4.4z" fill="#fff"/>
   </svg>
 );
 
@@ -605,6 +623,39 @@ const Register = () => {
               )}
             </button>
           </form>
+
+          {/* SSO divider — OAuth signup auto-provisions server-side (new-user
+              PENDING_VERIFICATION + KYC flow), so the same start URL serves both
+              login and register (contract §5.2). */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 14px 0', color: 'var(--co-text-muted)', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            <span style={{ flex: 1, height: 1, background: 'var(--co-line)' }} />
+            或使用社群帳號註冊
+            <span style={{ flex: 1, height: 1, background: 'var(--co-line)' }} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {([
+              { icon: <IconGoogle />, label: 'Google', provider: 'google' as OAuthProvider },
+              { icon: <IconLine />, label: 'LINE', provider: 'line' as OAuthProvider },
+            ]).map(({ icon, label, provider }) => (
+              <button
+                key={label}
+                type="button"
+                aria-label={`使用 ${label} 註冊`}
+                onClick={() => { window.location.href = oauthStartUrl(provider, '/jobs'); }}
+                style={{
+                  height: 42, borderRadius: 10,
+                  background: 'var(--co-bg-3)', borderStyle: 'solid', borderWidth: 1, borderColor: 'var(--co-line-strong)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  fontSize: 13, fontWeight: 500, color: 'var(--co-text)',
+                  cursor: 'pointer', transition: 'background 150ms, border-color 150ms',
+                }}
+              >
+                {icon}
+                {label}
+              </button>
+            ))}
+          </div>
 
           {/* Terms */}
           <div style={{ fontSize: 11.5, color: 'var(--co-text-muted)', marginTop: 14, textAlign: 'center', lineHeight: 1.55 }}>

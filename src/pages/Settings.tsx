@@ -1,4 +1,5 @@
 import { useTheme } from '../hooks/useTheme';
+import { SocialBindingSection } from '../components/settings/SocialBindingSection';
 import './Settings.css';
 
 const Settings = () => {
@@ -9,16 +10,16 @@ const Settings = () => {
     <div className="settings-page">
       <div className="settings-container">
         <h1 className="settings-title">設定</h1>
-        
+
         <div className="settings-section">
           <h2 className="section-title">外觀</h2>
-          
+
           <div className="setting-item">
             <div className="setting-info">
               <div className="setting-label">主題模式</div>
               <div className="setting-description">選擇淺色或深色主題</div>
             </div>
-            
+
             <div className="theme-options">
               <button
                 className={`theme-option ${theme === 'light' ? 'active' : ''}`}
@@ -37,7 +38,7 @@ const Settings = () => {
                 </div>
                 <span>淺色</span>
               </button>
-              
+
               <button
                 className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
                 onClick={() => {
@@ -59,9 +60,12 @@ const Settings = () => {
           </div>
         </div>
 
+        {/* 社群帳號綁定 — link/unlink Google & LINE for the authenticated user. */}
+        <SocialBindingSection />
+
         <div className="settings-section">
           <h2 className="section-title">通知</h2>
-          
+
           <div className="setting-item">
             <div className="setting-info">
               <div className="setting-label">桌面通知</div>
@@ -87,7 +91,7 @@ const Settings = () => {
 
         <div className="settings-section">
           <h2 className="section-title">隱私</h2>
-          
+
           <div className="setting-item">
             <div className="setting-info">
               <div className="setting-label">已讀狀態</div>
@@ -116,4 +120,3 @@ const Settings = () => {
 };
 
 export default Settings;
-
