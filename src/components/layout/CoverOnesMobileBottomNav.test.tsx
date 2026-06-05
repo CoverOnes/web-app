@@ -51,7 +51,6 @@ describe('CoverOnesMobileBottomNav', () => {
     renderNav('/');
     expect(screen.getByRole('button', { name: '首頁' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('button', { name: '案件' })).not.toHaveAttribute('aria-current', 'page');
-    // Also verify /jobs activates 案件 only (not 首頁)
   });
 
   it('marks /contracts tab as active on /contracts/:id route', () => {
