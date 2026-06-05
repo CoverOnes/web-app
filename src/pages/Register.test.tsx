@@ -72,13 +72,13 @@ describe('Register page — render', () => {
     expect(screen.getByRole('heading', { name: '建立企業帳號' })).toBeInTheDocument();
   });
 
-  it('renders the stepper with 4 steps', () => {
+  it('does not render a multi-step stepper (registration is single-submit)', () => {
     renderPage();
-    // Step labels visible in stepper — use getAllByText since "密碼" also appears as a label
-    expect(screen.getByText('公司')).toBeInTheDocument();
-    expect(screen.getByText('負責人')).toBeInTheDocument();
-    expect(screen.getAllByText('密碼').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('邀請團隊')).toBeInTheDocument();
+    // The misleading 4-step stepper has been removed — none of these stepper-only
+    // labels should appear in the document.
+    expect(screen.queryByText('公司')).not.toBeInTheDocument();
+    expect(screen.queryByText('負責人')).not.toBeInTheDocument();
+    expect(screen.queryByText('邀請團隊')).not.toBeInTheDocument();
   });
 
   it('renders required form inputs', () => {
@@ -240,8 +240,12 @@ describe('Register page — error states', () => {
 
   it('shows EMAIL_TAKEN error from server as role=alert', async () => {
     const user = userEvent.setup();
+    // Real backend envelope: {"error":{"code":"EMAIL_TAKEN","message":"..."}}
     mockRegister.mockRejectedValue(
-      Object.assign(new Error('EMAIL_TAKEN'), { isAxiosError: true, response: { data: { code: 'EMAIL_TAKEN' } } }),
+      Object.assign(new Error('EMAIL_TAKEN'), {
+        isAxiosError: true,
+        response: { data: { error: { code: 'EMAIL_TAKEN', message: 'Email already registered' } } },
+      }),
     );
 
     renderPage();
@@ -256,6 +260,30 @@ describe('Register page — error states', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('此 email 已被註冊，請改用其他信箱或直接登入。');
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('shows RATE_LIMITED error from nested envelope', async () => {
+    const user = userEvent.setup();
+    mockRegister.mockRejectedValue(
+      Object.assign(new Error('RATE_LIMITED'), {
+        isAxiosError: true,
+        response: { data: { error: { code: 'RATE_LIMITED', message: 'Too many requests' } } },
+      }),
+    );
+
+    renderPage();
+
+    await user.type(screen.getByLabelText(/顯示名稱/), 'Test User');
+    await user.type(screen.getByLabelText(/真實姓名/), '陳俊宇');
+    await user.type(screen.getByLabelText(/企業 Email/), 'test@co.com');
+    await user.type(screen.getByLabelText(/身分證字號/), 'A123456789');
+    await user.type(screen.getByLabelText(/^密碼/), 'strongpassword123');
+    await user.type(screen.getByLabelText(/確認密碼/, { selector: 'input' }), 'strongpassword123');
+    await user.click(screen.getByRole('button', { name: /建立帳號/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('操作過於頻繁，請稍後再試。');
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 

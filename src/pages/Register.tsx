@@ -58,12 +58,6 @@ const IconBuilding = () => (
   </svg>
 );
 
-const IconCheckmark = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
-    <polyline points="20 6 9 17 4 12"/>
-  </svg>
-);
-
 // ─── Owl brand mark ──────────────────────────────────────────────────────────
 
 const OwlMark = () => (
@@ -73,80 +67,6 @@ const OwlMark = () => (
     <path d="M11 14.5 L12 16 L13 14.5" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
   </svg>
 );
-
-// ─── Step type ───────────────────────────────────────────────────────────────
-
-type StepStatus = 'done' | 'active' | 'pending';
-
-interface StepDef {
-  n: number;
-  label: string;
-}
-
-const STEPS: StepDef[] = [
-  { n: 1, label: '公司' },
-  { n: 2, label: '負責人' },
-  { n: 3, label: '密碼' },
-  { n: 4, label: '邀請團隊' },
-];
-
-// ─── Stepper component ───────────────────────────────────────────────────────
-
-interface StepperProps {
-  currentStep: number;
-}
-
-function Stepper({ currentStep }: StepperProps) {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        display: 'flex', gap: 0, marginBottom: 24,
-        background: 'rgba(15,23,42,0.5)', border: '1px solid var(--co-line)',
-        borderRadius: 11, padding: 5,
-      }}
-    >
-      {STEPS.map((step) => {
-        const status: StepStatus = step.n < currentStep ? 'done' : step.n === currentStep ? 'active' : 'pending';
-        return (
-          <div
-            key={step.n}
-            style={{
-              flex: 1, padding: '9px 10px', borderRadius: 7,
-              display: 'flex', alignItems: 'center', gap: 8,
-              fontSize: 11.5,
-              color: status === 'done' ? 'var(--co-green)' : status === 'active' ? '#fff' : 'var(--co-text-muted)',
-              background: status === 'active' ? 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.1))' : 'transparent',
-            }}
-          >
-            <div
-              aria-hidden="true"
-              style={{
-                width: 20, height: 20, borderRadius: 5,
-                background: status === 'active'
-                  ? 'linear-gradient(135deg, var(--co-accent), var(--co-accent-2))'
-                  : status === 'done'
-                    ? 'rgba(16,185,129,0.18)'
-                    : 'var(--co-bg-3)',
-                border: status === 'active'
-                  ? 'none'
-                  : status === 'done'
-                    ? '1px solid var(--co-green)'
-                    : '1px solid var(--co-line)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 10.5, fontWeight: 700, color: status === 'done' ? 'var(--co-green)' : '#fff',
-                flexShrink: 0,
-              }}
-            >
-              {status === 'done' ? <IconCheckmark /> : step.n}
-            </div>
-            {step.label}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 // ─── Input wrapper component ─────────────────────────────────────────────────
 
@@ -279,7 +199,10 @@ const Register = () => {
       navigate('/register/verify-sent', { replace: true, state: { email: email.trim() } });
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        const code = (err.response?.data as { code?: string } | undefined)?.code;
+        // Backend returns {"error":{"code":"...","message":"..."}} nested under "error"
+        type ApiError = { error?: { code?: string; message?: string }; code?: string; message?: string };
+        const data = err.response?.data as ApiError | undefined;
+        const code = data?.error?.code ?? data?.code;
         const byCode: Record<string, string> = {
           EMAIL_TAKEN: '此 email 已被註冊，請改用其他信箱或直接登入。',
           WEAK_PASSWORD: '密碼強度不足，請使用更長或更複雜的密碼（至少 12 字元）。',
@@ -288,7 +211,8 @@ const Register = () => {
         };
         setError(
           (code && byCode[code]) ??
-            (err.response?.data as { message?: string } | undefined)?.message ??
+            data?.error?.message ??
+            data?.message ??
             '註冊失敗，請稍後再試。'
         );
       } else {
@@ -475,9 +399,6 @@ const Register = () => {
               已有帳號？<strong style={{ color: '#A78BFA' }}>登入</strong>
             </Link>
           </div>
-
-          {/* Stepper — decorative only; all steps are submitted at once */}
-          <Stepper currentStep={1} />
 
           <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 6px', color: 'var(--co-text)' }}>
             建立企業帳號

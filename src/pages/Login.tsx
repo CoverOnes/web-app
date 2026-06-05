@@ -310,8 +310,19 @@ const Login = () => {
       navigate('/jobs', { replace: true });
     } catch (err) {
       if (axios.isAxiosError(err)) {
+        // Backend returns {"error":{"code":"...","message":"..."}} nested under "error"
+        type ApiError = { error?: { code?: string; message?: string }; code?: string; message?: string };
+        const data = err.response?.data as ApiError | undefined;
+        const code = data?.error?.code ?? data?.code;
+        const byCode: Record<string, string> = {
+          RATE_LIMITED: '操作過於頻繁，請稍後再試。',
+          INVALID_CREDENTIALS: '帳號或密碼錯誤，請再試一次。',
+          ACCOUNT_DISABLED: '此帳號已停用，請聯絡客服。',
+        };
         setError(
-          (err.response?.data as { message?: string } | undefined)?.message ??
+          (code && byCode[code]) ??
+            data?.error?.message ??
+            data?.message ??
             '登入失敗，請確認您的帳號與密碼。'
         );
       } else {

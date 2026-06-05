@@ -169,11 +169,15 @@ describe('Login page — error states', () => {
     });
   });
 
-  it('shows server error as role=alert when login fails', async () => {
+  it('shows server error as role=alert when login fails (nested envelope)', async () => {
     const user = userEvent.setup();
 
+    // Real backend envelope: {"error":{"code":"...","message":"..."}}
     mockLogin.mockRejectedValue(
-      Object.assign(new Error('Unauthorized'), { isAxiosError: true, response: { data: { message: '帳號或密碼錯誤。' } } }),
+      Object.assign(new Error('Unauthorized'), {
+        isAxiosError: true,
+        response: { data: { error: { code: 'INVALID_CREDENTIALS', message: '帳號或密碼錯誤。' } } },
+      }),
     );
 
     renderPage();
@@ -183,7 +187,29 @@ describe('Login page — error states', () => {
     await user.click(screen.getByRole('button', { name: /登入 CoverOnes/i }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('帳號或密碼錯誤。');
+    // INVALID_CREDENTIALS maps to this specific message via byCode table
+    expect(alert).toHaveTextContent('帳號或密碼錯誤，請再試一次。');
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('shows RATE_LIMITED error from nested envelope', async () => {
+    const user = userEvent.setup();
+
+    mockLogin.mockRejectedValue(
+      Object.assign(new Error('TooManyRequests'), {
+        isAxiosError: true,
+        response: { data: { error: { code: 'RATE_LIMITED', message: 'Too many requests' } } },
+      }),
+    );
+
+    renderPage();
+
+    await user.type(screen.getByLabelText('電子郵件'), 'bad@co.com');
+    await user.type(screen.getByLabelText('密碼'), 'wrongpassword');
+    await user.click(screen.getByRole('button', { name: /登入 CoverOnes/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('操作過於頻繁，請稍後再試。');
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
@@ -222,9 +248,12 @@ describe('Login page — error states', () => {
   it('shows error when login succeeds but me() call fails', async () => {
     const user = userEvent.setup();
     mockLogin.mockResolvedValue({ accessToken: 'acc', refreshToken: 'ref', tokenType: 'Bearer', expiresIn: 3600 });
-    // me() throws an axios error after the token is obtained
+    // me() throws an axios error after the token is obtained (nested envelope)
     mockMe.mockRejectedValue(
-      Object.assign(new Error('Forbidden'), { isAxiosError: true, response: { data: { message: '帳號已停用。' } } }),
+      Object.assign(new Error('Forbidden'), {
+        isAxiosError: true,
+        response: { data: { error: { code: 'ACCOUNT_DISABLED', message: '帳號已停用。' } } },
+      }),
     );
 
     renderPage();
@@ -234,7 +263,8 @@ describe('Login page — error states', () => {
     await user.click(screen.getByRole('button', { name: /登入 CoverOnes/i }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('帳號已停用。');
+    // ACCOUNT_DISABLED maps to the byCode message in Login.tsx
+    expect(alert).toHaveTextContent('此帳號已停用，請聯絡客服。');
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 });
