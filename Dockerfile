@@ -22,12 +22,33 @@ RUN npm run build
 # nginx:unprivileged listens on port 8080 and owns its cache dirs — no root needed.
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
 
-# Minimal SPA-friendly nginx config on port 8080 (unprivileged default)
+# Minimal SPA-friendly nginx config on port 8080 (unprivileged default).
+# Security headers included per five-army audit (Major finding — Dockerfile:26-34).
+# HSTS is intentionally omitted here: this container sits behind a TLS-terminating
+# reverse proxy / CDN in production; Strict-Transport-Security MUST be added at
+# that terminator (e.g. AWS ALB, Cloudflare, or the gateway nginx), not here,
+# because this server speaks plain HTTP inside the container network.
 RUN printf 'server {\n\
     listen 8080;\n\
     server_name _;\n\
     root /usr/share/nginx/html;\n\
     index index.html;\n\
+\n\
+    # ── Security response headers ──────────────────────────────────────\n\
+    # Prevent framing / clickjacking (defence-in-depth alongside CSP frame-ancestors)\n\
+    add_header X-Frame-Options "SAMEORIGIN" always;\n\
+    # Prevent MIME-type sniffing (critical for uploaded-content paths)\n\
+    add_header X-Content-Type-Options "nosniff" always;\n\
+    # Limit referrer leakage from the SPA to third-party origins\n\
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;\n\
+    # Baseline CSP: allow same-origin resources + the configured API gateway.\n\
+    # connect-src includes localhost for local dev; tighten to gateway domain in prod.\n\
+    # NOTE: inline styles are used extensively (React style props) — unsafe-inline\n\
+    # for style-src is necessary until CSS-in-JS is migrated to Tailwind classes.\n\
+    add_header Content-Security-Policy "default-src '\''self'\''; script-src '\''self'\''; style-src '\''self'\'' '\''unsafe-inline'\''; img-src '\''self'\'' data: https:; font-src '\''self'\'' data:; connect-src '\''self'\'' http://localhost:8080 https:; frame-ancestors '\''self'\''; object-src '\''none'\'';" always;\n\
+    # Disable legacy browser features not used by this SPA\n\
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;\n\
+\n\
     location / {\n\
         try_files $uri $uri/ /index.html;\n\
     }\n\

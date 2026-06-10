@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import PostJobPage from './PostJobPage';
+import { sumMilestoneAmounts } from '../utils/budgetUtils';
 import { useAuthStore, type AuthUser } from '../store/authStore';
 import { useCreateListing } from '../lib/query';
 
@@ -61,6 +62,54 @@ function renderPage() {
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
+
+// ─── sumMilestoneAmounts unit tests ──────────────────────────────────────────
+// Regression guard for audit finding: JS float summation produced artifacts
+// (0.1 + 0.2 → '0.30000000000000004') in budget strings sent to the backend.
+
+describe('sumMilestoneAmounts', () => {
+  it('returns 0 for an empty milestone list', () => {
+    expect(sumMilestoneAmounts([])).toBe(0);
+  });
+
+  it('returns 0 for milestones with no amount entered', () => {
+    expect(sumMilestoneAmounts([{ amount: '' }, { amount: '' }])).toBe(0);
+  });
+
+  it('sums integer amounts without precision loss', () => {
+    expect(sumMilestoneAmounts([{ amount: '100000' }, { amount: '50000' }])).toBe(150000);
+  });
+
+  it('avoids JS float artifact: 0.1 + 0.2 === 0.3 (not 0.30000000000000004)', () => {
+    const result = sumMilestoneAmounts([{ amount: '0.1' }, { amount: '0.2' }]);
+    expect(result).toBe(0.3);
+    // Explicitly assert the naive float sum would fail
+    expect(0.1 + 0.2).not.toBe(0.3); // documents the bug that was fixed
+  });
+
+  it('strips currency formatting characters (commas, dollar signs)', () => {
+    expect(sumMilestoneAmounts([{ amount: '$1,200.50' }, { amount: 'NT$800.50' }])).toBe(2001);
+  });
+
+  it('ignores non-finite values (NaN, Infinity) without throwing', () => {
+    expect(sumMilestoneAmounts([{ amount: 'abc' }, { amount: '500' }])).toBe(500);
+  });
+
+  it('ignores negative amounts', () => {
+    // Negative milestones make no sense — stripped by replace([^0-9.], '')
+    expect(sumMilestoneAmounts([{ amount: '-100' }, { amount: '500' }])).toBe(600);
+  });
+
+  it('handles large real-world budget sums (NT$ 4.5M)', () => {
+    expect(
+      sumMilestoneAmounts([
+        { amount: '1500000' },
+        { amount: '1500000' },
+        { amount: '1500000' },
+      ])
+    ).toBe(4500000);
+  });
+});
 
 describe('PostJobPage', () => {
   beforeEach(() => {

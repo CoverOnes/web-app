@@ -24,6 +24,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { useCreateListing } from '../lib/query';
 import { TierGuard } from '../components/auth/TierGuard';
+import { sumMilestoneAmounts } from '../utils/budgetUtils';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -81,6 +82,7 @@ interface Milestone {
 function makeMilestone(n: number): Milestone {
   return { id: crypto.randomUUID(), title: `里程碑 ${n}`, amount: '' };
 }
+
 
 // Monotonically increasing counter so deleted-then-added milestones
 // get a new sequential number rather than reusing a previous index.
@@ -1406,11 +1408,9 @@ const PostJobPage = () => {
     if (!description.trim()) { setSubmitError('請填寫案件說明。'); return; }
     setSubmitError('');
 
-    // Compute budget from milestones
-    const rawTotal = milestones.reduce((sum, m) => {
-      const raw = m.amount.replace(/[^0-9.]/g, '');
-      return sum + (parseFloat(raw) || 0);
-    }, 0);
+    // Compute budget from milestones using integer minor-unit arithmetic to
+    // avoid JS float precision artifacts. See sumMilestoneAmounts for details.
+    const rawTotal = sumMilestoneAmounts(milestones);
 
     try {
       // TODO: confirm extended listing endpoint shape with backend team.

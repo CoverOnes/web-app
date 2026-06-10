@@ -55,6 +55,8 @@ const ContractDetailPage = () => {
 
   // Must be declared before early returns so hook order is stable
   const [actionError, setActionError] = useState('');
+  // Confirm dialog state for irreversible cancel action
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   if (isLoading) {
     return (
@@ -108,8 +110,76 @@ const ContractDetailPage = () => {
   const stepIndex = getStepIndex(contract.status);
   const letter = contract.title.charAt(0).toUpperCase();
 
+  const handleConfirmCancel = () => {
+    setShowCancelConfirm(false);
+    cancelContract.mutate(undefined, {
+      onError: (err) => {
+        const axErr = err as import('axios').AxiosError<{ message?: string }>;
+        setActionError(axErr.response?.data?.message ?? 'Failed to cancel contract.');
+      },
+    });
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--co-bg)', minHeight: '100%' }}>
+      {/* ── Cancel-contract confirm dialog ── */}
+      {showCancelConfirm && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cancel-confirm-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(0,0,0,0.55)',
+          }}
+        >
+          <div
+            style={{
+              background: 'var(--co-bg-card)',
+              border: '1px solid var(--co-line-strong)',
+              borderRadius: 16,
+              padding: '28px 32px',
+              maxWidth: 420,
+              width: '90%',
+              boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
+            }}
+          >
+            <h2
+              id="cancel-confirm-title"
+              style={{ fontSize: 16, fontWeight: 700, margin: '0 0 10px 0', color: 'var(--co-text)' }}
+            >
+              確認取消合約？
+            </h2>
+            <p style={{ fontSize: 13.5, color: 'var(--co-text-dim)', lineHeight: 1.6, margin: '0 0 22px 0' }}>
+              取消後合約狀態將變更為「已取消」且無法復原。請確認您已知悉此操作的影響。
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowCancelConfirm(false)}
+                aria-label="保留合約，返回"
+              >
+                保留合約
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                loading={cancelContract.isPending}
+                onClick={handleConfirmCancel}
+                aria-label="確認取消合約"
+              >
+                確認取消
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       <PageHead
         crumb="合約管理 / 合約詳情"
         title={contract.title}
@@ -142,12 +212,7 @@ const ContractDetailPage = () => {
                 loading={cancelContract.isPending}
                 onClick={() => {
                   setActionError('');
-                  cancelContract.mutate(undefined, {
-                    onError: (err) => {
-                      const axErr = err as import('axios').AxiosError<{ message?: string }>;
-                      setActionError(axErr.response?.data?.message ?? 'Failed to cancel contract.');
-                    },
-                  });
+                  setShowCancelConfirm(true);
                 }}
                 aria-label="取消合約"
               >
