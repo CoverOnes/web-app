@@ -42,7 +42,9 @@ RUN printf 'server {\n\
     # Limit referrer leakage from the SPA to third-party origins\n\
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;\n\
     # Baseline CSP: allow same-origin resources + the configured API gateway.\n\
-    # connect-src includes localhost for local dev; tighten to gateway domain in prod.\n\
+    # connect-src https: is intentionally broad for local dev.\n\
+    # TODO(prod): replace https: with the actual gateway domain via --build-arg VITE_API_BASE_URL\n\
+    # so that connect-src is narrowed to e.g. https://api.coverones.com in production.\n\
     # NOTE: inline styles are used extensively (React style props) — unsafe-inline\n\
     # for style-src is necessary until CSS-in-JS is migrated to Tailwind classes.\n\
     add_header Content-Security-Policy "default-src '\''self'\''; script-src '\''self'\''; style-src '\''self'\'' '\''unsafe-inline'\''; img-src '\''self'\'' data: https:; font-src '\''self'\'' data:; connect-src '\''self'\'' http://localhost:8080 https:; frame-ancestors '\''self'\''; object-src '\''none'\'';" always;\n\

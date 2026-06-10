@@ -95,9 +95,10 @@ describe('sumMilestoneAmounts', () => {
     expect(sumMilestoneAmounts([{ amount: 'abc' }, { amount: '500' }])).toBe(500);
   });
 
-  it('ignores negative amounts', () => {
-    // Negative milestones make no sense — stripped by replace([^0-9.], '')
-    expect(sumMilestoneAmounts([{ amount: '-100' }, { amount: '500' }])).toBe(600);
+  it('skips negative amounts (does not add them to the sum)', () => {
+    // Negative milestones make no financial sense; '-100' is skipped, not
+    // converted to +100 by the non-numeric strip, so the result is 500 not 600.
+    expect(sumMilestoneAmounts([{ amount: '-100' }, { amount: '500' }])).toBe(500);
   });
 
   it('handles large real-world budget sums (NT$ 4.5M)', () => {

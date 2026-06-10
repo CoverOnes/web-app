@@ -405,7 +405,7 @@ function HomeProjCard({ proj, onBid }: { proj: ProjectItem; onBid: () => void })
 // TODO (P3): replace PLACEHOLDER_PROJECTS / SUGGESTED_COMPANIES / TRENDING with
 // real hooks (useListings, useContracts, useMyBids) once those endpoints are
 // stabilised. Track at: https://github.com/coverones/web-app/issues/XX
-const IS_DEMO_HOME = import.meta.env.VITE_DEMO_HOME === 'true' || true; // always ON until real data wired
+const IS_DEMO_HOME = import.meta.env.VITE_DEMO_HOME === 'true';
 
 /* ── Main component ──────────────────────────────────────────────────── */
 const Home = () => {

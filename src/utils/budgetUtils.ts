@@ -9,9 +9,12 @@
  */
 export function sumMilestoneAmounts(milestones: { amount: string }[]): number {
   const totalCents = milestones.reduce((sumCents, m) => {
+    // Skip negative amounts before stripping non-numeric chars so that
+    // '-100' is not silently converted to '100' and included in the sum.
+    if (m.amount.trim().startsWith('-')) return sumCents;
     const raw = m.amount.replace(/[^0-9.]/g, '');
     const n = parseFloat(raw);
-    if (!Number.isFinite(n) || n < 0) return sumCents;
+    if (!Number.isFinite(n)) return sumCents;
     return sumCents + Math.round(n * 100);
   }, 0);
   return totalCents / 100;

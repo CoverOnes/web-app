@@ -663,10 +663,9 @@ interface LivePreviewProps {
 }
 
 function parseTotalFromMilestones(milestones: Milestone[], currency: string): string {
-  const total = milestones.reduce((sum, m) => {
-    const raw = m.amount.replace(/[^0-9.]/g, '');
-    return sum + (parseFloat(raw) || 0);
-  }, 0);
+  // Use sumMilestoneAmounts (integer minor-unit arithmetic) to avoid JS float
+  // precision artifacts such as 0.1 + 0.2 → 0.30000000000000004.
+  const total = sumMilestoneAmounts(milestones);
   if (total === 0) return '—';
   if (currency === 'TWD') {
     return `NT$ ${total.toLocaleString('zh-TW')}`;
@@ -1028,10 +1027,9 @@ interface Step3Props {
 function Step3({ milestones, onMilestoneChange, onMilestoneAdd, onMilestoneDelete, currency, onCurrencyChange }: Step3Props) {
   const currencyId = useId();
   const total = parseTotalFromMilestones(milestones, currency);
-  const rawTotal = milestones.reduce((sum, m) => {
-    const raw = m.amount.replace(/[^0-9.]/g, '');
-    return sum + (parseFloat(raw) || 0);
-  }, 0);
+  // Use sumMilestoneAmounts (integer minor-unit arithmetic) to avoid JS float
+  // precision artifacts in the live-preview budget total display.
+  const rawTotal = sumMilestoneAmounts(milestones);
 
   return (
     <Section title="里程碑與付款" sub="分階段付款可降低雙方風險。建議至少設置 3 個里程碑。">

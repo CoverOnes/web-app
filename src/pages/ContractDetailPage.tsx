@@ -20,8 +20,9 @@ import { TermsPanel } from '../components/workspace/TermsPanel';
 import { SignaturePanel } from '../components/workspace/SignaturePanel';
 import { TaskList } from '../components/workspace/TaskList';
 import { Icon } from '../components/ui/Icon';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { TaskStatus } from '../lib/api/coverones';
+import { getApiErrorMessage } from '../lib/api/http';
 
 const CONTRACT_STEPS = ['草稿', '待簽署', '生效中', '執行中', '完成'];
 
@@ -57,6 +58,18 @@ const ContractDetailPage = () => {
   const [actionError, setActionError] = useState('');
   // Confirm dialog state for irreversible cancel action
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  // Ref for the dialog panel — used to move focus into it on open (a11y)
+  const cancelDialogRef = useRef<HTMLDivElement>(null);
+
+  // a11y: close on Escape; only active while the dialog is open
+  useEffect(() => {
+    if (!showCancelConfirm) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowCancelConfirm(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [showCancelConfirm]);
 
   if (isLoading) {
     return (
@@ -91,8 +104,7 @@ const ContractDetailPage = () => {
     setActionError('');
     updateTask.mutate({ taskId, data: { status } }, {
       onError: (err) => {
-        const axErr = err as import('axios').AxiosError<{ message?: string }>;
-        setActionError(axErr.response?.data?.message ?? 'Failed to update task status.');
+        setActionError(getApiErrorMessage(err) ?? 'Failed to update task status.');
       },
     });
   };
@@ -101,8 +113,7 @@ const ContractDetailPage = () => {
     setActionError('');
     createTask.mutate(data, {
       onError: (err) => {
-        const axErr = err as import('axios').AxiosError<{ message?: string }>;
-        setActionError(axErr.response?.data?.message ?? 'Failed to create task.');
+        setActionError(getApiErrorMessage(err) ?? 'Failed to create task.');
       },
     });
   };
@@ -114,8 +125,7 @@ const ContractDetailPage = () => {
     setShowCancelConfirm(false);
     cancelContract.mutate(undefined, {
       onError: (err) => {
-        const axErr = err as import('axios').AxiosError<{ message?: string }>;
-        setActionError(axErr.response?.data?.message ?? 'Failed to cancel contract.');
+        setActionError(getApiErrorMessage(err) ?? 'Failed to cancel contract.');
       },
     });
   };
@@ -124,6 +134,7 @@ const ContractDetailPage = () => {
     <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--co-bg)', minHeight: '100%' }}>
       {/* ── Cancel-contract confirm dialog ── */}
       {showCancelConfirm && (
+        /* a11y: backdrop click closes the dialog */
         <div
           role="dialog"
           aria-modal="true"
@@ -137,8 +148,11 @@ const ContractDetailPage = () => {
             justifyContent: 'center',
             background: 'rgba(0,0,0,0.55)',
           }}
+          onClick={() => setShowCancelConfirm(false)}
         >
+          {/* a11y: stopPropagation prevents backdrop click from firing on inner panel */}
           <div
+            ref={cancelDialogRef}
             style={{
               background: 'var(--co-bg-card)',
               border: '1px solid var(--co-line-strong)',
@@ -148,6 +162,7 @@ const ContractDetailPage = () => {
               width: '90%',
               boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
             }}
+            onClick={(e) => e.stopPropagation()}
           >
             <h2
               id="cancel-confirm-title"
@@ -159,9 +174,11 @@ const ContractDetailPage = () => {
               取消後合約狀態將變更為「已取消」且無法復原。請確認您已知悉此操作的影響。
             </p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              {/* autoFocus: focus moves into the dialog on open; default to the safe "keep" action */}
               <Button
                 variant="secondary"
                 size="sm"
+                autoFocus
                 onClick={() => setShowCancelConfirm(false)}
                 aria-label="保留合約，返回"
               >
@@ -195,8 +212,7 @@ const ContractDetailPage = () => {
                   setActionError('');
                   submitForSignature.mutate(undefined, {
                     onError: (err) => {
-                      const axErr = err as import('axios').AxiosError<{ message?: string }>;
-                      setActionError(axErr.response?.data?.message ?? 'Failed to submit for signature.');
+                      setActionError(getApiErrorMessage(err) ?? 'Failed to submit for signature.');
                     },
                   });
                 }}
@@ -360,8 +376,7 @@ const ContractDetailPage = () => {
                   setActionError('');
                   signContract.mutate(hash, {
                     onError: (err) => {
-                      const axErr = err as import('axios').AxiosError<{ message?: string }>;
-                      setActionError(axErr.response?.data?.message ?? 'Failed to sign contract.');
+                      setActionError(getApiErrorMessage(err) ?? 'Failed to sign contract.');
                     },
                   });
                 }}

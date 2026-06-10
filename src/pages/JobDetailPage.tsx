@@ -26,7 +26,7 @@ import { BidForm } from '../components/marketplace/BidForm';
 import { BidListRow } from '../components/marketplace/BidListRow';
 import { Icon } from '../components/ui/Icon';
 import { formatDistanceToNow } from 'date-fns';
-import type { AxiosError } from 'axios';
+import { getApiErrorMessage } from '../lib/api/http';
 import { useState, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Bid } from '../lib/api/coverones';
@@ -160,8 +160,7 @@ const JobDetailPage = () => {
       await createBid.mutateAsync(data);
       setBidSubmitted(true);
     } catch (err) {
-      const axErr = err as AxiosError<{ message?: string }>;
-      setBidError(axErr.response?.data?.message ?? 'Failed to submit bid.');
+      setBidError(getApiErrorMessage(err) ?? 'Failed to submit bid.');
     }
   };
 
@@ -171,8 +170,7 @@ const JobDetailPage = () => {
     try {
       await acceptBid.mutateAsync(bidId);
     } catch (err) {
-      const axErr = err as import('axios').AxiosError<{ message?: string }>;
-      setAcceptRejectError(axErr.response?.data?.message ?? 'Failed to accept bid. Please try again.');
+      setAcceptRejectError(getApiErrorMessage(err) ?? 'Failed to accept bid. Please try again.');
     } finally {
       setAcceptingId(null);
     }
@@ -184,8 +182,7 @@ const JobDetailPage = () => {
     try {
       await rejectBid.mutateAsync(bidId);
     } catch (err) {
-      const axErr = err as import('axios').AxiosError<{ message?: string }>;
-      setAcceptRejectError(axErr.response?.data?.message ?? 'Failed to reject bid. Please try again.');
+      setAcceptRejectError(getApiErrorMessage(err) ?? 'Failed to reject bid. Please try again.');
     } finally {
       setRejectingId(null);
     }
