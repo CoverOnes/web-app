@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useListings } from '../lib/query';
+import { getApiErrorCode } from '../lib/api/http';
 
 /* Design-system palette constants — all values from shared.css / index.css :root tokens */
 const P = {
@@ -39,16 +40,6 @@ const TABS: { id: TabId; label: string; disabled?: true }[] = [
 ];
 
 const FILTER_CHIPS = ['軟體開發', 'UI/UX 設計', '行銷推廣', '硬體製造', '資料分析', '法務財會'];
-
-type ApiErrorBody = {
-  code?: string;
-  data?: { code?: string };
-};
-
-function getApiErrorCode(error: unknown): string | undefined {
-  const r = (error as { response?: { data?: ApiErrorBody } })?.response;
-  return r?.data?.code ?? r?.data?.data?.code;
-}
 
 /* ── Role badge ─────────────────────────────────────────────────────── */
 type BadgeVariant = 'dev' | 'design' | 'mfg' | 'mkt' | 'grey' | 'cyan' | 'amber' | 'green';
@@ -293,10 +284,33 @@ const JobBoardPage = () => {
 
   const totalCount = listings?.length ?? 0;
 
+  // Map category chip labels to keywords matched against title + description.
+  // NOTE: The API has no category field yet; this is a client-side text filter.
+  // TODO (backend): add category/tag field to Listing and filter server-side.
+  const CHIP_KEYWORDS: Record<string, string[]> = {
+    '軟體開發':  ['軟體', '開發', '程式', 'software', 'dev', 'code', 'api', 'backend', 'frontend', 'golang', 'go ', 'react', 'microservice', '微服務'],
+    'UI/UX 設計': ['設計', 'design', 'ui', 'ux', '品牌', 'visual', '介面'],
+    '行銷推廣':  ['行銷', 'marketing', 'campaign', 'social', 'kol', '媒體', '推廣'],
+    '硬體製造':  ['硬體', 'hardware', 'pcb', '製造', '代工', '機械', '機電', '電路'],
+    '資料分析':  ['資料', 'data', 'analytics', 'bi', '分析', 'ml', 'ai', '機器學習'],
+    '法務財會':  ['法務', '財會', '會計', '法律', 'legal', 'finance', 'audit', '稽核'],
+  };
+
   function filterListings(items: Listing[]): Listing[] {
-    if (activeTab === 'APPLIED') return items.filter((l) => l.status === 'AWARDED' || l.status === 'CLOSED');
-    // ALL (and any future active tab) shows everything
-    return items;
+    // Tab filter
+    let result = items;
+    if (activeTab === 'APPLIED') {
+      result = result.filter((l) => l.status === 'AWARDED' || l.status === 'CLOSED');
+    }
+    // Category chip filter: client-side keyword match on title + description
+    if (activeFilter && CHIP_KEYWORDS[activeFilter]) {
+      const keywords = CHIP_KEYWORDS[activeFilter];
+      result = result.filter((l) => {
+        const haystack = `${l.title} ${l.description}`.toLowerCase();
+        return keywords.some((kw) => haystack.includes(kw.toLowerCase()));
+      });
+    }
+    return result;
   }
 
   const displayed = listings ? filterListings(listings) : [];
@@ -641,9 +655,12 @@ const JobBoardPage = () => {
                     onBid={() => navigate(`/jobs/${listing.id}`)}
                   />
                 ))}
+                {/* Pagination not yet implemented — disable until cursor-based
+                    load-more is wired to the API's next_cursor/has_more fields */}
                 <div style={{ textAlign: 'center', padding: 14 }}>
                   <button
-                    aria-label="載入更多案件"
+                    aria-label="載入更多案件（即將推出）"
+                    disabled
                     style={{
                       padding: '8px 20px',
                       borderRadius: 'var(--co-btn-r)',
@@ -651,10 +668,11 @@ const JobBoardPage = () => {
                       border: '1px solid var(--co-line-strong)',
                       color: 'var(--co-text-dim)',
                       fontSize: 13,
-                      cursor: 'pointer',
+                      cursor: 'not-allowed',
+                      opacity: 0.55,
                     }}
                   >
-                    載入更多 (還有 343 件)
+                    即將推出分頁載入
                   </button>
                 </div>
               </>

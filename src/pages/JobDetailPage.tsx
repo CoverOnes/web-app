@@ -26,7 +26,7 @@ import { BidForm } from '../components/marketplace/BidForm';
 import { BidListRow } from '../components/marketplace/BidListRow';
 import { Icon } from '../components/ui/Icon';
 import { formatDistanceToNow } from 'date-fns';
-import type { AxiosError } from 'axios';
+import { getApiErrorMessage } from '../lib/api/http';
 import { useState, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Bid } from '../lib/api/coverones';
@@ -160,8 +160,7 @@ const JobDetailPage = () => {
       await createBid.mutateAsync(data);
       setBidSubmitted(true);
     } catch (err) {
-      const axErr = err as AxiosError<{ message?: string }>;
-      setBidError(axErr.response?.data?.message ?? 'Failed to submit bid.');
+      setBidError(getApiErrorMessage(err) ?? 'Failed to submit bid.');
     }
   };
 
@@ -171,8 +170,7 @@ const JobDetailPage = () => {
     try {
       await acceptBid.mutateAsync(bidId);
     } catch (err) {
-      const axErr = err as import('axios').AxiosError<{ message?: string }>;
-      setAcceptRejectError(axErr.response?.data?.message ?? 'Failed to accept bid. Please try again.');
+      setAcceptRejectError(getApiErrorMessage(err) ?? 'Failed to accept bid. Please try again.');
     } finally {
       setAcceptingId(null);
     }
@@ -184,8 +182,7 @@ const JobDetailPage = () => {
     try {
       await rejectBid.mutateAsync(bidId);
     } catch (err) {
-      const axErr = err as import('axios').AxiosError<{ message?: string }>;
-      setAcceptRejectError(axErr.response?.data?.message ?? 'Failed to reject bid. Please try again.');
+      setAcceptRejectError(getApiErrorMessage(err) ?? 'Failed to reject bid. Please try again.');
     } finally {
       setRejectingId(null);
     }
@@ -717,10 +714,12 @@ const JobDetailPage = () => {
               </div>
             ))}
 
+            {/* Q&A 送出 — coming soon; disabled until API is wired */}
             <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
               <input
-                aria-label="提出你的問題"
-                placeholder="提出你的問題...（採購方會公開回覆）"
+                aria-label="提出你的問題（即將推出）"
+                placeholder="提問功能即將推出..."
+                disabled
                 style={{
                   flex: 1,
                   padding: '10px 14px',
@@ -728,24 +727,28 @@ const JobDetailPage = () => {
                   border: '1px solid var(--co-line)',
                   borderRadius: 10,
                   fontSize: 13,
-                  color: 'var(--co-text)',
+                  color: 'var(--co-text-dim)',
                   outline: 'none',
+                  opacity: 0.55,
+                  cursor: 'not-allowed',
                 }}
               />
               <button
-                aria-label="送出問題"
+                aria-label="送出問題（即將推出）"
+                disabled
                 style={{
                   padding: '10px 16px',
                   borderRadius: 'var(--co-btn-r)',
-                  background: 'linear-gradient(135deg, var(--co-accent-blue), var(--co-accent-2))',
-                  color: '#fff',
+                  background: 'rgba(148,163,184,0.15)',
+                  color: 'var(--co-text-dim)',
                   fontSize: 13,
                   fontWeight: 600,
-                  border: 'none',
-                  cursor: 'pointer',
+                  border: '1px solid var(--co-line-strong)',
+                  cursor: 'not-allowed',
+                  opacity: 0.55,
                 }}
               >
-                送出提問
+                即將推出
               </button>
             </div>
           </div>
@@ -834,8 +837,24 @@ const JobDetailPage = () => {
                 )}
               </>
             ) : (
-              /* Public bidder placeholder rows */
+              /* Public bidder placeholder rows — shown to non-owners.
+                 NOTE: This list is design-spec sample data. Real bidder
+                 anonymisation API is not yet implemented (Coming Soon). */
               <>
+                <div
+                  role="status"
+                  style={{
+                    marginBottom: 12,
+                    padding: '8px 12px',
+                    background: 'rgba(245,158,11,0.10)',
+                    border: '1px solid rgba(245,158,11,0.28)',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    color: 'var(--co-bdg-mfg-text)',
+                  }}
+                >
+                  ⚠ 以下為展示資料，實際投標方資訊即將推出
+                </div>
                 {[
                   { letter: '鴻', bg: P.gradRose, name: '鴻海資訊', verified: true, meta: '資訊服務 · 200+ 員工 · 2 天前投標', quote: 'NT$ 1.18M', duration: '12 個月' },
                   { letter: '沛', bg: P.gradCyan,  name: '沛星互動', verified: true, meta: 'AI / SaaS · 80 員工 · 3 天前投標',  quote: 'NT$ 1.24M', duration: '11 個月' },
@@ -884,7 +903,8 @@ const JobDetailPage = () => {
                 ))}
                 <div style={{ textAlign: 'center', marginTop: 10 }}>
                   <button
-                    aria-label={`展開全部 ${bids.length || 11} 家投標方`}
+                    aria-label="展開全部投標方（即將推出）"
+                    disabled
                     style={{
                       padding: '7px 16px',
                       borderRadius: 'var(--co-btn-r)',
@@ -892,10 +912,11 @@ const JobDetailPage = () => {
                       border: '1px solid var(--co-line-strong)',
                       color: 'var(--co-text-dim)',
                       fontSize: 12.5,
-                      cursor: 'pointer',
+                      cursor: 'not-allowed',
+                      opacity: 0.55,
                     }}
                   >
-                    展開全部 {bids.length || 11} 家投標方 ▾
+                    即將推出 ▾
                   </button>
                 </div>
               </>

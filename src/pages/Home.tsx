@@ -398,6 +398,15 @@ function HomeProjCard({ proj, onBid }: { proj: ProjectItem; onBid: () => void })
   );
 }
 
+// ─── Demo flag ───────────────────────────────────────────────────────────────
+// Home dashboard currently renders placeholder design-spec fixtures instead of
+// live API data. The VITE_DEMO_HOME flag (default OFF in production) controls
+// a visible banner so users always know they are seeing mock content.
+// TODO (P3): replace PLACEHOLDER_PROJECTS / SUGGESTED_COMPANIES / TRENDING with
+// real hooks (useListings, useContracts, useMyBids) once those endpoints are
+// stabilised. Track at: https://github.com/coverones/web-app/issues/XX
+const IS_DEMO_HOME = import.meta.env.VITE_DEMO_HOME === 'true';
+
 /* ── Main component ──────────────────────────────────────────────────── */
 const Home = () => {
   const navigate = useNavigate();
@@ -414,6 +423,28 @@ const Home = () => {
         color: 'var(--co-text)',
       }}
     >
+      {/* ── Demo data notice (shown whenever IS_DEMO_HOME is true) ── */}
+      {IS_DEMO_HOME && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            margin: '12px 28px 0 28px',
+            padding: '10px 16px',
+            background: 'rgba(245,158,11,0.12)',
+            border: '1px solid rgba(245,158,11,0.35)',
+            borderRadius: 10,
+            fontSize: 12.5,
+            color: 'var(--co-bdg-mfg-text)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <span aria-hidden="true">⚠</span>
+          目前顯示的數據為展示用範例資料，並非您的真實帳戶資訊。功能持續開發中，敬請期待。
+        </div>
+      )}
       {/* ── Desktop body grid (1fr + 320px sidebar) ── */}
       <div
         style={{

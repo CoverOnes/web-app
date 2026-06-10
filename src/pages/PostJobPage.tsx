@@ -24,6 +24,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { useCreateListing } from '../lib/query';
 import { TierGuard } from '../components/auth/TierGuard';
+import { sumMilestoneAmounts } from '../utils/budgetUtils';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -81,6 +82,7 @@ interface Milestone {
 function makeMilestone(n: number): Milestone {
   return { id: crypto.randomUUID(), title: `里程碑 ${n}`, amount: '' };
 }
+
 
 // Monotonically increasing counter so deleted-then-added milestones
 // get a new sequential number rather than reusing a previous index.
@@ -661,10 +663,9 @@ interface LivePreviewProps {
 }
 
 function parseTotalFromMilestones(milestones: Milestone[], currency: string): string {
-  const total = milestones.reduce((sum, m) => {
-    const raw = m.amount.replace(/[^0-9.]/g, '');
-    return sum + (parseFloat(raw) || 0);
-  }, 0);
+  // Use sumMilestoneAmounts (integer minor-unit arithmetic) to avoid JS float
+  // precision artifacts such as 0.1 + 0.2 → 0.30000000000000004.
+  const total = sumMilestoneAmounts(milestones);
   if (total === 0) return '—';
   if (currency === 'TWD') {
     return `NT$ ${total.toLocaleString('zh-TW')}`;
@@ -1026,10 +1027,9 @@ interface Step3Props {
 function Step3({ milestones, onMilestoneChange, onMilestoneAdd, onMilestoneDelete, currency, onCurrencyChange }: Step3Props) {
   const currencyId = useId();
   const total = parseTotalFromMilestones(milestones, currency);
-  const rawTotal = milestones.reduce((sum, m) => {
-    const raw = m.amount.replace(/[^0-9.]/g, '');
-    return sum + (parseFloat(raw) || 0);
-  }, 0);
+  // Use sumMilestoneAmounts (integer minor-unit arithmetic) to avoid JS float
+  // precision artifacts in the live-preview budget total display.
+  const rawTotal = sumMilestoneAmounts(milestones);
 
   return (
     <Section title="里程碑與付款" sub="分階段付款可降低雙方風險。建議至少設置 3 個里程碑。">
@@ -1406,11 +1406,9 @@ const PostJobPage = () => {
     if (!description.trim()) { setSubmitError('請填寫案件說明。'); return; }
     setSubmitError('');
 
-    // Compute budget from milestones
-    const rawTotal = milestones.reduce((sum, m) => {
-      const raw = m.amount.replace(/[^0-9.]/g, '');
-      return sum + (parseFloat(raw) || 0);
-    }, 0);
+    // Compute budget from milestones using integer minor-unit arithmetic to
+    // avoid JS float precision artifacts. See sumMilestoneAmounts for details.
+    const rawTotal = sumMilestoneAmounts(milestones);
 
     try {
       // TODO: confirm extended listing endpoint shape with backend team.
