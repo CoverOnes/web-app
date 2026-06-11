@@ -74,20 +74,33 @@ export interface OAuthExchangeRequest {
   code: string;
 }
 
-// Backend returns the same token shape as LoginResponse.
-// FLAG: expiresIn is optional here since some backends omit it on exchange —
-//       reconcile with eng-oauth-be if needed.
+// Exchange response mirrors LoginResponse shape (tokenType confirmed by contract).
 export interface OAuthExchangeResponse {
   accessToken: string;
   refreshToken: string;
+  tokenType: string;
   expiresIn?: number;
 }
 
 export interface OAuthIdentity {
   provider: OAuthProvider;
-  // Provider-side user id (opaque string, for display only).
-  providerUserId: string;
+  // Provider-registered email for this identity.
+  email: string;
   linkedAt: string;
+}
+
+// GET /api/user/v1/me/identities response envelope.
+// hasPassword: true when the user has a password-based login method —
+// used to decide whether unbinding the last social identity is safe.
+export interface ListIdentitiesResponse {
+  identities: OAuthIdentity[];
+  hasPassword: boolean;
+}
+
+// POST /api/user/v1/me/identities/:provider → { authorizeUrl }
+// FE follows the URL with window.location.href to start the bind flow.
+export interface OAuthBindStartResponse {
+  authorizeUrl: string;
 }
 
 // ===== Marketplace =====
@@ -252,28 +265,28 @@ export const authApi = {
   // Exchange a one-time authorisation code (from the OAuth callback) for tokens.
   // isAuthFlowRequest covers /v1/auth/oauth/ so a 401 never triggers the
   // access-token refresh-retry loop.
-  // Backend: POST /v1/auth/oauth/exchange { code } → { accessToken, refreshToken, expiresIn }
-  // FLAG: field names assumed from the existing LoginResponse shape — reconcile
-  //       with eng-oauth-be when the endpoint is live.
   oauthExchange: (data: OAuthExchangeRequest) =>
     http.post<OAuthExchangeResponse>('/v1/auth/oauth/exchange', data).then((r) => r.data),
 
   // List social identities bound to the current user.
-  // Backend: GET /api/user/v1/me/identities → [{ provider, providerUserId, linkedAt }]
-  // FLAG: path assumed — reconcile with eng-oauth-be.
+  // GET /api/user/v1/me/identities → { identities: [...], hasPassword: boolean }
   listIdentities: () =>
-    http.get<OAuthIdentity[]>('/api/user/v1/me/identities').then((r) => r.data),
+    http.get<ListIdentitiesResponse>('/api/user/v1/me/identities').then((r) => r.data),
 
   // Initiate OAuth bind flow for an already-authenticated user.
-  // Redirects the browser to GET /v1/auth/oauth/{provider}/start?bind=true
-  // so the backend can attach the new identity to the existing account.
-  bindIdentity: (provider: OAuthProvider) => {
-    const base = import.meta.env.VITE_API_BASE_URL ?? '';
-    window.location.href = `${base}/v1/auth/oauth/${provider}/start?bind=true`;
-  },
+  // POST /api/user/v1/me/identities/:provider → { authorizeUrl }
+  // FE follows the returned URL (window.location.href) so the backend can
+  // attach the new identity to the already-authenticated session.
+  bindIdentity: (provider: OAuthProvider) =>
+    http
+      .post<OAuthBindStartResponse>(`/api/user/v1/me/identities/${provider}`)
+      .then((r) => {
+        window.location.href = r.data.authorizeUrl;
+      }),
 
   // Remove a social identity from the current user.
-  // Backend: DELETE /api/user/v1/me/identities/:provider
+  // DELETE /api/user/v1/me/identities/:provider → 204
+  // 409 LAST_LOGIN_METHOD when trying to remove the only remaining method.
   unbindIdentity: (provider: OAuthProvider) =>
     http.delete(`/api/user/v1/me/identities/${provider}`).then((r) => r.data),
 };
