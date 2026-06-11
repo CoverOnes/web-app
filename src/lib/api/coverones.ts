@@ -66,6 +66,43 @@ export interface ResendVerificationResponse {
   message: string;
 }
 
+// ===== OAuth / Social Login =====
+
+export type OAuthProvider = 'google' | 'line';
+
+export interface OAuthExchangeRequest {
+  code: string;
+}
+
+// Exchange response mirrors LoginResponse shape (tokenType confirmed by contract).
+export interface OAuthExchangeResponse {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn?: number;
+}
+
+export interface OAuthIdentity {
+  provider: OAuthProvider;
+  // Provider-registered email for this identity.
+  email: string;
+  linkedAt: string;
+}
+
+// GET /api/user/v1/me/identities response envelope.
+// hasPassword: true when the user has a password-based login method —
+// used to decide whether unbinding the last social identity is safe.
+export interface ListIdentitiesResponse {
+  identities: OAuthIdentity[];
+  hasPassword: boolean;
+}
+
+// POST /api/user/v1/me/identities/:provider → { authorizeUrl }
+// FE follows the URL with window.location.href to start the bind flow.
+export interface OAuthBindStartResponse {
+  authorizeUrl: string;
+}
+
 // ===== Marketplace =====
 export interface Listing {
   id: string;
@@ -223,6 +260,35 @@ export const authApi = {
     http.get<AuthUser>('/api/user/v1/me', {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     }).then((r) => r.data),
+
+  // ── OAuth ──────────────────────────────────────────────────────────────────
+  // Exchange a one-time authorisation code (from the OAuth callback) for tokens.
+  // isAuthFlowRequest covers /v1/auth/oauth/ so a 401 never triggers the
+  // access-token refresh-retry loop.
+  oauthExchange: (data: OAuthExchangeRequest) =>
+    http.post<OAuthExchangeResponse>('/v1/auth/oauth/exchange', data).then((r) => r.data),
+
+  // List social identities bound to the current user.
+  // GET /api/user/v1/me/identities → { identities: [...], hasPassword: boolean }
+  listIdentities: () =>
+    http.get<ListIdentitiesResponse>('/api/user/v1/me/identities').then((r) => r.data),
+
+  // Initiate OAuth bind flow for an already-authenticated user.
+  // POST /api/user/v1/me/identities/:provider → { authorizeUrl }
+  // FE follows the returned URL (window.location.href) so the backend can
+  // attach the new identity to the already-authenticated session.
+  bindIdentity: (provider: OAuthProvider) =>
+    http
+      .post<OAuthBindStartResponse>(`/api/user/v1/me/identities/${provider}`)
+      .then((r) => {
+        window.location.href = r.data.authorizeUrl;
+      }),
+
+  // Remove a social identity from the current user.
+  // DELETE /api/user/v1/me/identities/:provider → 204
+  // 409 LAST_LOGIN_METHOD when trying to remove the only remaining method.
+  unbindIdentity: (provider: OAuthProvider) =>
+    http.delete(`/api/user/v1/me/identities/${provider}`).then((r) => r.data),
 };
 
 export const marketplaceApi = {
