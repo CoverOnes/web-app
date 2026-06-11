@@ -6,7 +6,7 @@
  * Auth API is mocked; router is wrapped with MemoryRouter.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -77,12 +77,56 @@ describe('Login page — render', () => {
     expect(screen.getByRole('link', { name: '立即註冊企業' })).toBeInTheDocument();
   });
 
-  it('renders SSO options', () => {
+  it('renders Google and LINE SSO buttons (Apple and Enterprise removed)', () => {
     renderPage();
     expect(screen.getByRole('button', { name: /使用 Google 登入/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /使用 Apple 登入/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /使用 LINE 登入/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /企業單一登入/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /使用 Apple 登入/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /企業單一登入/i })).not.toBeInTheDocument();
+  });
+
+  it('email/password form is present alongside SSO buttons', () => {
+    renderPage();
+    expect(screen.getByLabelText('電子郵件')).toBeInTheDocument();
+    expect(screen.getByLabelText('密碼')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /登入 CoverOnes/i })).toBeInTheDocument();
+  });
+});
+
+describe('Login page — OAuth buttons', () => {
+  let savedHref: string;
+
+  beforeEach(() => {
+    savedHref = window.location.href;
+    Object.defineProperty(window, 'location', {
+      value: { href: '' },
+      writable: true,
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, 'location', {
+      value: { href: savedHref },
+      writable: true,
+    });
+  });
+
+  it('Google button navigates to Google OAuth start URL', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: /使用 Google 登入/i }));
+
+    expect(window.location.href).toContain('/v1/auth/oauth/google/start');
+  });
+
+  it('LINE button navigates to LINE OAuth start URL', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: /使用 LINE 登入/i }));
+
+    expect(window.location.href).toContain('/v1/auth/oauth/line/start');
   });
 });
 

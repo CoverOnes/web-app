@@ -54,11 +54,6 @@ const IconLockSmall = () => (
   </svg>
 );
 
-const IconBuilding = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="1.75" aria-hidden="true">
-    <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/>
-  </svg>
-);
 
 // ─── Owl brand mark SVG ──────────────────────────────────────────────────────
 
@@ -84,12 +79,6 @@ const IconGoogle = () => (
   </svg>
 );
 
-// Apple
-const IconApple = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
-    <path d="M17 12.5c0-2.6 2.1-3.8 2.2-3.9-1.2-1.7-3-2-3.7-2-1.6-.2-3 .9-3.8.9s-2-.9-3.3-.9c-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.5 1.3 0 1.8-.8 3.4-.8s2 .8 3.4.8c1.4 0 2.3-1.2 3.1-2.4.6-.9 1.1-1.8 1.4-2.8-1.5-.6-3-2.2-3-4.1zM14.5 4.7c.7-.8 1.2-2 1-3.2-1 0-2.3.7-3 1.5-.7.7-1.2 1.9-1.1 3.1 1.1 0 2.3-.6 3.1-1.4z"/>
-  </svg>
-);
 
 // LINE
 const IconLine = () => (
@@ -652,17 +641,22 @@ const Login = () => {
                 <span style={{ flex: 1, height: 1, background: 'var(--co-line)' }} />
               </div>
 
-              {/* SSO grid */}
+              {/* SSO grid — Google + LINE only (full-page redirect to backend OAuth start) */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                {[
-                  { icon: <IconGoogle />, label: 'Google' },
-                  { icon: <IconApple />, label: 'Apple' },
-                  { icon: <IconLine />, label: 'LINE' },
-                ].map(({ icon, label }) => (
+                {(
+                  [
+                    { icon: <IconGoogle />, label: 'Google', provider: 'google' },
+                    { icon: <IconLine />, label: 'LINE', provider: 'line' },
+                  ] as const
+                ).map(({ icon, label, provider }) => (
                   <button
-                    key={label}
+                    key={provider}
                     type="button"
                     aria-label={`使用 ${label} 登入`}
+                    onClick={() => {
+                      const base = import.meta.env.VITE_API_BASE_URL ?? '';
+                      window.location.href = `${base}/v1/auth/oauth/${provider}/start`;
+                    }}
                     style={{
                       height: 42, borderRadius: 10, border: 'none',
                       background: 'rgba(15,23,42,0.5)', borderStyle: 'solid', borderWidth: 1, borderColor: 'var(--co-line-strong)',
@@ -676,24 +670,6 @@ const Login = () => {
                     {label}
                   </button>
                 ))}
-
-                {/* Enterprise SSO — spans full width */}
-                <button
-                  type="button"
-                  aria-label="企業單一登入 SAML 2.0 / OIDC"
-                  style={{
-                    gridColumn: 'span 2', height: 42, borderRadius: 10, border: 'none',
-                    background: 'linear-gradient(180deg, rgba(99,102,241,0.1), rgba(139,92,246,0.06))',
-                    borderStyle: 'solid', borderWidth: 1, borderColor: 'rgba(99,102,241,0.3)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    fontSize: 13, fontWeight: 500, color: 'var(--co-text)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <IconBuilding />
-                  <span>企業單一登入 (SAML 2.0 / OIDC)</span>
-                  <span style={{ fontSize: 10, color: 'var(--co-text-muted)', marginLeft: 4 }}>為大型企業設計</span>
-                </button>
               </div>
 
               {/* Footer: sign up link */}

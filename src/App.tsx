@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/query';
 import CoverOnesLayout from './components/layout/CoverOnesLayout';
 import Login from './pages/Login';
+import OAuthCallback from './pages/OAuthCallback';
 import Register from './pages/Register';
 import VerifyEmailSent from './pages/VerifyEmailSent';
 import VerifyEmail from './pages/VerifyEmail';
@@ -33,6 +34,7 @@ function App() {
         <Routes>
           {/* Public auth routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/auth/callback" element={<OAuthCallback />} />
           <Route path="/register" element={<Register />} />
           <Route path="/register/verify-sent" element={<VerifyEmailSent />} />
           <Route path="/verify-email" element={<VerifyEmail />} />

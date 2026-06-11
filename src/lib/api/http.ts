@@ -65,7 +65,10 @@ export const isAuthFlowRequest = (url?: string): boolean =>
   !!url &&
   (url.includes('/v1/auth/login') ||
     url.includes('/v1/auth/register') ||
-    url.includes('/v1/auth/refresh'));
+    url.includes('/v1/auth/refresh') ||
+    // OAuth start, callback and exchange endpoints issue/validate credentials
+    // themselves; a 401 from them must NOT trigger the access-token refresh loop.
+    url.includes('/v1/auth/oauth/'));
 
 /**
  * Returns current access token from auth store without a circular import at module init time.

@@ -66,6 +66,30 @@ export interface ResendVerificationResponse {
   message: string;
 }
 
+// ===== OAuth / Social Login =====
+
+export type OAuthProvider = 'google' | 'line';
+
+export interface OAuthExchangeRequest {
+  code: string;
+}
+
+// Backend returns the same token shape as LoginResponse.
+// FLAG: expiresIn is optional here since some backends omit it on exchange —
+//       reconcile with eng-oauth-be if needed.
+export interface OAuthExchangeResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn?: number;
+}
+
+export interface OAuthIdentity {
+  provider: OAuthProvider;
+  // Provider-side user id (opaque string, for display only).
+  providerUserId: string;
+  linkedAt: string;
+}
+
 // ===== Marketplace =====
 export interface Listing {
   id: string;
@@ -223,6 +247,35 @@ export const authApi = {
     http.get<AuthUser>('/api/user/v1/me', {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     }).then((r) => r.data),
+
+  // ── OAuth ──────────────────────────────────────────────────────────────────
+  // Exchange a one-time authorisation code (from the OAuth callback) for tokens.
+  // isAuthFlowRequest covers /v1/auth/oauth/ so a 401 never triggers the
+  // access-token refresh-retry loop.
+  // Backend: POST /v1/auth/oauth/exchange { code } → { accessToken, refreshToken, expiresIn }
+  // FLAG: field names assumed from the existing LoginResponse shape — reconcile
+  //       with eng-oauth-be when the endpoint is live.
+  oauthExchange: (data: OAuthExchangeRequest) =>
+    http.post<OAuthExchangeResponse>('/v1/auth/oauth/exchange', data).then((r) => r.data),
+
+  // List social identities bound to the current user.
+  // Backend: GET /api/user/v1/me/identities → [{ provider, providerUserId, linkedAt }]
+  // FLAG: path assumed — reconcile with eng-oauth-be.
+  listIdentities: () =>
+    http.get<OAuthIdentity[]>('/api/user/v1/me/identities').then((r) => r.data),
+
+  // Initiate OAuth bind flow for an already-authenticated user.
+  // Redirects the browser to GET /v1/auth/oauth/{provider}/start?bind=true
+  // so the backend can attach the new identity to the existing account.
+  bindIdentity: (provider: OAuthProvider) => {
+    const base = import.meta.env.VITE_API_BASE_URL ?? '';
+    window.location.href = `${base}/v1/auth/oauth/${provider}/start?bind=true`;
+  },
+
+  // Remove a social identity from the current user.
+  // Backend: DELETE /api/user/v1/me/identities/:provider
+  unbindIdentity: (provider: OAuthProvider) =>
+    http.delete(`/api/user/v1/me/identities/${provider}`).then((r) => r.data),
 };
 
 export const marketplaceApi = {
