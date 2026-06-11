@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { isFeatureEnabled } from '../../features/flags/featureFlags';
 import { Icon } from '../ui/Icon';
 
 /* --- Nav item definition --- */
@@ -141,7 +140,7 @@ const CoverOnesSidebar = () => {
   const location = useLocation();
   const user = useAuthStore((s) => s.user);
 
-  const settingsEnabled = isFeatureEnabled('avatarSettings');
+  const settingsEnabled = true;
   const handleOpenSettings = useCallback(() => {
     if (settingsEnabled) navigate('/settings');
   }, [navigate, settingsEnabled]);
