@@ -86,15 +86,8 @@ function App() {
               }
             />
 
-            {/* Settings (gated) */}
-            <Route
-              path="settings"
-              element={
-                <FeatureRoute flag="avatarSettings" feature="設定" description="個人設定功能正在開發中，敬請期待。">
-                  <Settings />
-                </FeatureRoute>
-              }
-            />
+            {/* Settings — ungated: accessible to all authenticated users */}
+            <Route path="settings" element={<Settings />} />
 
             {/* 404 within the app shell */}
             <Route path="*" element={<NotFoundPage />} />
