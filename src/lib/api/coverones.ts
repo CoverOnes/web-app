@@ -103,6 +103,32 @@ export interface OAuthBindStartResponse {
   authorizeUrl: string;
 }
 
+// ── OAuth registration (no-email provider e.g. LINE) ──────────────────────────
+// When a provider (e.g. LINE) does not supply an email address the backend
+// cannot complete registration automatically. Instead of silently creating a
+// placeholder account it redirects to /auth/callback?register=<regToken>.
+// The FE collects an email, then calls POST /v1/auth/oauth/register.
+
+export interface OAuthRegisterRequest {
+  // Opaque short-lived token issued by the backend identifying the pending
+  // OAuth registration session.
+  regToken: string;
+  // Email collected from the user (provider did not supply one).
+  email: string;
+}
+
+// Backend returns a one-time code to exchange for tokens (same as normal OAuth
+// login code flow), or email_exists if the email is already registered.
+// FLAG: field name `code` assumed — reconcile with eng-oauth-be if the backend
+//       returns tokens directly instead of a code. The current assumption is:
+//       201 { code: string } → FE calls oauthExchange({ code }) to get tokens.
+export interface OAuthRegisterResponse {
+  // One-time code to pass to oauthExchange. Backend issues this so the same
+  // exchange path is reused regardless of whether this is a first-time login
+  // or registration completion.
+  code: string;
+}
+
 // ===== Marketplace =====
 export interface Listing {
   id: string;
@@ -289,6 +315,19 @@ export const authApi = {
   // 409 LAST_LOGIN_METHOD when trying to remove the only remaining method.
   unbindIdentity: (provider: OAuthProvider) =>
     http.delete(`/api/user/v1/me/identities/${provider}`).then((r) => r.data),
+
+  // Complete OAuth registration when the provider did not supply an email.
+  // POST /v1/auth/oauth/register { regToken, email }
+  //   201 { code } → FE calls oauthExchange({ code }) to mint session tokens.
+  //   409 EMAIL_EXISTS → surface "use password login + bind in Settings" UX.
+  // isAuthFlowRequest covers /v1/auth/oauth/ so a 401 here never triggers
+  // the access-token refresh-retry loop.
+  // FLAG: path confirmed as /v1/auth/oauth/register (gateway public route,
+  //       no /api/:svc prefix) — reconcile with eng-oauth-be if it moves.
+  oauthRegister: (data: OAuthRegisterRequest) =>
+    http
+      .post<OAuthRegisterResponse>('/v1/auth/oauth/register', data)
+      .then((r) => r.data),
 };
 
 export const marketplaceApi = {
