@@ -331,6 +331,13 @@ const Shield = ({ size = 16, style, className }: IconBaseProps) => (
   </svg>
 );
 
+const Clock = ({ size = 16, style, className }: IconBaseProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={base(size, style)} className={className}>
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
 export const Icon = {
   Owl,
   Plus,
@@ -373,6 +380,7 @@ export const Icon = {
   Tag,
   FileText,
   Shield,
+  Clock,
 } as const;
 
 export type IconName = keyof typeof Icon;
