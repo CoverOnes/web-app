@@ -5,6 +5,7 @@
  * never sees an empty chatStore.rooms[]. Regression: fix/chat-load-rooms-on-mount
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ReactNode } from 'react';
 import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
@@ -22,14 +23,14 @@ vi.mock('../../store/authStore', () => ({
 }));
 
 vi.mock('./AppShell', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('./CoverOnesSidebar', () => ({ default: () => <nav aria-label="sidebar" /> }));
 vi.mock('./CoverOnesTopbar', () => ({ default: () => <header /> }));
 vi.mock('./CoverOnesMobileBottomNav', () => ({ default: () => <nav aria-label="bottom-nav" /> }));
 vi.mock('./MobileDrawer', () => ({ default: () => null }));
 vi.mock('./MobileFABProvider', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  default: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 vi.mock('../chat/ChatPopup', () => ({ default: () => null }));
 vi.mock('../auth/UnverifiedBanner', () => ({ UnverifiedBanner: () => null }));
@@ -82,17 +83,34 @@ function createWrapper() {
 
 /* ── tests ──────────────────────────────────────────────────────────────────── */
 
+/* ── useAuthStore selector helper ───────────────────────────────────────────── */
+
+type AuthSelector<T> = (state: { user: { id: string } | null }) => T;
+
+/** Simulate useAuthStore with a real selector call so `(s) => s.user?.id ?? ''` is exercised. */
+function mockAuthUser(id: string) {
+  vi.mocked(useAuthStore).mockImplementation(<T,>(selector: AuthSelector<T>) =>
+    selector({ user: { id } }) as T
+  );
+}
+
+function mockAuthNoUser() {
+  vi.mocked(useAuthStore).mockImplementation(<T,>(selector: AuthSelector<T>) =>
+    selector({ user: null }) as T
+  );
+}
+
 describe('CoverOnesLayout — rooms loading', () => {
   beforeEach(() => {
     useChatStore.setState({ rooms: [], roomsLoaded: false });
     vi.clearAllMocks();
     // Default: no user
-    vi.mocked(useAuthStore).mockReturnValue('');
+    mockAuthNoUser();
   });
 
   it('calls chatApi.getRooms on mount when userId is available and populates chatStore', async () => {
-    // Arrange: authenticated user
-    vi.mocked(useAuthStore).mockReturnValue('user-42');
+    // Arrange: authenticated user — selector `(s) => s.user?.id ?? ''` must return 'user-42'
+    mockAuthUser('user-42');
     vi.mocked(chatApi.getRooms).mockResolvedValue({
       success: true,
       data: MOCK_ROOMS,
@@ -115,16 +133,16 @@ describe('CoverOnesLayout — rooms loading', () => {
   });
 
   it('does NOT call chatApi.getRooms when userId is empty (unauthenticated guard)', () => {
-    // useAuthStore already returns '' from beforeEach
+    // mockAuthNoUser already set in beforeEach — selector returns '' (user is null)
     const Wrapper = createWrapper();
     render(<CoverOnesLayout />, { wrapper: Wrapper });
 
-    // Synchronous: no API call should be made
+    // Synchronous: no API call should be made because userId === ''
     expect(chatApi.getRooms).not.toHaveBeenCalled();
   });
 
   it('sets roomsLoaded=true even when getRooms throws (error resilience)', async () => {
-    vi.mocked(useAuthStore).mockReturnValue('user-42');
+    mockAuthUser('user-42');
     vi.mocked(chatApi.getRooms).mockRejectedValue(new Error('network error'));
 
     const Wrapper = createWrapper();
@@ -135,5 +153,14 @@ describe('CoverOnesLayout — rooms loading', () => {
     });
     // rooms remains empty on error — ChatRoomPage must handle this
     expect(useChatStore.getState().rooms).toHaveLength(0);
+  });
+
+  it('selector (s)=>s.user?.id??empty is invoked — null user yields empty string', () => {
+    // Verifies the selector path: null user must produce '' (not throw)
+    mockAuthNoUser();
+    const Wrapper = createWrapper();
+    // Should render without throwing; getRooms must NOT be called
+    expect(() => render(<CoverOnesLayout />, { wrapper: Wrapper })).not.toThrow();
+    expect(chatApi.getRooms).not.toHaveBeenCalled();
   });
 });

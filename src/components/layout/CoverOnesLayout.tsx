@@ -70,12 +70,14 @@ const CoverOnesLayout = () => {
         const response = await chatApi.getRooms(userId, 50, '');
         if (response.success && response.data) {
           setRooms(response.data);
-          setRoomsLoaded(true);
           hasInitialLoadRef.current = true;
         }
       } catch {
-        setRoomsLoaded(true);
+        // non-critical; roomsLoaded still set in finally so consumers unblock
       } finally {
+        // Always mark attempted so ChatRoomPage / ChatList never wait forever.
+        // hasInitialLoadRef.current stays false on error → retries on next userId change.
+        setRoomsLoaded(true);
         loadingRef.current = false;
       }
     };

@@ -5,6 +5,9 @@ import { chatApi } from '../../api/chat';
 import type { Room } from '../../types';
 import RoomItem from './RoomItem';
 
+// Consistent page size used by both the layout prefetch and ChatList pagination.
+const ROOMS_PAGE_SIZE = 50;
+
 interface ChatListProps {
   onCreateRoom: () => void;
   onSelectRoom?: (roomId: string) => void;
@@ -12,14 +15,14 @@ interface ChatListProps {
 
 const ChatList = ({ onSelectRoom }: ChatListProps) => {
   const userId = useAuthStore((s) => s.user?.id ?? '');
-  const { rooms, setRooms, setCurrentRoom } = useChatStore();
+  const { rooms, roomsLoaded, setRooms, setCurrentRoom } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
   const [cursor, setCursor] = useState('');
   const [hasMore, setHasMore] = useState(true);
   const listRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
-  // 載入聊天室列表
+  // 載入更多聊天室（分頁）— 只用於 load-more；初始渲染從 store 取
   const loadRooms = useCallback(async (loadMore = false) => {
     if (loadingRef.current) return;
     if (loadMore && !hasMore) return;
@@ -28,8 +31,8 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
     setIsLoading(true);
     try {
       const currentCursor = loadMore ? cursor : '';
-      const response = await chatApi.getRooms(userId, 20, currentCursor);
-      
+      const response = await chatApi.getRooms(userId, ROOMS_PAGE_SIZE, currentCursor);
+
       if (response.success && response.data) {
         if (loadMore) {
           setRooms((prevRooms: Room[]) => [...prevRooms, ...response.data!]);
@@ -47,20 +50,26 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
     }
   }, [userId, cursor, hasMore, setRooms]);
 
-  // 初始載入 - 只在 userId 改變時觸發
+  // 初始載入 — 僅在 roomsLoaded 為 false（layout 尚未完成 prefetch）時才自行 fetch。
+  // 正常情況下 CoverOnesLayout 會先載入，此 effect 不執行 API call。
   useEffect(() => {
+    if (roomsLoaded) {
+      // Layout prefetch already populated the store — skip redundant fetch.
+      return;
+    }
+
+    // Fallback: layout not yet done (e.g. ChatList rendered before layout effect fires).
     setCursor('');
     setHasMore(true);
-    
-    // 直接在這裡載入，不依賴 loadRooms
+
     const initialLoad = async () => {
       if (loadingRef.current) return;
-      
+
       loadingRef.current = true;
       setIsLoading(true);
       try {
-        const response = await chatApi.getRooms(userId, 20, '');
-        
+        const response = await chatApi.getRooms(userId, ROOMS_PAGE_SIZE, '');
+
         if (response.success && response.data) {
           setRooms(response.data);
           setCursor(response.cursor || '');
@@ -73,9 +82,9 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
         loadingRef.current = false;
       }
     };
-    
+
     initialLoad();
-  }, [userId, setRooms]);
+  }, [userId, roomsLoaded, setRooms]);
 
   // 滾動載入更多（使用節流優化）
   const handleScroll = useCallback(() => {
