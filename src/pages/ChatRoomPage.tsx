@@ -103,20 +103,23 @@ const ChatRoomPage = () => {
     }
   }, [location.state]);
 
+  // Finding 1 + 4: !roomId guard now redirects to /chat (room-list), not /messages.
+  // This path should be unreachable under normal routing (route "chat" without :roomId
+  // renders Messages, not ChatRoomPage), but we keep the guard as a safety net.
   if (!roomId) {
-    navigate('/messages');
+    navigate('/chat', { replace: true });
     return null;
   }
 
-  // While the layout is still fetching rooms on a cold deep-link, show a
-  // loading skeleton instead of a blank screen (or premature redirect).
+  // Finding 4: roomsLoaded guard MUST fire before targetRoom check so a cold
+  // deep-link waits for rooms to arrive before deciding to redirect.
   if (!roomsLoaded) {
     return <RoomsLoadingScreen />;
   }
 
   // 找不到聊天室（rooms already loaded → safe to redirect）
   if (!targetRoom) {
-    navigate('/messages');
+    navigate('/chat', { replace: true });
     return null;
   }
 

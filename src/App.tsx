@@ -17,6 +17,7 @@ import MyContractsPage from './pages/MyContractsPage';
 import ContractDetailPage from './pages/ContractDetailPage';
 import KycPage from './pages/KycPage';
 import ChatRoomPage from './pages/ChatRoomPage';
+import Messages from './pages/Messages';
 import Contacts from './pages/Contacts';
 import Settings from './pages/Settings';
 import NotFoundPage from './pages/NotFoundPage';
@@ -72,8 +73,10 @@ function App() {
              * Gateway contract: REST via /api/chat/v1/*; SSE via /api/chat/v1/messages/stream.
              * Identity sourced from authStore (decision 5adf4b20).
              */}
-            <Route path="messages" element={<Navigate to="/chat" replace />} />
-            <Route path="chat" element={<ChatRoomPage />} />
+            {/* /messages kept as alias for deep links that still use it */}
+            <Route path="messages" element={<Messages />} />
+            {/* /chat → room list; /chat/:roomId → conversation */}
+            <Route path="chat" element={<Messages />} />
             <Route path="chat/:roomId" element={<ChatRoomPage />} />
 
             {/* Contacts (gated — no backend yet) */}
