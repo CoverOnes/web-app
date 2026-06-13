@@ -103,7 +103,7 @@ function StatusChip({ status, progress }: StatusChipProps) {
       </div>
       {progress !== undefined && (
         <div
-          className="pgs"
+          className="co-bar"
           style={{ marginTop: 6 }}
           role="progressbar"
           aria-valuenow={progress}
@@ -518,6 +518,8 @@ const MyContractsPage = () => {
                 />
               ) : (
                 <div
+                  role="table"
+                  aria-label="合約列表"
                   style={{
                     background: 'var(--co-bg-card)',
                     border: '1px solid var(--co-line-strong)',
