@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { useListing, useListingBids, useCreateBid, useAcceptBid, useRejectBid } from '../lib/query';
+import { useListing, useListingBids, useCreateBid, useAcceptBid, useRejectBid, useListings } from '../lib/query';
 import { workspaceApi } from '../lib/api/coverones';
 
 /* Design-system palette constants — all values from shared.css / index.css :root tokens */
@@ -113,6 +113,9 @@ const JobDetailPage = () => {
   const [contractNotReadyMsg, setContractNotReadyMsg] = useState('');
   const contractRetryCount = useRef(0);
   const contractRetryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Similar listings — must be called before any early return (Rules of Hooks) */
+  const { data: allListings } = useListings({ status: 'OPEN' });
 
   useEffect(() => {
     return () => {
@@ -237,45 +240,13 @@ const JobDetailPage = () => {
     await attempt();
   };
 
+  /* Derive similarListings after listing is confirmed non-null */
+  const similarListings = (allListings ?? []).filter((l) => l.id !== id).slice(0, 3);
+
   const letter = listing.title.charAt(0).toUpperCase();
   const grad = logoGrad(listing.id);
 
-  /* ── Static placeholder Q&A / bidder list (design mockup fixtures) ── */
-  const QA_ITEMS = [
-    {
-      letter: '奇',
-      bg: P.gradViolet,
-      questioner: '奇點科技 · Alex Chen',
-      whenQ: '2 天前 · 已驗證投標方',
-      q: '請問 PoC 階段是否允許使用團隊既有的 Go gRPC framework？我們有開源實績可提供。另想確認 NDA 的限制範圍是否涵蓋技術 blog 撰寫？',
-      answerer: '採購窗口',
-      a: 'PoC 階段歡迎使用既有 framework，但須確認 license 相容性。NDA 限制核心業務邏輯，技術架構討論在去識別化後可發布 blog，需事前審核。',
-    },
-    {
-      letter: '沛',
-      bg: P.gradCyan,
-      questioner: '沛星互動',
-      whenQ: '3 天前',
-      q: '原系統的 monolith 是用什麼語言？預期遷移期間是否有機會接觸到正式生產流量做壓測？',
-      answerer: '技術窗口',
-      a: '原系統為 Java 11 + Spring Boot。簽 NDA 後可申請開發環境，含影子流量回放，但正式生產壓測需個案核准。',
-    },
-    {
-      letter: '綠',
-      bg: P.gradGreen,
-      questioner: '綠源資安',
-      whenQ: '5 天前',
-      q: '是否提供現有 API 的流量分析資料？以利我們評估服務拆分粒度的合理性。',
-      answerer: null,
-      a: null,
-    },
-  ];
 
-  const SIMILAR = [
-    { title: '中華電信 - 微服務治理平台導入', budget: 'NT$ 980K', deadline: '5/30', bidCount: 7 },
-    { title: '玉山銀行 - Core Banking API Gateway', budget: 'NT$ 2.4M', deadline: '6/15', bidCount: 14 },
-    { title: 'Appier - K8s 平台維運外包', budget: 'NT$ 720K / 年', deadline: '長期', bidCount: 0 },
-  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--co-bg)', minHeight: '100%', color: 'var(--co-text)' }}>
@@ -372,12 +343,6 @@ const JobDetailPage = () => {
                   {listing.title}
                 </h1>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <Badge style={{ background: 'var(--co-bdg-dev-bg)', color: 'var(--co-bdg-dev-text)', border: '1px solid var(--co-bdg-dev-border)' }}>
-                    後端開發
-                  </Badge>
-                  <Badge style={{ background: 'rgba(34,211,238,0.12)', color: P.textCyan, border: '1px solid rgba(34,211,238,0.3)' }}>
-                    技術接案
-                  </Badge>
                   <Badge style={{ background: 'rgba(148,163,184,0.1)', color: 'var(--co-text-dim)', border: '1px solid rgba(148,163,184,0.2)' }}>
                     {listing.status === 'OPEN' ? '進行中' : listing.status}
                   </Badge>
@@ -406,7 +371,7 @@ const JobDetailPage = () => {
                           boxShadow: '0 0 6px rgba(239,68,68,0.8)',
                         }}
                       />
-                      截標倒數 4 天
+                      截標中
                     </span>
                   )}
                 </div>
@@ -417,7 +382,7 @@ const JobDetailPage = () => {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(4,1fr)',
+                gridTemplateColumns: 'repeat(3,1fr)',
                 gap: 14,
                 marginTop: 18,
               }}
@@ -427,7 +392,6 @@ const JobDetailPage = () => {
                 { label: '預算',   value: budgetLabel || 'TBD', color: 'var(--co-green)' },
                 { label: '截標日', value: '開放中',              color: 'var(--co-amber)' },
                 { label: '投標數', value: String(bids.length),   color: 'var(--co-text)' },
-                { label: '關注',   value: '86',                  color: P.textCyan },
               ].map(({ label, value, color }) => (
                 <div
                   key={label}
@@ -505,70 +469,10 @@ const JobDetailPage = () => {
               </span>
               需求規格
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 6 }} className="jd-req-grid">
-              {[
-                { n: '01', title: '技術棧',     desc: 'Go 1.21+ 為主、Kubernetes 1.28+、gRPC + Protocol Buffers、PostgreSQL、Redis' },
-                { n: '02', title: '團隊規模',   desc: '至少 1 名架構師 + 4 名後端 + 1 名 DevOps，全程駐廠或混合辦公' },
-                { n: '03', title: '過往實績',   desc: '需提供至少 2 個千萬級 QPS 系統重構案例文件，含技術 Blog 或開源貢獻' },
-                { n: '04', title: '交付標準',   desc: '不停機 SLO 99.95%、回滾機制、完整 OpenAPI 規範與內部 SDK' },
-                { n: '05', title: '合規',       desc: '需通過 ISO 27001 認證、簽署 NDA 與利益迴避條款' },
-                { n: '06', title: '語言',       desc: '繁體中文 / 英文均可，技術文件需中英對照' },
-              ].map(({ n, title, desc }) => (
-                <div
-                  key={n}
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: 10,
-                    background: 'rgba(15,23,42,.6)',
-                    border: '1px solid var(--co-line)',
-                    display: 'flex',
-                    gap: 12,
-                    alignItems: 'flex-start',
-                  }}
-                >
-                  <div
-                    aria-hidden="true"
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: 7,
-                      background: 'linear-gradient(135deg,var(--co-accent),var(--co-accent-2))',
-                      color: '#fff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {n}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 600 }}>{title}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--co-text-dim)', marginTop: 2, lineHeight: 1.5 }}>{desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {/* Skill tags */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
-              {['Go', 'Kubernetes', 'gRPC', 'Microservices', 'Service Mesh', 'Istio', 'PostgreSQL', 'Redis', 'CI/CD', 'Observability'].map((skill) => (
-                <span
-                  key={skill}
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: 999,
-                    fontSize: 11.5,
-                    background: 'rgba(99,102,241,.12)',
-                    border: '1px solid rgba(99,102,241,.25)',
-                    color: P.textIndigoLt,
-                  }}
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
+            <EmptyState
+              title="需求規格即將推出"
+              description="採購方的詳細技術需求將在此顯示，功能正在開發中。"
+            />
           </div>
 
           {/* 付款里程碑 */}
@@ -598,36 +502,10 @@ const JobDetailPage = () => {
               </span>
               付款里程碑
             </h2>
-            <div style={{ display: 'grid', gap: 12, marginTop: 6 }}>
-              {[
-                { when: 'M1 · 第 1 月', what: '技術 PoC 與架構設計',     detail: '提交完整 ADR 文件、選型驗證',     pay: 'NT$ 180K' },
-                { when: 'M2 · 第 4 月', what: '前 4 個服務上線',         detail: '含監控、灰度發布驗證',           pay: 'NT$ 360K' },
-                { when: 'M3 · 第 8 月', what: '全部服務拆分完成',         detail: '舊系統流量 100% 遷移',           pay: 'NT$ 480K' },
-                { when: 'M4 · 第 12 月', what: '驗收 + 知識轉移',        detail: '完整文件、Runbook、3 個月維護',  pay: 'NT$ 180K' },
-              ].map(({ when, what, detail, pay }) => (
-                <div
-                  key={when}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '90px 1fr auto',
-                    gap: 14,
-                    padding: 14,
-                    borderRadius: 10,
-                    border: '1px solid var(--co-line)',
-                    background: 'rgba(15,23,42,.4)',
-                    alignItems: 'center',
-                  }}
-                  className="jd-ms"
-                >
-                  <div style={{ fontSize: 11, color: 'var(--co-text-dim)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{when}</div>
-                  <div>
-                    <div style={{ fontSize: 13.5, fontWeight: 600 }}>{what}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--co-text-dim)', fontWeight: 400, marginTop: 2 }}>{detail}</div>
-                  </div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--co-green)', whiteSpace: 'nowrap' }}>{pay}</div>
-                </div>
-              ))}
-            </div>
+            <EmptyState
+              title="付款里程碑即將推出"
+              description="合約付款時程與里程碑詳情將在此顯示。"
+            />
           </div>
 
           {/* Q&A section */}
@@ -657,62 +535,15 @@ const JobDetailPage = () => {
               </span>
               專案 Q&amp;A
               <span style={{ marginLeft: 'auto', fontSize: 11.5, color: 'var(--co-text-dim)', fontWeight: 400 }}>
-                {QA_ITEMS.length} 則討論 · 公開
+                0 則討論 · 公開
               </span>
             </h2>
 
-            {QA_ITEMS.map(({ letter: l, bg, questioner, whenQ, q, answerer, a }) => (
-              <div
-                key={questioner}
-                style={{
-                  paddingTop: 14,
-                  borderTop: '1px solid var(--co-line)',
-                }}
-              >
-                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <div
-                    aria-hidden="true"
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      background: bg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                      color: '#fff',
-                      fontSize: 12,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {l}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600 }}>{questioner}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--co-text-dim)', marginBottom: 6 }}>{whenQ}</div>
-                    <div style={{ fontSize: 13, color: 'var(--co-text-dim)', lineHeight: 1.65 }}>{q}</div>
-                  </div>
-                </div>
-                {answerer && a && (
-                  <div
-                    style={{
-                      marginTop: 10,
-                      marginLeft: 42,
-                      padding: 12,
-                      borderLeft: '2px solid var(--co-accent)',
-                      background: 'rgba(99,102,241,.06)',
-                      borderRadius: '0 10px 10px 0',
-                    }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 600, color: P.textViolet, marginBottom: 4 }}>
-                      ↳ {answerer}
-                    </div>
-                    <div style={{ fontSize: 13, color: 'var(--co-text)', lineHeight: 1.6 }}>{a}</div>
-                  </div>
-                )}
-              </div>
-            ))}
+            <EmptyState
+              icon={<Icon.MessageSquare size={32} />}
+              title="暫無討論"
+              description="Q&A 功能即將推出，敬請期待。"
+            />
 
             {/* Q&A 送出 — coming soon; disabled until API is wired */}
             <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
@@ -837,89 +668,12 @@ const JobDetailPage = () => {
                 )}
               </>
             ) : (
-              /* Public bidder placeholder rows — shown to non-owners.
-                 NOTE: This list is design-spec sample data. Real bidder
-                 anonymisation API is not yet implemented (Coming Soon). */
-              <>
-                <div
-                  role="status"
-                  style={{
-                    marginBottom: 12,
-                    padding: '8px 12px',
-                    background: 'rgba(245,158,11,0.10)',
-                    border: '1px solid rgba(245,158,11,0.28)',
-                    borderRadius: 8,
-                    fontSize: 12,
-                    color: 'var(--co-bdg-mfg-text)',
-                  }}
-                >
-                  ⚠ 以下為展示資料，實際投標方資訊即將推出
-                </div>
-                {[
-                  { letter: '鴻', bg: P.gradRose, name: '鴻海資訊', verified: true, meta: '資訊服務 · 200+ 員工 · 2 天前投標', quote: 'NT$ 1.18M', duration: '12 個月' },
-                  { letter: '沛', bg: P.gradCyan,  name: '沛星互動', verified: true, meta: 'AI / SaaS · 80 員工 · 3 天前投標',  quote: 'NT$ 1.24M', duration: '11 個月' },
-                  { letter: '綠', bg: P.gradGreen, name: '綠源資安', verified: false, meta: '資訊安全 · 50 員工 · 5 天前投標',  quote: 'NT$ 1.32M', duration: '14 個月' },
-                ].map(({ letter: l, bg, name, verified, meta, quote, duration }) => (
-                  <div
-                    key={name}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'auto 1fr auto',
-                      gap: 12,
-                      padding: '12px 0',
-                      borderBottom: '1px solid var(--co-line)',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <div
-                      aria-hidden="true"
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 8,
-                        background: bg,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 700,
-                        color: '#fff',
-                        fontSize: 13,
-                      }}
-                    >
-                      {l}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        {name}
-                        {verified && <VerifiedTick />}
-                      </div>
-                      <div style={{ fontSize: 11, color: 'var(--co-text-dim)', marginTop: 1 }}>{meta}</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{quote}</div>
-                      <div style={{ fontSize: 10.5, color: 'var(--co-text-dim)', fontWeight: 400 }}>{duration}</div>
-                    </div>
-                  </div>
-                ))}
-                <div style={{ textAlign: 'center', marginTop: 10 }}>
-                  <button
-                    aria-label="展開全部投標方（即將推出）"
-                    disabled
-                    style={{
-                      padding: '7px 16px',
-                      borderRadius: 'var(--co-btn-r)',
-                      background: 'none',
-                      border: '1px solid var(--co-line-strong)',
-                      color: 'var(--co-text-dim)',
-                      fontSize: 12.5,
-                      cursor: 'not-allowed',
-                      opacity: 0.55,
-                    }}
-                  >
-                    即將推出 ▾
-                  </button>
-                </div>
-              </>
+              /* Non-owner view: bidder info is confidential */
+              <EmptyState
+                icon={<Icon.Users size={32} />}
+                title="投標方資訊不公開"
+                description="依平台規範，投標方資訊僅採購方可見。"
+              />
             )}
           </div>
         </div>
@@ -951,62 +705,9 @@ const JobDetailPage = () => {
               </div>
             )}
 
-            {/* Match score */}
-            <div
-              style={{
-                background: 'linear-gradient(135deg,rgba(34,211,238,.1),rgba(99,102,241,.05))',
-                border: '1px solid rgba(34,211,238,.25)',
-                borderRadius: 10,
-                padding: 12,
-                marginTop: 14,
-              }}
-            >
-              <div style={{ fontSize: 11.5, color: P.textCyan, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
-                <Icon.Star size={12} />
-                媒合度
-              </div>
-              <div
-                style={{
-                  fontSize: 24,
-                  fontWeight: 800,
-                  marginTop: 2,
-                  background: P.gradMatchScore,
-                  WebkitBackgroundClip: 'text',
-                  backgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                94
-                <span style={{ fontSize: 14, color: 'var(--co-text-dim)', fontWeight: 600 }}> / 100</span>
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--co-text-dim)' }}>技能 100% · 規模 90% · 過往實績 95%</div>
-            </div>
 
-            {/* Info rows */}
-            <div style={{ marginTop: 14 }}>
-              {[
-                { l: '類別',     v: '技術接案 · 微服務' },
-                { l: '付款方式', v: '里程碑分期' },
-                { l: '合約期間', v: '12 個月' },
-                { l: '工作模式', v: '混合辦公' },
-                { l: '需 NDA',   v: '是', red: true },
-                { l: '採購窗口', v: '林經理' },
-              ].map(({ l, v, red }, i, arr) => (
-                <div
-                  key={l}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '9px 0',
-                    fontSize: 12.5,
-                    borderBottom: i < arr.length - 1 ? '1px dashed var(--co-line)' : 'none',
-                  }}
-                >
-                  <span style={{ color: 'var(--co-text-dim)' }}>{l}</span>
-                  <span style={{ color: red ? P.textRedLt : 'var(--co-text)', fontWeight: 500 }}>{v}</span>
-                </div>
-              ))}
-            </div>
+
+
 
             {/* CTA buttons — real bid form for non-owners when open */}
             {!isOwnerComputed && listing.status === 'OPEN' && (
@@ -1112,39 +813,10 @@ const JobDetailPage = () => {
                 <div style={{ fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
                   發布方 <VerifiedTick />
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--co-text-dim)' }}>業界領先 · 精英企業</div>
+
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
-              {[
-                { label: '總發案',   value: '142' },
-                { label: '完成率',   value: '98%', green: true },
-                { label: '準時付款', value: '⭐ 4.9', cyan: true },
-                { label: '合作廠商', value: '86' },
-              ].map(({ label, value, green, cyan }) => (
-                <div
-                  key={label}
-                  style={{
-                    padding: 10,
-                    background: 'rgba(15,23,42,.5)',
-                    border: '1px solid var(--co-line)',
-                    borderRadius: 8,
-                  }}
-                >
-                  <div style={{ fontSize: 10, color: 'var(--co-text-dim)', textTransform: 'uppercase' }}>{label}</div>
-                  <div
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 700,
-                      marginTop: 2,
-                      color: green ? 'var(--co-green)' : cyan ? 'var(--co-cyan)' : 'var(--co-text)',
-                    }}
-                  >
-                    {value}
-                  </div>
-                </div>
-              ))}
-            </div>
+
           </div>
 
           {/* Similar projects */}
@@ -1166,34 +838,38 @@ const JobDetailPage = () => {
                 查看全部
               </button>
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {SIMILAR.map(({ title, budget, deadline, bidCount }) => (
-                <button
-                  key={title}
-                  onClick={() => navigate('/jobs')}
-                  aria-label={`查看案件：${title}`}
-                  style={{
-                    padding: 10,
-                    borderRadius: 10,
-                    border: '1px solid var(--co-line)',
-                    background: 'rgba(15,23,42,.4)',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    color: 'inherit',
-                    transition: 'border-color 150ms',
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.4)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--co-line)'; }}
-                >
-                  <div style={{ fontSize: 12.5, fontWeight: 600, lineHeight: 1.4 }}>{title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--co-text-dim)', marginTop: 4, display: 'flex', gap: 8 }}>
-                    <span style={{ color: 'var(--co-green)', fontWeight: 600 }}>{budget}</span>
-                    <span>· 截標 {deadline}</span>
-                    {bidCount > 0 && <span>· {bidCount} 投標</span>}
-                  </div>
-                </button>
-              ))}
-            </div>
+            {similarListings.length === 0 ? (
+              <EmptyState title="暫無類似案件" description="目前沒有其他開放案件。" />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {similarListings.map((sim) => (
+                  <button
+                    key={sim.id}
+                    onClick={() => navigate(`/jobs/${sim.id}`)}
+                    aria-label={`查看案件：${sim.title}`}
+                    style={{
+                      padding: 10,
+                      borderRadius: 10,
+                      border: '1px solid var(--co-line)',
+                      background: 'rgba(15,23,42,.4)',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      color: 'inherit',
+                      transition: 'border-color 150ms',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.4)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--co-line)'; }}
+                  >
+                    <div style={{ fontSize: 12.5, fontWeight: 600, lineHeight: 1.4 }}>{sim.title}</div>
+                    <div style={{ fontSize: 11, color: 'var(--co-text-dim)', marginTop: 4 }}>
+                      <span style={{ color: 'var(--co-green)', fontWeight: 600 }}>
+                        {sim.budgetMin != null ? `NT$ ${Number(sim.budgetMin).toLocaleString()}` : 'TBD'}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
         </div>

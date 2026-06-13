@@ -336,41 +336,6 @@ const Register = () => {
             <p style={{ fontSize: 16, color: 'var(--co-text-dim)', lineHeight: 1.65, margin: '0 0 32px' }}>
               CoverOnes 為台灣 B2B 而生。從統編一鍵驗證、AI 智慧媒合，到合約簽署、發票結算 — 全流程數位化。
             </p>
-
-            {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, auto)', gap: 32, marginBottom: 32 }}>
-              {[
-                { v: '3,420+', l: '已驗證企業' },
-                { v: 'NT$ 2.8B', l: '媒合金額' },
-                { v: '2.4 天', l: '平均媒合時間' },
-              ].map((s) => (
-                <div key={s.l}>
-                  <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', background: 'linear-gradient(135deg, #67E8F9, #A78BFA)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    {s.v}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--co-text-dim)', marginTop: 2 }}>{s.l}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Partner logos */}
-            <div style={{ fontSize: 11, color: 'var(--co-text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14, fontWeight: 600 }}>
-              合作夥伴
-            </div>
-            <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-              {['台積電子', '沛星互動', '中華電信', '玉山銀行', '+ 218 家'].map((name) => (
-                <div
-                  key={name}
-                  style={{
-                    padding: '8px 14px', background: 'rgba(15,23,42,0.6)',
-                    border: '1px solid var(--co-line)', borderRadius: 8,
-                    fontSize: 12.5, fontWeight: 600, color: 'var(--co-text-dim)',
-                  }}
-                >
-                  {name}
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Footer */}
@@ -404,7 +369,7 @@ const Register = () => {
             建立企業帳號
           </h2>
           <p style={{ fontSize: 13, color: 'var(--co-text-dim)', margin: '0 0 22px', lineHeight: 1.55 }}>
-            加入超過 3,000 家台灣企業，開始您的數位化協作之旅。
+            加入台灣企業，開始您的數位化協作之旅。
           </p>
 
           {/* Error banner */}
