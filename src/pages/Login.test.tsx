@@ -15,9 +15,14 @@ import { useAuthStore } from '../store/authStore';
 
 // Mock navigation
 const mockNavigate = vi.fn();
+let mockLocationState: Record<string, unknown> = {};
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
-  return { ...actual, useNavigate: () => mockNavigate };
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+    useLocation: () => ({ state: mockLocationState, pathname: '/login', search: '', hash: '' }),
+  };
 });
 
 // Mock authApi
@@ -310,5 +315,43 @@ describe('Login page — error states', () => {
     // ACCOUNT_DISABLED maps to the byCode message in Login.tsx
     expect(alert).toHaveTextContent('此帳號已停用，請聯絡客服。');
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('Login page — resetSuccess banner', () => {
+  beforeEach(() => {
+    mockLogin.mockReset();
+    mockMe.mockReset();
+    mockNavigate.mockReset();
+    useAuthStore.setState({
+      accessToken: null, refreshToken: null, user: null,
+      isAuthenticated: false, isHydrating: false,
+    });
+  });
+
+  afterEach(() => {
+    mockLocationState = {};
+  });
+
+  it('shows role=status success banner when location.state.resetSuccess is true', () => {
+    mockLocationState = { resetSuccess: true };
+    renderPage();
+
+    const banner = screen.getByRole('status');
+    expect(banner).toHaveTextContent('密碼已重設，請使用新密碼登入。');
+  });
+
+  it('does NOT show the banner when resetSuccess is absent', () => {
+    mockLocationState = {};
+    renderPage();
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('does NOT show the banner when resetSuccess is false', () => {
+    mockLocationState = { resetSuccess: false };
+    renderPage();
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

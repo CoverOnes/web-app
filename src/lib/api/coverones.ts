@@ -66,6 +66,27 @@ export interface ResendVerificationResponse {
   message: string;
 }
 
+// ── Password reset ──────────────────────────────────────────────────────────
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+// Backend always returns a generic 202 — never reveals whether the email exists.
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+// 200 { reset: true } on success; 400 INVALID_RESET_TOKEN / 422 WEAK_PASSWORD on error.
+export interface ResetPasswordResponse {
+  reset: boolean;
+}
+
 // ===== OAuth / Social Login =====
 
 export type OAuthProvider = 'google' | 'line';
@@ -279,6 +300,18 @@ export const authApi = {
   // (always generic, never leaks whether the email exists).
   resendVerification: (data: ResendVerificationRequest) =>
     http.post<ResendVerificationResponse>('/v1/auth/resend-verification', data).then((r) => r.data),
+
+  // POST /v1/auth/forgot-password — always 202 with generic message; never leaks
+  // whether the email exists (anti-enumeration). isAuthFlowRequest covers this path.
+  forgotPassword: (data: ForgotPasswordRequest) =>
+    http.post<ForgotPasswordResponse>('/v1/auth/forgot-password', data).then((r) => r.data),
+
+  // POST /v1/auth/reset-password — 200 { reset: true } on success.
+  // 400 INVALID_RESET_TOKEN when the token is expired/invalid.
+  // 422 WEAK_PASSWORD when the password does not meet the policy (min 12 chars).
+  // isAuthFlowRequest covers this path so a 400 never triggers the refresh loop.
+  resetPassword: (data: ResetPasswordRequest) =>
+    http.post<ResetPasswordResponse>('/v1/auth/reset-password', data).then((r) => r.data),
 
   // /api/user/v1/me → gateway strips /api/user → user service receives /v1/me
   // Accepts an optional token to use directly (bypasses store, for post-login hydration).

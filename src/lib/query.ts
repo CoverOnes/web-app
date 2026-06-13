@@ -6,6 +6,7 @@ import {
   workspaceApi,
   type ContractStatus,
   type KycSubmitRequest,
+  type ResetPasswordRequest,
 } from './api/coverones';
 import { useAuthStore } from '../store/authStore';
 
@@ -35,6 +36,24 @@ export function useVerifyEmail() {
 export function useResendVerification() {
   return useMutation({
     mutationFn: (email: string) => authApi.resendVerification({ email }),
+    retry: false,
+  });
+}
+
+// Request a password-reset link. The backend always responds 202 with a generic
+// message — never reveals whether the email exists (anti-enumeration).
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: (email: string) => authApi.forgotPassword({ email }),
+    retry: false,
+  });
+}
+
+// Consume the reset link token from /reset-password?token=. retry:false because
+// 400 INVALID_RESET_TOKEN and 422 WEAK_PASSWORD are deterministic errors.
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: (data: ResetPasswordRequest) => authApi.resetPassword(data),
     retry: false,
   });
 }

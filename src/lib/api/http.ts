@@ -66,6 +66,10 @@ export const isAuthFlowRequest = (url?: string): boolean =>
   (url.includes('/v1/auth/login') ||
     url.includes('/v1/auth/register') ||
     url.includes('/v1/auth/refresh') ||
+    // Password-reset endpoints issue/validate tokens themselves; a 400 from them
+    // must NOT trigger the access-token refresh retry loop.
+    url.includes('/v1/auth/forgot-password') ||
+    url.includes('/v1/auth/reset-password') ||
     // OAuth start, callback and exchange endpoints issue/validate credentials
     // themselves; a 401 from them must NOT trigger the access-token refresh loop.
     url.includes('/v1/auth/oauth/'));
