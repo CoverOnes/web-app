@@ -92,7 +92,6 @@ describe('MyContractsPage', () => {
     render(<Page />, { wrapper: makeWrapper() });
 
     // Skeletons are aria-hidden — check they exist via their class
-    // eslint-disable-next-line testing-library/no-node-access
     const skeletons = document.querySelectorAll('[aria-hidden="true"].rounded-xl');
     expect(skeletons.length).toBeGreaterThan(0);
   });

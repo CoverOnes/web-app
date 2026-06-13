@@ -149,7 +149,6 @@ describe('ContractDetailPage', () => {
     render(<Page />, { wrapper: makeWrapper() });
 
     // Skeleton block is aria-hidden
-    // eslint-disable-next-line testing-library/no-node-access
     const skeletons = document.querySelectorAll('[aria-hidden="true"].rounded-xl');
     expect(skeletons.length).toBeGreaterThan(0);
   });
