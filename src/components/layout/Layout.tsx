@@ -87,7 +87,7 @@ const Layout = () => {
   // Refresh rooms when leaving messages page
   useEffect(() => {
     if (!userId) return;
-    const isMessagesPage = location.pathname.startsWith('/messages');
+    const isMessagesPage = location.pathname.startsWith('/messages') || location.pathname.startsWith('/chat');
 
     if (!isMessagesPage && hasInitialLoadRef.current && !loadingRef.current) {
       const refreshRooms = async () => {

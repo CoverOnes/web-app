@@ -68,7 +68,7 @@ const ChatRoomPage = () => {
 
   // 處理未讀訊息
   useEffect(() => {
-    if (!roomId || !targetRoom) return;
+    if (!roomId || !targetRoom || !userId) return;
     
     if (targetRoom.unread_count && targetRoom.unread_count > 0) {
       setTimeout(() => {

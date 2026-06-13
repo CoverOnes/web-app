@@ -13,6 +13,7 @@ import { useIsMobile } from '../hooks/useIsMobile';
 const Messages = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [groupCreateError, setGroupCreateError] = useState<string | null>(null);
+  const [dmCreateError, setDmCreateError] = useState<string | null>(null);
   const userId = useAuthStore((s) => s.user?.id ?? '');
   const { rooms, currentRoom, setCurrentRoom, addRoom, openChatPopup, setRooms } = useChatStore();
 
@@ -34,11 +35,14 @@ const Messages = () => {
     }
   };
 
-  const handleCreateDM = async (userId: string) => {
-    // Find existing DM room or create a temporary one
+  const handleCreateDM = async (contactId: string) => {
+    setDmCreateError(null);
+    const selfId = useAuthStore.getState().user?.id ?? '';
+
+    // Find existing DM room — must contain BOTH the logged-in user AND the contact
     const existingRoom = rooms.find(r => {
       if (r.type !== 'direct') return false;
-      return r.members?.some(m => m.user_id === userId) && r.members?.some(m => m.user_id === userId);
+      return r.members?.some(m => m.user_id === selfId) && r.members?.some(m => m.user_id === contactId);
     });
 
     if (existingRoom) {
@@ -53,13 +57,13 @@ const Messages = () => {
     // Create new DM room
     try {
       const members: Member[] = [
-        { user_id: userId, role: 'admin' },
-        { user_id: userId, role: 'member' },
+        { user_id: selfId, role: 'admin' },
+        { user_id: contactId, role: 'member' },
       ];
       const response = await chatApi.createRoom({
-        name: `${userId}_${userId}`,
+        name: `${selfId}_${contactId}`,
         type: 'direct',
-        owner_id: userId,
+        owner_id: selfId,
         members,
       });
       if (response.success && response.data) {
@@ -70,26 +74,9 @@ const Messages = () => {
           openChatPopup(response.data);
         }
       }
-    } catch {
-      // Create temporary room for immediate chat
-      const tempRoom = {
-        id: `temp_${userId}`,
-        name: '',
-        type: 'direct' as const,
-        owner_id: userId,
-        members: [
-          { user_id: userId, role: 'admin' as const },
-          { user_id: userId, role: 'member' as const },
-        ],
-        created_at: Math.floor(Date.now() / 1000),
-        isTemporary: true,
-        targetContactId: userId,
-      };
-      if (isMobile) {
-        setCurrentRoom(tempRoom);
-      } else {
-        openChatPopup(tempRoom);
-      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '建立私訊失敗，請稍後再試';
+      setDmCreateError(msg);
     }
   };
 
@@ -225,6 +212,11 @@ const Messages = () => {
                   {groupCreateError}
                 </p>
               )}
+              {dmCreateError && (
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--color-red, #ef4444)' }}>
+                  {dmCreateError}
+                </p>
+              )}
             <button
               type="button"
               onClick={() => setShowCreateModal(true)}
@@ -319,7 +311,7 @@ const Messages = () => {
 
       <CreateModal
         open={showCreateModal}
-        onClose={() => { setShowCreateModal(false); setGroupCreateError(null); }}
+        onClose={() => { setShowCreateModal(false); setGroupCreateError(null); setDmCreateError(null); }}
         onCreateDM={handleCreateDM}
         onCreateGroup={handleCreateGroup}
       />
