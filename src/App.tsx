@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import VerifyEmailSent from './pages/VerifyEmailSent';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import Home from './pages/Home';
 import JobBoardPage from './pages/JobBoardPage';
 import PostJobPage from './pages/PostJobPage';
@@ -40,6 +41,7 @@ function App() {
           <Route path="/register/verify-sent" element={<VerifyEmailSent />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Protected app routes */}
           <Route

@@ -16,7 +16,7 @@
  */
 
 import { useState, useId } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { authApi } from '../lib/api/coverones';
@@ -271,7 +271,10 @@ const FloatingCards = () => (
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuthStore();
+  // resetSuccess is set by ResetPasswordPage after a successful password reset.
+  const resetSuccess = (location.state as { resetSuccess?: boolean } | null)?.resetSuccess === true;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -490,6 +493,20 @@ const Login = () => {
               <p style={{ fontSize: 13.5, color: 'var(--co-text-dim)', margin: '0 0 26px 0' }}>
                 使用您的公司 Email 登入，開始探索合作機會。
               </p>
+
+              {/* Reset-success banner (shown after a successful password reset) */}
+              {resetSuccess && (
+                <div
+                  role="status"
+                  style={{
+                    padding: '10px 14px', marginBottom: 16,
+                    background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
+                    borderRadius: 10, fontSize: 13, color: '#4ade80',
+                  }}
+                >
+                  密碼已重設，請使用新密碼登入。
+                </div>
+              )}
 
               {/* Error banner */}
               {error && (
