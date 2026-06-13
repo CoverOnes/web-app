@@ -336,10 +336,6 @@ const Register = () => {
             <p style={{ fontSize: 16, color: 'var(--co-text-dim)', lineHeight: 1.65, margin: '0 0 32px' }}>
               CoverOnes 為台灣 B2B 而生。從統編一鍵驗證、AI 智慧媒合，到合約簽署、發票結算 — 全流程數位化。
             </p>
-
-
-
-
           </div>
 
           {/* Footer */}

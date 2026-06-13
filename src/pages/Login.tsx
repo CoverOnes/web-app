@@ -232,9 +232,9 @@ const FloatingCards = () => (
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
         {[
-          ['鴻', 'linear-gradient(135deg,var(--co-amber),var(--co-red))'],
-          ['新', 'linear-gradient(135deg,var(--co-green),#059669)'],
-          ['奇', 'linear-gradient(135deg,var(--co-accent-2),var(--co-pink))'],
+          ['A', 'linear-gradient(135deg,var(--co-amber),var(--co-red))'],
+          ['B', 'linear-gradient(135deg,var(--co-green),#059669)'],
+          ['C', 'linear-gradient(135deg,var(--co-accent-2),var(--co-pink))'],
         ].map(([ch, bg], i) => (
           <div key={ch} style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: '2px solid var(--co-bg-3)', marginLeft: i > 0 ? -10 : 0, fontSize: 11, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 3 - i }}>{ch}</div>
         ))}
@@ -426,22 +426,15 @@ const Login = () => {
             </h1>
 
             <p style={{ fontSize: 17, lineHeight: 1.65, color: 'var(--co-text-dim)', maxWidth: 520, margin: '0 0 36px 0', fontWeight: 400 }}>
-              從上市公司到新創團隊，超過 12,000 家企業在 CoverOnes 上發掘合作夥伴、發布專案需求，並以加密通訊安心協作。
+              從上市公司到新創團隊，CoverOnes 連結企業合作夥伴、媒合專案需求，並以加密通訊安心協作。
             </p>
 
-            {/* Stats */}
-            <div style={{ display: 'flex', gap: 36, marginTop: 16, paddingTop: 28, borderTop: '1px solid var(--co-line)' }}>
-              {[
-                { num: '12,400+', lbl: '已認證企業' },
-                { num: '86,200', lbl: '本月新發專案' },
-                { num: 'NT$ 4.8B', lbl: '累計媒合金額' },
-                { num: '98.6%', lbl: '合作完成率' },
-              ].map((s) => (
-                <div key={s.lbl}>
-                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', background: 'linear-gradient(180deg, #fff, #C7D2FE)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    {s.num}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--co-text-dim)', marginTop: 2, letterSpacing: '0.02em' }}>{s.lbl}</div>
+            {/* Brand trust strip — no fabricated numbers */}
+            <div style={{ display: 'flex', gap: 24, marginTop: 16, paddingTop: 28, borderTop: '1px solid var(--co-line)', flexWrap: 'wrap' }}>
+              {['統編驗證', 'AI 智慧媒合', '合約簽署', '發票結算'].map((feat) => (
+                <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--co-accent)', flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, color: 'var(--co-text-dim)', fontWeight: 500 }}>{feat}</span>
                 </div>
               ))}
             </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { useListings } from '../lib/query';
+import { useListings, useMyBids } from '../lib/query';
 import { getApiErrorCode } from '../lib/api/http';
 
 /* Design-system palette constants — all values from shared.css / index.css :root tokens */
@@ -271,6 +271,8 @@ const JobBoardPage = () => {
   const user = useAuthStore((s) => s.user);
   const kycTier = user?.kycTier ?? 0;
   const { data: listings, isLoading, isError, error } = useListings({ status: 'OPEN' });
+  // APPLIED tab: use real bid data from the user's submitted bids
+  const { data: myBids } = useMyBids();
   // Default to first enabled tab ('ALL'); RECOMMEND is disabled / coming-soon
   const [activeTab, setActiveTab] = useState<TabId>('ALL');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -297,20 +299,15 @@ const JobBoardPage = () => {
   };
 
   function filterListings(items: Listing[]): Listing[] {
-    // Tab filter
-    let result = items;
-    if (activeTab === 'APPLIED') {
-      result = result.filter((l) => l.status === 'AWARDED' || l.status === 'CLOSED');
-    }
     // Category chip filter: client-side keyword match on title + description
     if (activeFilter && CHIP_KEYWORDS[activeFilter]) {
       const keywords = CHIP_KEYWORDS[activeFilter];
-      result = result.filter((l) => {
+      return items.filter((l) => {
         const haystack = `${l.title} ${l.description}`.toLowerCase();
         return keywords.some((kw) => haystack.includes(kw.toLowerCase()));
       });
     }
-    return result;
+    return items;
   }
 
   const displayed = listings ? filterListings(listings) : [];
@@ -398,7 +395,7 @@ const JobBoardPage = () => {
         {TABS.map((tab) => {
           const isTabActive = activeTab === tab.id;
           // Show real count only for tabs with a live filter; disabled tabs show no count
-          const liveCount = tab.id === 'ALL' ? totalCount : tab.id === 'APPLIED' ? displayed.length : undefined;
+          const liveCount = tab.id === 'ALL' ? totalCount : tab.id === 'APPLIED' ? (myBids?.length ?? 0) : undefined;
           return (
             <button
               key={tab.id}
@@ -553,7 +550,23 @@ const JobBoardPage = () => {
             id={`jobs-panel-${activeTab}`}
             aria-labelledby={`jobs-tab-${activeTab}`}
           >
-            {isLoading ? (
+            {/* APPLIED tab: show real bids from useMyBids(); Bid type doesn't
+                map to ListingRow, so render EmptyState with honest bid count */}
+            {activeTab === 'APPLIED' ? (
+              myBids && myBids.length > 0 ? (
+                <EmptyState
+                  icon={<Icon.Briefcase size={48} />}
+                  title={`已應標 ${myBids.length} 個專案`}
+                  description="詳細應標記錄請至各專案頁面查看。"
+                />
+              ) : (
+                <EmptyState
+                  icon={<Icon.Briefcase size={48} />}
+                  title="尚無應標紀錄"
+                  description="瀏覽案件並提交您的第一個投標。"
+                />
+              )
+            ) : isLoading ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <LoadingSkeleton count={4} height="h-32" />
               </div>
