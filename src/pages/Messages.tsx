@@ -60,19 +60,17 @@ const Messages = () => {
         { user_id: selfId, role: 'admin' },
         { user_id: contactId, role: 'member' },
       ];
-      const response = await chatApi.createRoom({
+      const createdRoom = await chatApi.createRoom({
         name: `${selfId}_${contactId}`,
         type: 'direct',
         owner_id: selfId,
         members,
       });
-      if (response.success && response.data) {
-        addRoom(response.data);
-        if (isMobile) {
-          setCurrentRoom(response.data);
-        } else {
-          openChatPopup(response.data);
-        }
+      addRoom(createdRoom);
+      if (isMobile) {
+        setCurrentRoom(createdRoom);
+      } else {
+        openChatPopup(createdRoom);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : '建立私訊失敗，請稍後再試';
@@ -87,19 +85,17 @@ const Messages = () => {
         { user_id: userId, role: 'admin' },
         ...userIds.map(id => ({ user_id: id, role: 'member' as const })),
       ];
-      const response = await chatApi.createRoom({
+      const createdRoom = await chatApi.createRoom({
         name,
         type: 'group',
         owner_id: userId,
         members,
       });
-      if (response.success && response.data) {
-        addRoom(response.data);
-        if (isMobile) {
-          setCurrentRoom(response.data);
-        } else {
-          openChatPopup(response.data);
-        }
+      addRoom(createdRoom);
+      if (isMobile) {
+        setCurrentRoom(createdRoom);
+      } else {
+        openChatPopup(createdRoom);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to create group';
@@ -246,7 +242,7 @@ const Messages = () => {
             </div>
           </div>
 
-          <ChatList onCreateRoom={() => setShowCreateModal(true)} onSelectRoom={handleRoomSelect} />
+          <ChatList onSelectRoom={handleRoomSelect} />
         </div>
 
         {/* Desktop empty state / info panel */}

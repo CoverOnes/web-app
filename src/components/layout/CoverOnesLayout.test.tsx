@@ -112,8 +112,9 @@ describe('CoverOnesLayout — rooms loading', () => {
     // Arrange: authenticated user — selector `(s) => s.user?.id ?? ''` must return 'user-42'
     mockAuthUser('user-42');
     vi.mocked(chatApi.getRooms).mockResolvedValue({
-      success: true,
-      data: MOCK_ROOMS,
+      rooms: MOCK_ROOMS,
+      cursor: '',
+      hasMore: false,
     });
 
     const Wrapper = createWrapper();
@@ -153,6 +154,39 @@ describe('CoverOnesLayout — rooms loading', () => {
     });
     // rooms remains empty on error — ChatRoomPage must handle this
     expect(useChatStore.getState().rooms).toHaveLength(0);
+  });
+
+  it('sets roomsLoadError=true when getRooms throws and false on success', async () => {
+    mockAuthUser('user-42');
+    vi.mocked(chatApi.getRooms).mockRejectedValue(new Error('CORS error'));
+
+    const Wrapper = createWrapper();
+    render(<CoverOnesLayout />, { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(useChatStore.getState().roomsLoadError).toBe(true);
+    });
+    // roomsLoadError must be distinguished from "no rooms" (empty array with no error)
+    expect(useChatStore.getState().rooms).toHaveLength(0);
+  });
+
+  it('sets roomsLoadError=false on successful rooms fetch', async () => {
+    mockAuthUser('user-42');
+    // Pre-seed an error state to verify it gets cleared on success
+    useChatStore.setState({ rooms: [], roomsLoaded: false, roomsLoadError: true });
+    vi.mocked(chatApi.getRooms).mockResolvedValue({
+      rooms: MOCK_ROOMS,
+      cursor: '',
+      hasMore: false,
+    });
+
+    const Wrapper = createWrapper();
+    render(<CoverOnesLayout />, { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(useChatStore.getState().roomsLoadError).toBe(false);
+      expect(useChatStore.getState().rooms).toHaveLength(1);
+    });
   });
 
   it('selector (s)=>s.user?.id??empty is invoked — null user yields empty string', () => {

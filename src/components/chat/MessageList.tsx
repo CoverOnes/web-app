@@ -120,13 +120,12 @@ const MessageList = ({ roomId }: MessageListProps) => {
     isLoadingRef.current = true;
     try {
       const cursor = messagesCursor[roomId] || '';
-      const response = await chatApi.getMessages(roomId, userId, 30, cursor);
-      if (response.success && response.data) {
-        const msgs = [...response.data].reverse();
-        prependMessages(roomId, msgs);
-        setMessagesCursor(roomId, response.next_cursor || '');
-        setHasMoreMessages(roomId, response.has_more || false);
-      }
+      const data = await chatApi.getMessages(roomId, userId, 30, cursor);
+      const msgs = [...data].reverse();
+      prependMessages(roomId, msgs);
+      // MVP: pagination cursor/hasMore not available from interceptor-unwrapped response
+      setMessagesCursor(roomId, '');
+      setHasMoreMessages(roomId, false);
     } catch {
       // silently ignore
     } finally {
@@ -186,51 +185,47 @@ const MessageList = ({ roomId }: MessageListProps) => {
     const loadInitial = async () => {
       isLoadingRef.current = true;
       try {
-        const response = await chatApi.getMessages(roomId, userId, 30, '');
+        const data = await chatApi.getMessages(roomId, userId, 30, '');
         if (prevRoomIdRef.current !== roomId) return;
 
-        if (response.success && response.data) {
-          const fromServer = [...response.data].reverse();
-          const { messageHistory: cur } = useChatStore.getState();
-          const existing = cur[roomId] || [];
-          const tempMsgs = existing.filter(m => m.id.startsWith('temp_'));
-          const merged = [...fromServer];
-          tempMsgs.forEach(t => {
-            if (!merged.some(m => m.content === t.content && m.sender_id === t.sender_id)) {
-              merged.push(t);
-            }
-          });
-
-          setMessages(roomId, merged);
-          setMessagesCursor(roomId, response.next_cursor || '');
-          setHasMoreMessages(roomId, response.has_more || false);
-          setStatus(merged.length === 0 ? 'empty' : 'loaded');
-
-          // Calculate unread index after loading
-          const storeState = useChatStore.getState();
-          const room = storeState.rooms.find(r => r.id === roomId);
-          if (room?.unread_count && room.unread_count > 0) {
-            const total = merged.length;
-            const unreadCount = room.unread_count;
-            initialUnreadIndex.current = unreadCount >= total ? 0 : total - unreadCount;
-            // Clear unread AFTER capturing the index
-            const { setRooms } = useChatStore.getState();
-            setRooms(prev => prev.map(r => r.id === roomId ? { ...r, unread_count: 0 } : r));
+        const fromServer = [...data].reverse();
+        const { messageHistory: cur } = useChatStore.getState();
+        const existing = cur[roomId] || [];
+        const tempMsgs = existing.filter(m => m.id.startsWith('temp_'));
+        const merged = [...fromServer];
+        tempMsgs.forEach(t => {
+          if (!merged.some(m => m.content === t.content && m.sender_id === t.sender_id)) {
+            merged.push(t);
           }
+        });
 
-          setTimeout(() => {
-            if (initialUnreadIndex.current >= 0 && unreadMarkerRef.current) {
-              unreadMarkerRef.current.scrollIntoView({ block: 'start' });
-              hasScrolledToUnread.current = true;
-            } else {
-              const container = messagesContainerRef.current;
-              if (container) container.scrollTop = container.scrollHeight;
-            }
-          }, 50);
-        } else {
-          setErrorMsg('服務暫時無法使用，請稍後再試');
-          setStatus('error');
+        setMessages(roomId, merged);
+        // MVP: pagination cursor/hasMore not available from interceptor-unwrapped response
+        setMessagesCursor(roomId, '');
+        setHasMoreMessages(roomId, false);
+        setStatus(merged.length === 0 ? 'empty' : 'loaded');
+
+        // Calculate unread index after loading
+        const storeState = useChatStore.getState();
+        const room = storeState.rooms.find(r => r.id === roomId);
+        if (room?.unread_count && room.unread_count > 0) {
+          const total = merged.length;
+          const unreadCount = room.unread_count;
+          initialUnreadIndex.current = unreadCount >= total ? 0 : total - unreadCount;
+          // Clear unread AFTER capturing the index
+          const { setRooms } = useChatStore.getState();
+          setRooms(prev => prev.map(r => r.id === roomId ? { ...r, unread_count: 0 } : r));
         }
+
+        setTimeout(() => {
+          if (initialUnreadIndex.current >= 0 && unreadMarkerRef.current) {
+            unreadMarkerRef.current.scrollIntoView({ block: 'start' });
+            hasScrolledToUnread.current = true;
+          } else {
+            const container = messagesContainerRef.current;
+            if (container) container.scrollTop = container.scrollHeight;
+          }
+        }, 50);
       } catch {
         if (prevRoomIdRef.current !== roomId) return;
         setErrorMsg('服務暫時無法使用，請稍後再試');
@@ -275,21 +270,16 @@ const MessageList = ({ roomId }: MessageListProps) => {
     const retry = async () => {
       isLoadingRef.current = true;
       try {
-        const response = await chatApi.getMessages(roomId, userId, 30, '');
-        if (response.success && response.data) {
-          const msgs = [...response.data].reverse();
-          setMessages(roomId, msgs);
-          setMessagesCursor(roomId, response.next_cursor || '');
-          setHasMoreMessages(roomId, response.has_more || false);
-          setStatus(msgs.length === 0 ? 'empty' : 'loaded');
-          setTimeout(() => {
-            const container = messagesContainerRef.current;
-            if (container) container.scrollTop = container.scrollHeight;
-          }, 50);
-        } else {
-          setErrorMsg('服務暫時無法使用，請稍後再試');
-          setStatus('error');
-        }
+        const data = await chatApi.getMessages(roomId, userId, 30, '');
+        const msgs = [...data].reverse();
+        setMessages(roomId, msgs);
+        setMessagesCursor(roomId, '');
+        setHasMoreMessages(roomId, false);
+        setStatus(msgs.length === 0 ? 'empty' : 'loaded');
+        setTimeout(() => {
+          const container = messagesContainerRef.current;
+          if (container) container.scrollTop = container.scrollHeight;
+        }, 50);
       } catch {
         setErrorMsg('服務暫時無法使用，請稍後再試');
         setStatus('error');

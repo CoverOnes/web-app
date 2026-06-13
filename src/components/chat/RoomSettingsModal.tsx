@@ -26,24 +26,19 @@ const RoomSettingsModal = ({ onClose }: RoomSettingsModalProps) => {
     setSuccess('');
 
     try {
-      const response = await chatApi.removeMember(currentRoom.id, userId);
-      
-      if (response.success) {
-        setSuccess('成員移除成功');
-        
-        // 樂觀更新：直接從 currentRoom 移除成員
-        if (currentRoom.members) {
-          const updatedRoom = {
-            ...currentRoom,
-            members: currentRoom.members.filter(m => m.user_id !== userId)
-          };
-          setCurrentRoom(updatedRoom);
-        }
-        
-        setTimeout(() => setSuccess(''), 3000);
-      } else {
-        setError('移除成員失敗');
+      await chatApi.removeMember(currentRoom.id, userId);
+      setSuccess('成員移除成功');
+
+      // 樂觀更新：直接從 currentRoom 移除成員
+      if (currentRoom.members) {
+        const updatedRoom = {
+          ...currentRoom,
+          members: currentRoom.members.filter(m => m.user_id !== userId)
+        };
+        setCurrentRoom(updatedRoom);
       }
+
+      setTimeout(() => setSuccess(''), 3000);
     } catch {
       setError('移除成員失敗，請稍後再試');
     } finally {
@@ -59,19 +54,14 @@ const RoomSettingsModal = ({ onClose }: RoomSettingsModalProps) => {
     setError('');
 
     try {
-      const response = await chatApi.removeMember(currentRoom.id, userId);
-      
-      if (response.success) {
-        // 清除當前聊天室
-        setCurrentRoom(null);
-        
-        // 樂觀更新：直接從 rooms 移除這個聊天室
-        setRooms((prevRooms) => prevRooms.filter(r => r.id !== currentRoom.id));
-        
-        onClose();
-      } else {
-        setError('退出群組失敗');
-      }
+      await chatApi.removeMember(currentRoom.id, userId);
+      // 清除當前聊天室
+      setCurrentRoom(null);
+
+      // 樂觀更新：直接從 rooms 移除這個聊天室
+      setRooms((prevRooms) => prevRooms.filter(r => r.id !== currentRoom.id));
+
+      onClose();
     } catch {
       setError('退出群組失敗，請稍後再試');
     } finally {

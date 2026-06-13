@@ -17,7 +17,7 @@ const MOBILE_BREAKPOINT = 768;
 const CoverOnesLayout = () => {
   const location = useLocation();
   const userId = useAuthStore((s) => s.user?.id ?? '');
-  const { openPopups, setRooms, setRoomsLoaded } = useChatStore();
+  const { openPopups, setRooms, setRoomsLoaded, setRoomsLoadError } = useChatStore();
   const loadingRef = useRef(false);
   const hasInitialLoadRef = useRef(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < MOBILE_BREAKPOINT);
@@ -67,23 +67,23 @@ const CoverOnesLayout = () => {
     const loadRooms = async () => {
       loadingRef.current = true;
       try {
-        const response = await chatApi.getRooms(userId, 50, '');
-        if (response.success && response.data) {
-          setRooms(response.data);
-          hasInitialLoadRef.current = true;
-        }
-      } catch {
-        // non-critical; roomsLoaded still set in finally so consumers unblock
+        const { rooms } = await chatApi.getRooms(userId, 50, '');
+        setRooms(rooms);
+        setRoomsLoadError(false);
+        hasInitialLoadRef.current = true;
+      } catch (err) {
+        console.error('[CoverOnesLayout] loadRooms failed:', err);
+        setRoomsLoadError(true);
+        // hasInitialLoadRef.current stays false on error → retries on next userId change.
       } finally {
         // Always mark attempted so ChatRoomPage / ChatList never wait forever.
-        // hasInitialLoadRef.current stays false on error → retries on next userId change.
         setRoomsLoaded(true);
         loadingRef.current = false;
       }
     };
 
     loadRooms();
-  }, [userId, setRooms, setRoomsLoaded]);
+  }, [userId, setRooms, setRoomsLoaded, setRoomsLoadError]);
 
   /* Refresh rooms when navigating away from chat pages */
   useEffect(() => {
@@ -96,26 +96,23 @@ const CoverOnesLayout = () => {
       const refreshRooms = async () => {
         loadingRef.current = true;
         try {
-          const response = await chatApi.getRooms(userId, 50, '');
-          if (response.success && response.data) {
-            setRooms((prevRooms) => {
-              const newRooms = response.data!;
-              if (prevRooms.length === 0) return newRooms;
-              return newRooms.map((newRoom) => {
-                const prevRoom = prevRooms.find((r) => r.id === newRoom.id);
-                if (
-                  prevRoom &&
-                  prevRoom.unread_count === 0 &&
-                  (newRoom.unread_count || 0) > 0
-                ) {
-                  return { ...newRoom, unread_count: 0 };
-                }
-                return newRoom;
-              });
+          const { rooms: newRooms } = await chatApi.getRooms(userId, 50, '');
+          setRooms((prevRooms) => {
+            if (prevRooms.length === 0) return newRooms;
+            return newRooms.map((newRoom) => {
+              const prevRoom = prevRooms.find((r) => r.id === newRoom.id);
+              if (
+                prevRoom &&
+                prevRoom.unread_count === 0 &&
+                (newRoom.unread_count || 0) > 0
+              ) {
+                return { ...newRoom, unread_count: 0 };
+              }
+              return newRoom;
             });
-          }
-        } catch {
-          // non-critical refresh; ignore errors
+          });
+        } catch (err) {
+          console.error('[CoverOnesLayout] refreshRooms failed:', err);
         } finally {
           loadingRef.current = false;
         }
