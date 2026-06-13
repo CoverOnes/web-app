@@ -7,12 +7,28 @@ import { chatApi } from '../api/chat';
 import type { Room } from '../types';
 import './ChatRoomPage.css';
 
+// Shown on cold deep-link while the layout is still loading rooms.
+const RoomsLoadingScreen = () => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100%',
+      color: 'var(--color-main-text-dim)',
+      fontSize: 14,
+    }}
+  >
+    載入中...
+  </div>
+);
+
 const ChatRoomPage = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const userId = useAuthStore((s) => s.user?.id ?? '');
-  const { rooms, setCurrentRoom, currentRoom, setRooms } = useChatStore();
+  const { rooms, roomsLoaded, setCurrentRoom, currentRoom, setRooms } = useChatStore();
 
   // 使用 useMemo 同步計算需要的聊天室
   const targetRoom = useMemo(() => {
@@ -92,11 +108,15 @@ const ChatRoomPage = () => {
     return null;
   }
 
-  // 找不到聊天室
+  // While the layout is still fetching rooms on a cold deep-link, show a
+  // loading skeleton instead of a blank screen (or premature redirect).
+  if (!roomsLoaded) {
+    return <RoomsLoadingScreen />;
+  }
+
+  // 找不到聊天室（rooms already loaded → safe to redirect）
   if (!targetRoom) {
-    if (rooms.length > 0) {
-      navigate('/messages');
-    }
+    navigate('/messages');
     return null;
   }
 
