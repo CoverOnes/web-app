@@ -11,7 +11,7 @@ export const chatApi = {
    */
   async getRooms(userId: string, limit = 10, cursor = ''): Promise<ApiResponse<Room[]>> {
     validateUserId(userId);
-    const response = await http.get('/rooms', {
+    const response = await http.get('/api/chat/v1/rooms', {
       params: { user_id: userId, limit, cursor },
     });
     return response.data;
@@ -28,7 +28,7 @@ export const chatApi = {
   }): Promise<ApiResponse<Room>> {
     validateRoomName(data.name);
     validateUserId(data.owner_id);
-    const response = await http.post('/rooms', data);
+    const response = await http.post('/api/chat/v1/rooms', data);
     return response.data;
   },
 
@@ -43,7 +43,7 @@ export const chatApi = {
   ): Promise<ApiResponse<Message[]>> {
     validateRoomId(roomId);
     validateUserId(userId);
-    const response = await http.get('/messages', {
+    const response = await http.get('/api/chat/v1/messages', {
       params: { room_id: roomId, user_id: userId, limit, cursor },
     });
     return response.data;
@@ -61,7 +61,7 @@ export const chatApi = {
     validateRoomId(data.room_id);
     validateUserId(data.sender_id);
     validateMessage(data.content);
-    const response = await http.post('/messages', data);
+    const response = await http.post('/api/chat/v1/messages', data);
     return response.data;
   },
 
@@ -71,7 +71,7 @@ export const chatApi = {
   async markAsRead(roomId: string, userId: string, messageId?: string): Promise<ApiResponse> {
     validateRoomId(roomId);
     validateUserId(userId);
-    const response = await http.post('/messages/read', {
+    const response = await http.post('/api/chat/v1/messages/read', {
       room_id: roomId,
       user_id: userId,
       message_id: messageId,
@@ -85,7 +85,7 @@ export const chatApi = {
   async addMember(roomId: string, userId: string): Promise<ApiResponse> {
     validateRoomId(roomId);
     validateUserId(userId);
-    const response = await http.post(`/rooms/${roomId}/members`, {
+    const response = await http.post(`/api/chat/v1/rooms/${roomId}/members`, {
       user_id: userId,
     });
     return response.data;
@@ -97,7 +97,7 @@ export const chatApi = {
   async removeMember(roomId: string, userId: string): Promise<ApiResponse> {
     validateRoomId(roomId);
     validateUserId(userId);
-    const response = await http.delete(`/rooms/${roomId}/members/${userId}`);
+    const response = await http.delete(`/api/chat/v1/rooms/${roomId}/members/${userId}`);
     return response.data;
   },
 };

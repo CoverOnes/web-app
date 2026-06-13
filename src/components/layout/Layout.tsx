@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import { chatApi } from '../../api/chat';
 import AppShell from './AppShell';
 import Sidebar from './Sidebar';
@@ -12,7 +13,8 @@ const MOBILE_BREAKPOINT = 768;
 
 const Layout = () => {
   const location = useLocation();
-  const { currentUser, setRooms, setRoomsLoaded, openPopups } = useChatStore();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { setRooms, setRoomsLoaded, openPopups } = useChatStore();
   const loadingRef = useRef(false);
   const hasInitialLoadRef = useRef(false);
 
@@ -60,12 +62,12 @@ const Layout = () => {
 
   // Only load rooms on initial mount
   useEffect(() => {
-    if (!currentUser || loadingRef.current || hasInitialLoadRef.current) return;
+    if (!userId || loadingRef.current || hasInitialLoadRef.current) return;
 
     const loadRooms = async () => {
       loadingRef.current = true;
       try {
-        const response = await chatApi.getRooms(currentUser, 50, '');
+        const response = await chatApi.getRooms(userId, 50, '');
         if (response.success && response.data) {
           setRooms(response.data);
           setRoomsLoaded(true);
@@ -80,18 +82,18 @@ const Layout = () => {
     };
 
     loadRooms();
-  }, [currentUser, setRooms, setRoomsLoaded]);
+  }, [userId, setRooms, setRoomsLoaded]);
 
   // Refresh rooms when leaving messages page
   useEffect(() => {
-    if (!currentUser) return;
-    const isMessagesPage = location.pathname.startsWith('/messages');
+    if (!userId) return;
+    const isMessagesPage = location.pathname.startsWith('/messages') || location.pathname.startsWith('/chat');
 
     if (!isMessagesPage && hasInitialLoadRef.current && !loadingRef.current) {
       const refreshRooms = async () => {
         loadingRef.current = true;
         try {
-          const response = await chatApi.getRooms(currentUser, 50, '');
+          const response = await chatApi.getRooms(userId, 50, '');
           if (response.success && response.data) {
             setRooms((prevRooms) => {
               const newRooms = response.data!;
@@ -114,7 +116,7 @@ const Layout = () => {
 
       refreshRooms();
     }
-  }, [location.pathname, currentUser, setRooms]);
+  }, [location.pathname, userId, setRooms]);
 
   return (
     <AppShell>
