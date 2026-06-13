@@ -31,11 +31,13 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
   const popupRef = useRef<HTMLDivElement>(null);
   const isMinimized = minimizedPopups[room.id] || false;
   
-  // 當臨時房間轉換成真實房間時更新
-  if (room.id !== actualRoomIdRef.current && !room.id.startsWith('temp_')) {
-    actualRoomIdRef.current = room.id;
-    setActualRoom(room);
-  }
+  // 當臨時房間轉換成真實房間時更新（必須在 useEffect 中，不能在 render body）
+  useEffect(() => {
+    if (room.id !== actualRoomIdRef.current && !room.id.startsWith('temp_')) {
+      actualRoomIdRef.current = room.id;
+      setActualRoom(room);
+    }
+  }, [room.id, room]);
 
   // 監聽 rooms 變化 - 當後端數據載入後，自動更新臨時房間為真實房間
   useEffect(() => {

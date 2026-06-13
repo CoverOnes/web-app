@@ -242,7 +242,7 @@ const Messages = () => {
             </div>
           </div>
 
-          <ChatList onCreateRoom={() => setShowCreateModal(true)} onSelectRoom={handleRoomSelect} />
+          <ChatList onSelectRoom={handleRoomSelect} />
         </div>
 
         {/* Desktop empty state / info panel */}

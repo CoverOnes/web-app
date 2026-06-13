@@ -9,16 +9,15 @@ import RoomItem from './RoomItem';
 const ROOMS_PAGE_SIZE = 50;
 
 interface ChatListProps {
-  onCreateRoom: () => void;
   onSelectRoom?: (roomId: string) => void;
 }
 
 const ChatList = ({ onSelectRoom }: ChatListProps) => {
   const userId = useAuthStore((s) => s.user?.id ?? '');
-  const { rooms, roomsLoaded, setRooms, setCurrentRoom } = useChatStore();
+  const { rooms, roomsLoaded, roomsLoadError, setRooms, setCurrentRoom } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
   const [cursor, setCursor] = useState('');
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
@@ -154,7 +153,9 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
         onScroll={throttledScroll}
         style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: 4 }}
       >
-        {sortedRooms.length === 0 && !isLoading ? (
+        {sortedRooms.length === 0 && !isLoading && roomsLoadError ? (
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-main-text-dim)', fontSize: 14 }}>載入失敗，請重試</div>
+        ) : sortedRooms.length === 0 && !isLoading ? (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-main-text-dim)', fontSize: 14 }}>暫無聊天室</div>
         ) : (
           sortedRooms.map(room => (

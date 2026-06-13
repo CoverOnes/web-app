@@ -111,12 +111,12 @@ const ChatRoomPage = () => {
     }
   }, [roomId, targetRoom, setRooms, userId]);
 
-  // 清除 router state
+  // 清除 router state（使用 react-router navigate 而非 window.history 直接操作）
   useEffect(() => {
     if (location.state) {
-      window.history.replaceState({}, document.title);
+      navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location.state]);
+  }, [location.state, location.pathname, navigate]);
 
   // Finding 4: roomsLoaded guard MUST fire before targetRoom check so a cold
   // deep-link waits for rooms to arrive before deciding to redirect.

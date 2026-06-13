@@ -5,8 +5,10 @@ interface ChatState {
   // 聊天室列表
   rooms: Room[];
   roomsLoaded: boolean; // 標記 rooms 是否已從後端載入
+  roomsLoadError: boolean; // 標記 rooms 是否載入失敗（區分「無聊天室」和「載入失敗」）
   setRooms: (rooms: Room[] | ((prevRooms: Room[]) => Room[])) => void;
   setRoomsLoaded: (loaded: boolean) => void;
+  setRoomsLoadError: (error: boolean) => void;
   addRoom: (room: Room) => void;
   updateRoom: (roomId: string, updates: Partial<Room>) => void;
 
@@ -43,6 +45,7 @@ export const useChatStore = create<ChatState>((set) => ({
   // 初始狀態
   rooms: [],
   roomsLoaded: false,
+  roomsLoadError: false,
   currentRoom: null,
   messageHistory: {},
   messagesCursor: {},
@@ -56,6 +59,8 @@ export const useChatStore = create<ChatState>((set) => ({
   })),
 
   setRoomsLoaded: (loaded) => set({ roomsLoaded: loaded }),
+
+  setRoomsLoadError: (error) => set({ roomsLoadError: error }),
 
   addRoom: (room) => set((state) => ({
     rooms: [...state.rooms, room],
@@ -141,6 +146,7 @@ export const useChatStore = create<ChatState>((set) => ({
   clearChat: () => set({
     rooms: [],
     roomsLoaded: false,
+    roomsLoadError: false,
     currentRoom: null,
     messageHistory: {},
     messagesCursor: {},
