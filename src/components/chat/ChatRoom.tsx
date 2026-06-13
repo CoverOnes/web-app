@@ -66,18 +66,14 @@ const ChatRoom = () => {
       if (currentRoom.isTemporary) {
         const other = currentRoom.members?.find(m => m.user_id !== userId);
         const roomName = other ? `${userId}_${other.user_id}` : `${userId}_chat`;
-        const createResponse = await chatApi.createRoom({
+        const createdRoom = await chatApi.createRoom({
           name: roomName,
           type: 'direct',
           owner_id: userId,
           members: currentRoom.members,
         });
-        if (!createResponse.success || !createResponse.data) {
-          alert('創建聊天室失敗');
-          return;
-        }
-        roomId = createResponse.data.id;
-        actualRoom = { ...createResponse.data, members: createResponse.data.members || currentRoom.members };
+        roomId = createdRoom.id;
+        actualRoom = { ...createdRoom, members: createdRoom.members || currentRoom.members };
         addRoom(actualRoom);
         setMessages(roomId, []);
         setCurrentRoom(actualRoom);
@@ -95,17 +91,12 @@ const ChatRoom = () => {
 
       addMessage(roomId, tempMessage);
 
-      const response = await chatApi.sendMessage({ room_id: roomId, sender_id: userId, content, type: 'text' });
+      const sentMsg = await chatApi.sendMessage({ room_id: roomId, sender_id: userId, content, type: 'text' });
 
-      if (response.success && response.data) {
-        const msgs = messageHistory[roomId] || [];
-        const withoutTemp = msgs.filter(m => m.id !== tempMessage.id);
-        const exists = withoutTemp.some(m => m.id === response.data!.id);
-        setMessages(roomId, exists ? withoutTemp : [...withoutTemp, response.data]);
-      } else {
-        const msgs = messageHistory[roomId] || [];
-        setMessages(roomId, msgs.filter(m => m.id !== tempMessage.id));
-      }
+      const msgs = messageHistory[roomId] || [];
+      const withoutTemp = msgs.filter(m => m.id !== tempMessage.id);
+      const exists = withoutTemp.some(m => m.id === sentMsg.id);
+      setMessages(roomId, exists ? withoutTemp : [...withoutTemp, sentMsg]);
     } catch {
       alert('發送訊息失敗，請稍後再試');
     }

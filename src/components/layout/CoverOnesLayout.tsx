@@ -67,11 +67,9 @@ const CoverOnesLayout = () => {
     const loadRooms = async () => {
       loadingRef.current = true;
       try {
-        const response = await chatApi.getRooms(userId, 50, '');
-        if (response.success && response.data) {
-          setRooms(response.data);
-          hasInitialLoadRef.current = true;
-        }
+        const { rooms } = await chatApi.getRooms(userId, 50, '');
+        setRooms(rooms);
+        hasInitialLoadRef.current = true;
       } catch {
         // non-critical; roomsLoaded still set in finally so consumers unblock
       } finally {
@@ -96,24 +94,21 @@ const CoverOnesLayout = () => {
       const refreshRooms = async () => {
         loadingRef.current = true;
         try {
-          const response = await chatApi.getRooms(userId, 50, '');
-          if (response.success && response.data) {
-            setRooms((prevRooms) => {
-              const newRooms = response.data!;
-              if (prevRooms.length === 0) return newRooms;
-              return newRooms.map((newRoom) => {
-                const prevRoom = prevRooms.find((r) => r.id === newRoom.id);
-                if (
-                  prevRoom &&
-                  prevRoom.unread_count === 0 &&
-                  (newRoom.unread_count || 0) > 0
-                ) {
-                  return { ...newRoom, unread_count: 0 };
-                }
-                return newRoom;
-              });
+          const { rooms: newRooms } = await chatApi.getRooms(userId, 50, '');
+          setRooms((prevRooms) => {
+            if (prevRooms.length === 0) return newRooms;
+            return newRooms.map((newRoom) => {
+              const prevRoom = prevRooms.find((r) => r.id === newRoom.id);
+              if (
+                prevRoom &&
+                prevRoom.unread_count === 0 &&
+                (newRoom.unread_count || 0) > 0
+              ) {
+                return { ...newRoom, unread_count: 0 };
+              }
+              return newRoom;
             });
-          }
+          });
         } catch {
           // non-critical refresh; ignore errors
         } finally {

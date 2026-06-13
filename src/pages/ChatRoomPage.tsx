@@ -72,6 +72,21 @@ const ChatRoomPage = () => {
     return null;
   }, [roomId, currentRoom, rooms, userId, location.state]);
 
+  // Major finding fix: navigate calls moved OUT of render body into useEffect.
+  // !roomId guard: should be unreachable under normal routing but kept as safety net.
+  useEffect(() => {
+    if (!roomId) {
+      navigate('/chat', { replace: true });
+    }
+  }, [roomId, navigate]);
+
+  // Finding 1 + 4: redirect when rooms are loaded and the target room is not found.
+  useEffect(() => {
+    if (roomId && roomsLoaded && !targetRoom) {
+      navigate('/chat', { replace: true });
+    }
+  }, [roomId, roomsLoaded, targetRoom, navigate]);
+
   // 更新 currentRoom（如果需要）
   useEffect(() => {
     if (targetRoom && (!currentRoom || currentRoom.id !== targetRoom.id)) {
@@ -85,10 +100,10 @@ const ChatRoomPage = () => {
   // 處理未讀訊息
   useEffect(() => {
     if (!roomId || !targetRoom || !userId) return;
-    
+
     if (targetRoom.unread_count && targetRoom.unread_count > 0) {
       setTimeout(() => {
-        setRooms((prevRooms) => 
+        setRooms((prevRooms) =>
           prevRooms.map(r => r.id === roomId ? { ...r, unread_count: 0 } : r)
         );
         chatApi.markAsRead(roomId, userId).catch(console.error);
@@ -103,24 +118,15 @@ const ChatRoomPage = () => {
     }
   }, [location.state]);
 
-  // Finding 1 + 4: !roomId guard now redirects to /chat (room-list), not /messages.
-  // This path should be unreachable under normal routing (route "chat" without :roomId
-  // renders Messages, not ChatRoomPage), but we keep the guard as a safety net.
-  if (!roomId) {
-    navigate('/chat', { replace: true });
-    return null;
-  }
-
   // Finding 4: roomsLoaded guard MUST fire before targetRoom check so a cold
   // deep-link waits for rooms to arrive before deciding to redirect.
-  if (!roomsLoaded) {
+  if (!roomId || !roomsLoaded) {
     return <RoomsLoadingScreen />;
   }
 
-  // 找不到聊天室（rooms already loaded → safe to redirect）
+  // Still loading the specific room (targetRoom not resolved yet)
   if (!targetRoom) {
-    navigate('/chat', { replace: true });
-    return null;
+    return <RoomsLoadingScreen />;
   }
 
   return (
@@ -133,4 +139,3 @@ const ChatRoomPage = () => {
 };
 
 export default ChatRoomPage;
-

@@ -177,22 +177,17 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
         const otherMember = currentRoom.members?.find(m => m.user_id !== userId);
         const roomName = otherMember ? `${userId}_${otherMember.user_id}` : `${userId}_chat`;
         
-        const createResponse = await chatApi.createRoom({
+        const createdRoom = await chatApi.createRoom({
           name: roomName,
           type: 'direct',
           owner_id: userId,
           members: currentRoom.members,
         });
 
-        if (!createResponse.success || !createResponse.data) {
-          alert('創建聊天室失敗');
-          return;
-        }
-
-        roomId = createResponse.data.id;
-        newRoom = { 
-          ...createResponse.data,
-          members: createResponse.data.members || currentRoom.members
+        roomId = createdRoom.id;
+        newRoom = {
+          ...createdRoom,
+          members: createdRoom.members || currentRoom.members
         };
         
         addRoom(newRoom);
@@ -231,17 +226,12 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
           type: 'text',
         });
 
-        if (sendResponse.success && sendResponse.data) {
+        {
           const { messageHistory, setMessages } = useChatStore.getState();
           const messages = messageHistory[roomId] || [];
-          
           const withoutTemp = messages.filter(msg => msg.id !== tempMessage.id);
-          const realMessageExists = withoutTemp.some(msg => msg.id === sendResponse.data!.id);
-          
-          const updatedMessages = realMessageExists 
-            ? withoutTemp 
-            : [...withoutTemp, sendResponse.data];
-          
+          const realMessageExists = withoutTemp.some(msg => msg.id === sendResponse.id);
+          const updatedMessages = realMessageExists ? withoutTemp : [...withoutTemp, sendResponse];
           setMessages(roomId, updatedMessages);
         }
         
@@ -289,22 +279,12 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
         type: 'text',
       });
 
-      if (response.success && response.data) {
+      {
         const { messageHistory, setMessages } = useChatStore.getState();
         const messages = messageHistory[roomId] || [];
-        
         const withoutTemp = messages.filter(msg => msg.id !== tempMessage.id);
-        const realMessageExists = withoutTemp.some(msg => msg.id === response.data!.id);
-        
-        const updatedMessages = realMessageExists 
-          ? withoutTemp 
-          : [...withoutTemp, response.data];
-        
-        setMessages(roomId, updatedMessages);
-      } else {
-        const { messageHistory, setMessages } = useChatStore.getState();
-        const messages = messageHistory[roomId] || [];
-        const updatedMessages = messages.filter(msg => msg.id !== tempMessage.id);
+        const realMessageExists = withoutTemp.some(msg => msg.id === response.id);
+        const updatedMessages = realMessageExists ? withoutTemp : [...withoutTemp, response];
         setMessages(roomId, updatedMessages);
       }
     } catch (error) {

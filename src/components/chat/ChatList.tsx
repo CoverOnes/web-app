@@ -31,17 +31,16 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
     setIsLoading(true);
     try {
       const currentCursor = loadMore ? cursor : '';
-      const response = await chatApi.getRooms(userId, ROOMS_PAGE_SIZE, currentCursor);
+      const { rooms: fetched, cursor: nextCursor, hasMore: more } =
+        await chatApi.getRooms(userId, ROOMS_PAGE_SIZE, currentCursor);
 
-      if (response.success && response.data) {
-        if (loadMore) {
-          setRooms((prevRooms: Room[]) => [...prevRooms, ...response.data!]);
-        } else {
-          setRooms(response.data);
-        }
-        setCursor(response.cursor || '');
-        setHasMore(response.has_more || false);
+      if (loadMore) {
+        setRooms((prevRooms: Room[]) => [...prevRooms, ...fetched]);
+      } else {
+        setRooms(fetched);
       }
+      setCursor(nextCursor);
+      setHasMore(more);
     } catch (error) {
       console.error('載入聊天室失敗:', error);
     } finally {
@@ -68,13 +67,11 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
       loadingRef.current = true;
       setIsLoading(true);
       try {
-        const response = await chatApi.getRooms(userId, ROOMS_PAGE_SIZE, '');
-
-        if (response.success && response.data) {
-          setRooms(response.data);
-          setCursor(response.cursor || '');
-          setHasMore(response.has_more || false);
-        }
+        const { rooms: fetched, cursor: nextCursor, hasMore: more } =
+          await chatApi.getRooms(userId, ROOMS_PAGE_SIZE, '');
+        setRooms(fetched);
+        setCursor(nextCursor);
+        setHasMore(more);
       } catch (error) {
         console.error('載入聊天室失敗:', error);
       } finally {

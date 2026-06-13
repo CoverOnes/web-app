@@ -147,8 +147,14 @@ const CoverOnesSidebar = () => {
 
   // Use exact match for '/' so 首頁 only lights up on the dashboard,
   // not on every route (mirrors CoverOnesMobileBottomNav's pathname === '/' guard).
-  const isActive = (path: string) =>
-    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+  // Chat canonical route is /chat; also match legacy /messages path.
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    if (path === '/chat') {
+      return location.pathname.startsWith('/chat') || location.pathname.startsWith('/messages');
+    }
+    return location.pathname.startsWith(path);
+  };
 
   const initial = (user?.displayName ?? 'U').charAt(0).toUpperCase();
 
@@ -161,8 +167,8 @@ const CoverOnesSidebar = () => {
     { path: '/jobs',      label: '案件看板',  icon: (s) => <Icon.Briefcase size={s} /> },
     { path: '/bids',      label: '招標進度',  icon: (s) => <Icon.Tag size={s} /> },
     { path: '/contracts', label: '合約管理',  icon: (s) => <Icon.FileText size={s} /> },
-    // 訊息: shown in sidebar pointing to placeholder page (chat deferred)
-    { path: '/messages',  label: '訊息',      icon: (s) => <Icon.MessageSquare size={s} /> },
+    // 訊息: canonical route is /chat; isActive also matches legacy /messages
+    { path: '/chat',      label: '訊息',      icon: (s) => <Icon.MessageSquare size={s} /> },
   ];
 
   // Account nav items (帳號)

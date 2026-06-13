@@ -112,8 +112,9 @@ describe('CoverOnesLayout — rooms loading', () => {
     // Arrange: authenticated user — selector `(s) => s.user?.id ?? ''` must return 'user-42'
     mockAuthUser('user-42');
     vi.mocked(chatApi.getRooms).mockResolvedValue({
-      success: true,
-      data: MOCK_ROOMS,
+      rooms: MOCK_ROOMS,
+      cursor: '',
+      hasMore: false,
     });
 
     const Wrapper = createWrapper();
