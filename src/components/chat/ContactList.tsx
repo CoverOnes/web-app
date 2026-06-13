@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import { getInitials, getAvatarColor } from '../../utils/formatters';
 import type { Room } from '../../types';
 
@@ -14,7 +15,8 @@ const users = [
 ];
 
 const ContactList = () => {
-  const { currentUser, roomsLoaded, openChatPopup } = useChatStore();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { roomsLoaded, openChatPopup } = useChatStore();
   const [loading, setLoading] = useState<string | null>(null);
 
   // 尋找已存在的聊天室
@@ -25,14 +27,14 @@ const ContactList = () => {
       // 方法1: 通過 members 匹配
       if (room.members && room.members.length > 0) {
         const hasContact = room.members.some(m => m.user_id === contactId);
-        const hasCurrentUser = room.members.some(m => m.user_id === currentUser);
+        const hasCurrentUser = room.members.some(m => m.user_id === userId);
         if (hasContact && hasCurrentUser) return true;
       }
       
       // 方法2: 通過 room.name 匹配（格式：user_alice_user_charlie）
       if (room.name) {
         const nameIncludesContact = room.name.includes(contactId);
-        const nameIncludesCurrentUser = room.name.includes(currentUser);
+        const nameIncludesCurrentUser = room.name.includes(userId);
         if (nameIncludesContact && nameIncludesCurrentUser) return true;
       }
       
@@ -41,7 +43,7 @@ const ContactList = () => {
   };
 
   const handleStartChat = async (contactId: string) => {
-    if (contactId === currentUser || loading) return;
+    if (contactId === userId || loading) return;
     
     // 如果 rooms 已經載入完成，直接檢查
     if (roomsLoaded) {
@@ -52,7 +54,7 @@ const ContactList = () => {
         const roomWithMembers: Room = {
           ...existingRoom,
           members: existingRoom.members || [
-            { user_id: currentUser, role: 'admin' },
+            { user_id: userId, role: 'admin' },
             { user_id: contactId, role: 'member' },
           ],
         };
@@ -65,9 +67,9 @@ const ContactList = () => {
         id: `temp_${contactId}`,
         name: '',
         type: 'direct',
-        owner_id: currentUser,
+        owner_id: userId,
         members: [
-          { user_id: currentUser, role: 'admin' },
+          { user_id: userId, role: 'admin' },
           { user_id: contactId, role: 'member' },
         ],
         created_at: Math.floor(Date.now() / 1000),
@@ -97,7 +99,7 @@ const ContactList = () => {
           const roomWithMembers: Room = {
             ...existingRoom,
             members: existingRoom.members || [
-              { user_id: currentUser, role: 'admin' },
+              { user_id: userId, role: 'admin' },
               { user_id: contactId, role: 'member' },
             ],
           };
@@ -108,9 +110,9 @@ const ContactList = () => {
             id: `temp_${contactId}`,
             name: '',
             type: 'direct',
-            owner_id: currentUser,
+            owner_id: userId,
             members: [
-              { user_id: currentUser, role: 'admin' },
+              { user_id: userId, role: 'admin' },
               { user_id: contactId, role: 'member' },
             ],
             created_at: Math.floor(Date.now() / 1000),
@@ -130,9 +132,9 @@ const ContactList = () => {
           id: `temp_${contactId}`,
           name: '',
           type: 'direct',
-          owner_id: currentUser,
+          owner_id: userId,
           members: [
-            { user_id: currentUser, role: 'admin' },
+            { user_id: userId, role: 'admin' },
             { user_id: contactId, role: 'member' },
           ],
           created_at: Math.floor(Date.now() / 1000),
@@ -151,7 +153,7 @@ const ContactList = () => {
     checkAndOpen();
   };
 
-  const availableContacts = users.filter(u => u.id !== currentUser);
+  const availableContacts = users.filter(u => u.id !== userId);
 
   return (
     <div style={{ marginBottom: 8 }}>

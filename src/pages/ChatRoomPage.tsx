@@ -2,6 +2,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useMemo } from 'react';
 import ChatRoom from '../components/chat/ChatRoom';
 import { useChatStore } from '../store/chatStore';
+import { useAuthStore } from '../store/authStore';
 import { chatApi } from '../api/chat';
 import type { Room } from '../types';
 import './ChatRoomPage.css';
@@ -10,7 +11,8 @@ const ChatRoomPage = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { rooms, setCurrentRoom, currentRoom, setRooms, currentUser } = useChatStore();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { rooms, setCurrentRoom, currentRoom, setRooms } = useChatStore();
 
   // 使用 useMemo 同步計算需要的聊天室
   const targetRoom = useMemo(() => {
@@ -40,9 +42,9 @@ const ChatRoomPage = () => {
         id: roomId,
         name: '', // 名稱會由 getRoomDisplayName 計算
         type: 'direct' as const,
-        owner_id: currentUser,
+        owner_id: userId,
         members: [
-          { user_id: currentUser, role: 'admin' as const },
+          { user_id: userId, role: 'admin' as const },
           { user_id: contactId, role: 'member' as const },
         ],
         created_at: Math.floor(Date.now() / 1000),
@@ -52,7 +54,7 @@ const ChatRoomPage = () => {
     }
 
     return null;
-  }, [roomId, currentRoom, rooms, currentUser, location.state]);
+  }, [roomId, currentRoom, rooms, userId, location.state]);
 
   // 更新 currentRoom（如果需要）
   useEffect(() => {
@@ -73,10 +75,10 @@ const ChatRoomPage = () => {
         setRooms((prevRooms) => 
           prevRooms.map(r => r.id === roomId ? { ...r, unread_count: 0 } : r)
         );
-        chatApi.markAsRead(roomId, currentUser).catch(console.error);
+        chatApi.markAsRead(roomId, userId).catch(console.error);
       }, 2000);
     }
-  }, [roomId, targetRoom, setRooms, currentUser]);
+  }, [roomId, targetRoom, setRooms, userId]);
 
   // 清除 router state
   useEffect(() => {

@@ -3,6 +3,7 @@ import ChatList from '../components/chat/ChatList';
 import CreateModal from '../components/chat/CreateModal';
 import ChatRoom from '../components/chat/ChatRoom';
 import { useChatStore } from '../store/chatStore';
+import { useAuthStore } from '../store/authStore';
 import { chatApi } from '../api/chat';
 import { Icon } from '../components/ui/Icon';
 import { getDisplayName } from '../utils/formatters';
@@ -12,7 +13,8 @@ import { useIsMobile } from '../hooks/useIsMobile';
 const Messages = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [groupCreateError, setGroupCreateError] = useState<string | null>(null);
-  const { rooms, currentRoom, setCurrentRoom, addRoom, openChatPopup, currentUser, setRooms } = useChatStore();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { rooms, currentRoom, setCurrentRoom, addRoom, openChatPopup, setRooms } = useChatStore();
 
   // On desktop: clicking a room opens popup (existing behavior)
   // On mobile (<768px): clicking a room sets it as currentRoom → full-screen view
@@ -36,7 +38,7 @@ const Messages = () => {
     // Find existing DM room or create a temporary one
     const existingRoom = rooms.find(r => {
       if (r.type !== 'direct') return false;
-      return r.members?.some(m => m.user_id === userId) && r.members?.some(m => m.user_id === currentUser);
+      return r.members?.some(m => m.user_id === userId) && r.members?.some(m => m.user_id === userId);
     });
 
     if (existingRoom) {
@@ -51,13 +53,13 @@ const Messages = () => {
     // Create new DM room
     try {
       const members: Member[] = [
-        { user_id: currentUser, role: 'admin' },
+        { user_id: userId, role: 'admin' },
         { user_id: userId, role: 'member' },
       ];
       const response = await chatApi.createRoom({
-        name: `${currentUser}_${userId}`,
+        name: `${userId}_${userId}`,
         type: 'direct',
-        owner_id: currentUser,
+        owner_id: userId,
         members,
       });
       if (response.success && response.data) {
@@ -74,9 +76,9 @@ const Messages = () => {
         id: `temp_${userId}`,
         name: '',
         type: 'direct' as const,
-        owner_id: currentUser,
+        owner_id: userId,
         members: [
-          { user_id: currentUser, role: 'admin' as const },
+          { user_id: userId, role: 'admin' as const },
           { user_id: userId, role: 'member' as const },
         ],
         created_at: Math.floor(Date.now() / 1000),
@@ -95,13 +97,13 @@ const Messages = () => {
     setGroupCreateError(null);
     try {
       const members: Member[] = [
-        { user_id: currentUser, role: 'admin' },
+        { user_id: userId, role: 'admin' },
         ...userIds.map(id => ({ user_id: id, role: 'member' as const })),
       ];
       const response = await chatApi.createRoom({
         name,
         type: 'group',
-        owner_id: currentUser,
+        owner_id: userId,
         members,
       });
       if (response.success && response.data) {
@@ -130,7 +132,7 @@ const Messages = () => {
     // Derive room display name
     let roomTitle = currentRoom.name;
     if (currentRoom.type === 'direct' && currentRoom.members?.length > 0) {
-      const other = currentRoom.members.find(m => m.user_id !== currentUser);
+      const other = currentRoom.members.find(m => m.user_id !== userId);
       if (other) roomTitle = getDisplayName(other.user_id);
     }
 

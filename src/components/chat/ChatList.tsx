@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import { chatApi } from '../../api/chat';
 import type { Room } from '../../types';
 import RoomItem from './RoomItem';
@@ -10,7 +11,8 @@ interface ChatListProps {
 }
 
 const ChatList = ({ onSelectRoom }: ChatListProps) => {
-  const { currentUser, rooms, setRooms, setCurrentRoom } = useChatStore();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { rooms, setRooms, setCurrentRoom } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
   const [cursor, setCursor] = useState('');
   const [hasMore, setHasMore] = useState(true);
@@ -26,7 +28,7 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
     setIsLoading(true);
     try {
       const currentCursor = loadMore ? cursor : '';
-      const response = await chatApi.getRooms(currentUser, 20, currentCursor);
+      const response = await chatApi.getRooms(userId, 20, currentCursor);
       
       if (response.success && response.data) {
         if (loadMore) {
@@ -43,9 +45,9 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
       setIsLoading(false);
       loadingRef.current = false;
     }
-  }, [currentUser, cursor, hasMore, setRooms]);
+  }, [userId, cursor, hasMore, setRooms]);
 
-  // 初始載入 - 只在 currentUser 改變時觸發
+  // 初始載入 - 只在 userId 改變時觸發
   useEffect(() => {
     setCursor('');
     setHasMore(true);
@@ -57,7 +59,7 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
       loadingRef.current = true;
       setIsLoading(true);
       try {
-        const response = await chatApi.getRooms(currentUser, 20, '');
+        const response = await chatApi.getRooms(userId, 20, '');
         
         if (response.success && response.data) {
           setRooms(response.data);
@@ -73,7 +75,7 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
     };
     
     initialLoad();
-  }, [currentUser, setRooms]);
+  }, [userId, setRooms]);
 
   // 滾動載入更多（使用節流優化）
   const handleScroll = useCallback(() => {
@@ -124,11 +126,11 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
           );
           
           // 異步發送已讀請求，不阻塞 UI
-          chatApi.markAsRead(roomId, currentUser).catch(console.error);
+          chatApi.markAsRead(roomId, userId).catch(console.error);
         });
       });
     }
-  }, [onSelectRoom, rooms, setCurrentRoom, setRooms, currentUser]);
+  }, [onSelectRoom, rooms, setCurrentRoom, setRooms, userId]);
 
   // 排序聊天室（使用 useMemo 優化）
   const sortedRooms = useMemo(() => {

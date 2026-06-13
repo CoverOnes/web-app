@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import { chatApi } from '../../api/chat';
 import type { Message, Person } from '../../types';
 import MessageGroup from './MessageGroup';
@@ -92,8 +93,8 @@ function groupMessages(messages: Message[]): MessageGroupData[] {
 }
 
 const MessageList = ({ roomId }: MessageListProps) => {
+  const userId = useAuthStore((s) => s.user?.id ?? '');
   const {
-    currentUser,
     messageHistory,
     setMessages,
     prependMessages,
@@ -119,7 +120,7 @@ const MessageList = ({ roomId }: MessageListProps) => {
     isLoadingRef.current = true;
     try {
       const cursor = messagesCursor[roomId] || '';
-      const response = await chatApi.getMessages(roomId, currentUser, 30, cursor);
+      const response = await chatApi.getMessages(roomId, userId, 30, cursor);
       if (response.success && response.data) {
         const msgs = [...response.data].reverse();
         prependMessages(roomId, msgs);
@@ -131,7 +132,7 @@ const MessageList = ({ roomId }: MessageListProps) => {
     } finally {
       isLoadingRef.current = false;
     }
-  }, [roomId, currentUser, messagesCursor, hasMoreMessages, prependMessages, setMessagesCursor, setHasMoreMessages]);
+  }, [roomId, userId, messagesCursor, hasMoreMessages, prependMessages, setMessagesCursor, setHasMoreMessages]);
 
   useEffect(() => {
     prevRoomIdRef.current = roomId;
@@ -185,7 +186,7 @@ const MessageList = ({ roomId }: MessageListProps) => {
     const loadInitial = async () => {
       isLoadingRef.current = true;
       try {
-        const response = await chatApi.getMessages(roomId, currentUser, 30, '');
+        const response = await chatApi.getMessages(roomId, userId, 30, '');
         if (prevRoomIdRef.current !== roomId) return;
 
         if (response.success && response.data) {
@@ -240,7 +241,7 @@ const MessageList = ({ roomId }: MessageListProps) => {
     };
 
     loadInitial();
-  }, [roomId, currentUser, setMessages, setMessagesCursor, setHasMoreMessages]);
+  }, [roomId, userId, setMessages, setMessagesCursor, setHasMoreMessages]);
 
   const messages = messageHistory[roomId] || [];
 
@@ -274,7 +275,7 @@ const MessageList = ({ roomId }: MessageListProps) => {
     const retry = async () => {
       isLoadingRef.current = true;
       try {
-        const response = await chatApi.getMessages(roomId, currentUser, 30, '');
+        const response = await chatApi.getMessages(roomId, userId, 30, '');
         if (response.success && response.data) {
           const msgs = [...response.data].reverse();
           setMessages(roomId, msgs);
@@ -453,7 +454,7 @@ const MessageList = ({ roomId }: MessageListProps) => {
             {group.dayLabel && <DaySeparator label={group.dayLabel} />}
             <MessageGroup
               messages={group.messages}
-              own={group.senderId === currentUser}
+              own={group.senderId === userId}
               sender={group.sender}
             />
           </div>

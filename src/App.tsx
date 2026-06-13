@@ -16,7 +16,7 @@ import MyBidsPage from './pages/MyBidsPage';
 import MyContractsPage from './pages/MyContractsPage';
 import ContractDetailPage from './pages/ContractDetailPage';
 import KycPage from './pages/KycPage';
-import MessagesPlaceholderPage from './pages/MessagesPlaceholderPage';
+import ChatRoomPage from './pages/ChatRoomPage';
 import Contacts from './pages/Contacts';
 import Settings from './pages/Settings';
 import NotFoundPage from './pages/NotFoundPage';
@@ -68,13 +68,13 @@ function App() {
             <Route path="contracts/:id" element={<ContractDetailPage />} />
 
             {/*
-             * 訊息 — routes to placeholder page (chat deferred, backend not built).
-             * Locked decision 2026-06-04: DO NOT un-park chat here.
-             * When chat flag is false the FeatureRoute shows the placeholder anyway,
-             * but we bypass it by rendering MessagesPlaceholderPage directly since
-             * the placeholder IS the intended UX for this phase.
+             * Chat — live as of 2026-06-13, superseding locked decision 2026-06-04.
+             * Gateway contract: REST via /api/chat/v1/*; SSE via /api/chat/v1/messages/stream.
+             * Identity sourced from authStore (decision 5adf4b20).
              */}
-            <Route path="messages" element={<MessagesPlaceholderPage />} />
+            <Route path="messages" element={<Navigate to="/chat" replace />} />
+            <Route path="chat" element={<ChatRoomPage />} />
+            <Route path="chat/:roomId" element={<ChatRoomPage />} />
 
             {/* Contacts (gated — no backend yet) */}
             <Route

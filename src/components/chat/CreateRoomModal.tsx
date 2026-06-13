@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import { chatApi } from '../../api/chat';
 import { validateRoomName } from '../../utils/validation';
 import type { Member } from '../../types';
@@ -19,13 +20,14 @@ const users = [
 ];
 
 const CreateRoomModal = ({ onClose }: CreateRoomModalProps) => {
-  const { currentUser, addRoom, openChatPopup } = useChatStore();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { addRoom, openChatPopup } = useChatStore();
   const [roomName, setRoomName] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const availableUsers = users.filter(u => u.id !== currentUser);
+  const availableUsers = users.filter(u => u.id !== userId);
 
   const toggleMember = (userId: string) => {
     if (selectedMembers.includes(userId)) {
@@ -60,14 +62,14 @@ const CreateRoomModal = ({ onClose }: CreateRoomModalProps) => {
     setLoading(true);
     try {
       const members: Member[] = [
-        { user_id: currentUser, role: 'admin' },
+        { user_id: userId, role: 'admin' },
         ...selectedMembers.map(id => ({ user_id: id, role: 'member' as const })),
       ];
 
       const response = await chatApi.createRoom({
         name: roomName,
         type: 'group',
-        owner_id: currentUser,
+        owner_id: userId,
         members,
       });
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useAuthStore } from '../store/authStore';
 import type { Message } from '../types';
 
 interface UseSSEOptions {
@@ -12,18 +13,21 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 /**
  * SSE (Server-Sent Events) Hook
- * 用於接收即時訊息
+ * 用於接收即時訊息。
+ * SSE stream URL: /api/chat/v1/messages/stream?room_id=<id>&access_token=<jwt>
+ * EventSource cannot send Authorization headers, so the JWT is passed as a query param
+ * (gateway validates it for this SSE-only route per locked contract decision 5adf4b20).
  */
 export const useSSE = ({ roomId, userId, onMessage, onError }: UseSSEOptions) => {
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
+
   // 使用 ref 保存回調函數，避免依賴變化導致重連
   const onMessageRef = useRef(onMessage);
   const onErrorRef = useRef(onError);
-  
+
   useEffect(() => {
     onMessageRef.current = onMessage;
     onErrorRef.current = onError;
@@ -53,7 +57,10 @@ export const useSSE = ({ roomId, userId, onMessage, onError }: UseSSEOptions) =>
       }
 
       // 建立新的 SSE 連接
-      const url = `${API_BASE_URL}/messages/stream?room_id=${roomId}&user_id=${userId}`;
+      // access_token passed as query param: EventSource cannot send Authorization headers.
+      // Gateway validates the token for this route only (decision 5adf4b20).
+      const accessToken = useAuthStore.getState().accessToken ?? '';
+      const url = `${API_BASE_URL}/api/chat/v1/messages/stream?room_id=${encodeURIComponent(roomId)}&access_token=${encodeURIComponent(accessToken)}`;
       const eventSource = new EventSource(url);
       eventSourceRef.current = eventSource;
 

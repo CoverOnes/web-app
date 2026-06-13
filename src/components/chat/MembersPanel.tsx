@@ -1,4 +1,5 @@
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import { getInitials } from '../../utils/formatters';
 
 interface MembersPanelProps {
@@ -16,7 +17,8 @@ const users = [
 ];
 
 const MembersPanel = ({ onClose }: MembersPanelProps) => {
-  const { currentUser, currentRoom } = useChatStore();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { currentRoom } = useChatStore();
 
   if (!currentRoom || currentRoom.type !== 'group') return null;
 
@@ -42,7 +44,7 @@ const MembersPanel = ({ onClose }: MembersPanelProps) => {
       <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
         {currentRoom.members?.map(member => {
           const user = users.find(u => u.id === member.user_id);
-          const isCurrentUser = member.user_id === currentUser;
+          const isCurrentUser = member.user_id === userId;
           const displayName = user?.name || member.user_id;
 
           return (

@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import type { Room, Person } from '../../types';
 import { getDisplayName } from '../../utils/formatters';
 import SidebarBrand from './SidebarBrand';
@@ -49,22 +50,24 @@ const NAV_ITEMS: { id: NavId; icon: 'MessageSquare' | 'Users' | 'UserGroup' | 'S
 
 const Sidebar = ({ activeRoomId, onSelectRoom, onOpenCreate }: SidebarProps) => {
   const navigate = useNavigate();
-  const { currentUser, rooms, roomsLoaded, openChatPopup } = useChatStore();
+  const authUserId = useAuthStore((s) => s.user?.id ?? '');
+  const authDisplayName = useAuthStore((s) => s.user?.displayName ?? '');
+  const { rooms, roomsLoaded, openChatPopup } = useChatStore();
   const [activeNav, setActiveNav] = useState<NavId>('all');
   const [search, setSearch] = useState('');
   const onlineUsers = useMemo((): Person[] => {
     return ONLINE_USER_IDS
-      .filter(id => id !== currentUser)
+      .filter(id => id !== authUserId)
       .map(id => {
         const name = getDisplayName(id);
         return { id, name, zh: name, status: 'online' as const, color: getPersonColor(id) };
       });
-  }, [currentUser]);
+  }, [authUserId]);
 
   const currentUserPerson: Person = useMemo(() => {
-    const name = getDisplayName(currentUser) || currentUser;
-    return { id: currentUser, name, zh: name, status: 'online', color: getPersonColor(currentUser) };
-  }, [currentUser]);
+    const name = authDisplayName || getDisplayName(authUserId) || authUserId;
+    return { id: authUserId, name, zh: name, status: 'online', color: getPersonColor(authUserId) };
+  }, [authUserId, authDisplayName]);
 
   const filteredRooms = useMemo((): Room[] => {
     let filtered = [...rooms];
@@ -101,16 +104,16 @@ const Sidebar = ({ activeRoomId, onSelectRoom, onOpenCreate }: SidebarProps) => 
   }, [onSelectRoom, rooms, openChatPopup]);
 
   const handlePresenceClick = useCallback((person: Person) => {
-    if (person.id === currentUser) return;
+    if (person.id === authUserId) return;
     if (roomsLoaded) {
       const existingRoom = rooms.find(r => {
         if (r.type !== 'direct') return false;
-        if (r.members?.some(m => m.user_id === person.id) && r.members?.some(m => m.user_id === currentUser)) return true;
-        if (r.name?.includes(person.id) && r.name?.includes(currentUser)) return true;
+        if (r.members?.some(m => m.user_id === person.id) && r.members?.some(m => m.user_id === authUserId)) return true;
+        if (r.name?.includes(person.id) && r.name?.includes(authUserId)) return true;
         return false;
       });
       if (existingRoom) {
-        openChatPopup({ ...existingRoom, members: existingRoom.members || [{ user_id: currentUser, role: 'admin' }, { user_id: person.id, role: 'member' }] });
+        openChatPopup({ ...existingRoom, members: existingRoom.members || [{ user_id: authUserId, role: 'admin' }, { user_id: person.id, role: 'member' }] });
         return;
       }
     }
@@ -118,14 +121,14 @@ const Sidebar = ({ activeRoomId, onSelectRoom, onOpenCreate }: SidebarProps) => 
       id: `temp_${person.id}`,
       name: '',
       type: 'direct',
-      owner_id: currentUser,
-      members: [{ user_id: currentUser, role: 'admin' }, { user_id: person.id, role: 'member' }],
+      owner_id: authUserId,
+      members: [{ user_id: authUserId, role: 'admin' }, { user_id: person.id, role: 'member' }],
       created_at: Math.floor(Date.now() / 1000),
       isTemporary: true,
       targetContactId: person.id,
     };
     openChatPopup(tempRoom);
-  }, [currentUser, rooms, roomsLoaded, openChatPopup]);
+  }, [authUserId, rooms, roomsLoaded, openChatPopup]);
 
   const handleOpenSettings = useCallback(() => {
     navigate('/settings');
@@ -198,7 +201,7 @@ const Sidebar = ({ activeRoomId, onSelectRoom, onOpenCreate }: SidebarProps) => 
             room={room}
             active={room.id === (activeRoomId ?? null)}
             onClick={() => handleSelectRoom(room.id)}
-            currentUser={currentUser}
+            currentUser={authUserId}
           />
         ))}
 

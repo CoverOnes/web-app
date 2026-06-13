@@ -2,13 +2,6 @@ import { create } from 'zustand';
 import type { Room, Message } from '../types';
 
 interface ChatState {
-  // 認證狀態
-  currentUser: string;
-  isAuthenticated: boolean;
-  setCurrentUser: (userId: string) => void;
-  setIsAuthenticated: (isAuth: boolean) => void;
-  logout: () => void;
-
   // 聊天室列表
   rooms: Room[];
   roomsLoaded: boolean; // 標記 rooms 是否已從後端載入
@@ -48,8 +41,6 @@ interface ChatState {
 
 export const useChatStore = create<ChatState>((set) => ({
   // 初始狀態
-  currentUser: '',
-  isAuthenticated: false,
   rooms: [],
   roomsLoaded: false,
   currentRoom: null,
@@ -60,27 +51,6 @@ export const useChatStore = create<ChatState>((set) => ({
   minimizedPopups: {},
 
   // Actions
-  setCurrentUser: (userId) => set({ currentUser: userId, isAuthenticated: true }),
-  
-  setIsAuthenticated: (isAuth) => set({ isAuthenticated: isAuth }),
-  
-  logout: () => {
-    sessionStorage.removeItem('chatapp_user');
-    sessionStorage.removeItem('chatapp_token');
-    set({
-      currentUser: '',
-      isAuthenticated: false,
-      rooms: [],
-      roomsLoaded: false,
-      currentRoom: null,
-      messageHistory: {},
-      messagesCursor: {},
-      hasMoreMessages: {},
-      openPopups: [],
-      minimizedPopups: {}
-    });
-  },
-
   setRooms: (rooms) => set((state) => ({
     rooms: typeof rooms === 'function' ? rooms(state.rooms) : rooms
   })),

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import { chatApi } from '../../api/chat';
 
 interface RoomSettingsModalProps {
@@ -17,7 +18,8 @@ const users = [
 ];
 
 const RoomSettingsModal = ({ onClose }: RoomSettingsModalProps) => {
-  const { currentUser, currentRoom, setCurrentRoom, setRooms } = useChatStore();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { currentRoom, setCurrentRoom, setRooms } = useChatStore();
   const [selectedUser, setSelectedUser] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -110,7 +112,7 @@ const RoomSettingsModal = ({ onClose }: RoomSettingsModalProps) => {
     setError('');
 
     try {
-      const response = await chatApi.removeMember(currentRoom.id, currentUser);
+      const response = await chatApi.removeMember(currentRoom.id, userId);
       
       if (response.success) {
         // 清除當前聊天室
@@ -177,7 +179,7 @@ const RoomSettingsModal = ({ onClose }: RoomSettingsModalProps) => {
             <div style={{ border: '1px solid var(--color-main-border)', borderRadius: 8, maxHeight: 300, overflowY: 'auto', background: 'var(--color-main-bg)' }}>
               {currentRoom.members?.map(member => {
                 const user = users.find(u => u.id === member.user_id);
-                const isCurrentUser = member.user_id === currentUser;
+                const isCurrentUser = member.user_id === userId;
 
                 return (
                   <div key={member.user_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--color-main-border)' }}>
