@@ -205,14 +205,14 @@ const FloatingCards = () => (
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, var(--co-accent-blue), var(--co-accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>台</div>
+        <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, var(--co-accent-blue), var(--co-accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>B</div>
         <div>
-          <div style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--co-text)' }}>台積電子</div>
-          <div style={{ fontSize: 10.5, color: 'var(--co-text-muted)' }}>已驗證 · 半導體</div>
+          <div style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--co-text)' }}>採購方 B</div>
+          <div style={{ fontSize: 10.5, color: 'var(--co-text-muted)' }}>已驗證 · 科技業</div>
         </div>
         <span style={{ marginLeft: 'auto', width: 16, height: 16, borderRadius: '50%', background: 'rgba(16,185,129,0.2)', color: 'var(--co-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>✓</span>
       </div>
-      <div style={{ fontSize: 11.5, color: 'var(--co-text-dim)', lineHeight: 1.5 }}>徵求 PCB 後段組裝合作夥伴 · 預算 NT$ 2.4M</div>
+      <div style={{ fontSize: 11.5, color: 'var(--co-text-dim)', lineHeight: 1.5 }}>正在尋找合作夥伴</div>
     </div>
 
     {/* Card 2 — live match */}
@@ -239,8 +239,8 @@ const FloatingCards = () => (
           <div key={ch} style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: '2px solid var(--co-bg-3)', marginLeft: i > 0 ? -10 : 0, fontSize: 11, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 3 - i }}>{ch}</div>
         ))}
       </div>
-      <div style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--co-text)' }}>智慧製造 ERP 系統開發案</div>
-      <div style={{ fontSize: 10.5, color: 'var(--co-text-muted)', marginTop: 2 }}>預算 NT$ 850K · 截標 4/28</div>
+      <div style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--co-text)' }}>企業數位轉型專案</div>
+      <div style={{ fontSize: 10.5, color: 'var(--co-text-muted)', marginTop: 2 }}>已有多家廠商洽談中</div>
     </div>
 
     {/* Card 3 — encryption */}

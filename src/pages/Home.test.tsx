@@ -1,28 +1,22 @@
 /**
- * Home.tsx — IS_DEMO_HOME flag tests
+ * Home.tsx — basic render test
  *
- * Regression guard for audit finding CRITICAL:
- * IS_DEMO_HOME was hard-wired to true via `|| true`, shipping demo/fake data to
- * production unconditionally. Fix: remove `|| true`; the flag must be env-gated.
+ * The IS_DEMO_HOME flag and PLACEHOLDER_PROJECTS fixtures have been removed.
+ * Home now shows real listings from useListings({ status: 'OPEN' }) or an EmptyState.
  *
  * These tests verify:
- *   1. When VITE_DEMO_HOME is unset (falsy), the demo notice is NOT rendered
- *      and the page degrades cleanly (no crash, content still renders).
- *   2. When VITE_DEMO_HOME='true', the demo notice IS rendered.
- *
- * Implementation note: IS_DEMO_HOME is a module-level constant so each test
- * must call vi.resetModules() + vi.stubEnv() before dynamically importing Home.
- * The authStore is imported at the top level (it is a Zustand singleton — the
- * same instance persists across module resets).
+ *   1. Page renders without crashing when useListings returns empty
+ *   2. Page renders listing cards when listings are returned
+ *   3. No hardcoded brand names appear in rendered output
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { useAuthStore } from '../store/authStore';
+import { useListings } from '../lib/query';
 
-// Mock useNavigate globally
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
   return {
@@ -31,9 +25,11 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-// The demo notice banner — matched via its role="status" aria attribute
-// (the text contains additional characters beyond the constant, use role query)
-const DEMO_NOTICE_PARTIAL = '目前顯示的數據為展示用範例資料';
+vi.mock('../lib/query', () => ({
+  useListings: vi.fn(),
+}));
+
+const mockUseListings = vi.mocked(useListings);
 
 function makeWrapper() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -45,15 +41,7 @@ function makeWrapper() {
   return Wrapper;
 }
 
-async function loadHome(envValue: string) {
-  // Stub env BEFORE resetting modules so the re-imported module sees the value
-  vi.stubEnv('VITE_DEMO_HOME', envValue);
-  vi.resetModules();
-  const { default: Home } = await import('./Home');
-  return Home;
-}
-
-describe('IS_DEMO_HOME env flag', () => {
+describe('Home — real data or EmptyState', () => {
   beforeEach(() => {
     useAuthStore.setState({
       accessToken: 'token',
@@ -73,37 +61,62 @@ describe('IS_DEMO_HOME env flag', () => {
     });
   });
 
-  afterEach(() => {
-    vi.unstubAllEnvs();
+  it('renders without crashing when listings are empty', async () => {
+    mockUseListings.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useListings>);
+
+    const { default: Home } = await import('./Home');
+    render(<Home />, { wrapper: makeWrapper() });
+
+    // EmptyState is shown
+    expect(screen.getByText('目前沒有開放案件')).toBeInTheDocument();
   });
 
-  it('does NOT render the demo notice when VITE_DEMO_HOME is unset (default production state)', async () => {
-    const Home = await loadHome('');
-    const Wrapper = makeWrapper();
-    render(<Home />, { wrapper: Wrapper });
+  it('renders listing cards from real API data', async () => {
+    mockUseListings.mockReturnValue({
+      data: [
+        {
+          id: 'lst-1',
+          title: '後端開發外包案',
+          description: '需有 Go 開發經驗',
+          status: 'OPEN',
+          ownerUserId: 'owner-1',
+          currency: 'TWD',
+          budgetMin: 500000,
+          budgetMax: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useListings>);
 
-    // role="status" banner must not be present when flag is off
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    const { default: Home } = await import('./Home');
+    render(<Home />, { wrapper: makeWrapper() });
+
+    expect(screen.getByText('後端開發外包案')).toBeInTheDocument();
   });
 
-  it('does NOT crash and renders page content when VITE_DEMO_HOME=false', async () => {
-    const Home = await loadHome('false');
-    const Wrapper = makeWrapper();
-    render(<Home />, { wrapper: Wrapper });
+  it('does NOT render any hardcoded fake brand names', async () => {
+    mockUseListings.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useListings>);
 
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    // Page renders without crashing — body is present
-    expect(document.body).toBeDefined();
-  });
+    const { default: Home } = await import('./Home');
+    const { container } = render(<Home />, { wrapper: makeWrapper() });
 
-  it('renders the demo notice when VITE_DEMO_HOME=true', async () => {
-    const Home = await loadHome('true');
-    const Wrapper = makeWrapper();
-    render(<Home />, { wrapper: Wrapper });
-
-    // Banner is rendered with role="status" and contains the partial notice text
-    const banner = screen.getByRole('status');
-    expect(banner).toBeInTheDocument();
-    expect(banner.textContent).toContain(DEMO_NOTICE_PARTIAL);
+    const html = container.innerHTML;
+    expect(html).not.toContain('台積電子');
+    expect(html).not.toContain('誠品文創');
+    expect(html).not.toContain('沛星互動');
   });
 });
