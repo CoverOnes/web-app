@@ -280,6 +280,7 @@ interface VerificationSectionProps {
   identities: ListIdentitiesResponse | undefined;
   identitiesLoading: boolean;
   identitiesError: boolean;
+  emailVerified: boolean;
 }
 
 const PROVIDER_LABEL: Record<OAuthProvider, string> = {
@@ -295,6 +296,7 @@ function VerificationSection({
   identities,
   identitiesLoading,
   identitiesError,
+  emailVerified,
 }: VerificationSectionProps) {
   const qc = useQueryClient();
   const [unbindError, setUnbindError] = React.useState<string | null>(null);
@@ -341,6 +343,9 @@ function VerificationSection({
   };
 
   const kycDone = (kycData?.currentTier ?? 0) >= 1;
+  // Mirror the kycDone pattern: derive from real profile data so the card
+  // stays honest and consistent with the UnverifiedBanner.
+  const emailDone = emailVerified;
 
   return (
     <div>
@@ -373,18 +378,22 @@ function VerificationSection({
         </div>
 
         {/* Email verification card */}
-        <div className="verify-card verify-card--done">
+        <div className={`verify-card${emailDone ? ' verify-card--done' : ''}`}>
           <div className="verify-card-header">
-            <div className="verify-card-icon verify-card-icon--done">
-              <IconCheck />
+            <div className={`verify-card-icon${emailDone ? ' verify-card-icon--done' : ''}`}>
+              {emailDone ? <IconCheck /> : <span aria-hidden="true">⚠</span>}
             </div>
             <div>
               <div className="verify-card-title">Email 驗證</div>
-              <div className="verify-card-status verify-card-status--done">已驗證</div>
+              <div className={`verify-card-status${emailDone ? ' verify-card-status--done' : ' verify-card-status--warn'}`}>
+                {emailDone ? '已驗證' : '未驗證'}
+              </div>
             </div>
           </div>
           <div className="verify-card-desc">
-            帳號 Email 已驗證，系統通知將正常發送。
+            {emailDone
+              ? '帳號 Email 已驗證，系統通知將正常發送。'
+              : '請驗證您的 Email 以確保帳號通知正常發送。'}
           </div>
         </div>
       </div>
@@ -553,7 +562,8 @@ function VerificationSection({
 function EmptyStateSection({ title, description }: { title: string; description: string }) {
   return (
     <div
-      role="status"
+      role="region"
+      aria-label={title}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -652,7 +662,10 @@ const Settings = () => {
     isLoading: kycLoading,
     isError: kycError,
   } = useQuery<KycStatusResponse>({
-    queryKey: ['kyc', 'status'],
+    // Use the same key as useKycStatus() in lib/query.ts so that
+    // useSubmitKyc's invalidateQueries({ queryKey: ['kyc-status'] }) also
+    // refreshes this query and the card never shows stale "未驗證".
+    queryKey: ['kyc-status'],
     queryFn: () => kycApi.getStatus(),
   });
 
@@ -686,6 +699,7 @@ const Settings = () => {
             identities={identities}
             identitiesLoading={identitiesLoading}
             identitiesError={identitiesError}
+            emailVerified={profile?.emailVerified ?? false}
           />
         );
 
@@ -788,7 +802,6 @@ const Settings = () => {
                 <button
                   key={item.id}
                   type="button"
-                  role="menuitem"
                   aria-current={activeSection === item.id ? 'page' : undefined}
                   onClick={() => setActiveSection(item.id)}
                   className={`settings-nav-item${activeSection === item.id ? ' settings-nav-item--active' : ''}`}

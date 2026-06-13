@@ -340,6 +340,22 @@ export const authApi = {
     http
       .post<OAuthBindStartResponse>(`/api/user/v1/me/identities/${provider}`)
       .then((r) => {
+        // Security: validate the server-supplied redirect URL before navigating
+        // (CWE-601 open redirect defence). Only allow HTTPS origins from the
+        // real OAuth providers — google and line are the only OAuthProvider values.
+        const ALLOWED_ORIGINS: Record<OAuthProvider, string> = {
+          google: 'https://accounts.google.com',
+          line: 'https://access.line.me',
+        };
+        let parsed: URL;
+        try {
+          parsed = new URL(r.data.authorizeUrl);
+        } catch {
+          throw new Error('Invalid authorizeUrl returned by server.');
+        }
+        if (parsed.protocol !== 'https:' || parsed.origin !== ALLOWED_ORIGINS[provider]) {
+          throw new Error('authorizeUrl origin is not an allowed OAuth provider.');
+        }
         window.location.href = r.data.authorizeUrl;
       }),
 

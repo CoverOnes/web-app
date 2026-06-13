@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import Settings from './Settings';
@@ -114,7 +114,8 @@ describe('Settings — render', () => {
     const Wrapper = createWrapper();
     render(<Settings />, { wrapper: Wrapper });
     // Navigate to verification section in desktop nav
-    const verificationBtn = screen.getByRole('menuitem', { name: '認證與資格' });
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    const verificationBtn = within(nav).getByRole('button', { name: '認證與資格' });
     fireEvent.click(verificationBtn);
     await waitFor(() => {
       expect(screen.getAllByText(/已完成/i).length).toBeGreaterThanOrEqual(1);
@@ -135,25 +136,29 @@ describe('Settings — section nav', () => {
   it('company nav item has aria-current=page by default', () => {
     const Wrapper = createWrapper();
     render(<Settings />, { wrapper: Wrapper });
-    const companyBtn = screen.getByRole('menuitem', { name: '公司資訊' });
+    // Scope to sidebar nav (aria-current lives on sidebar buttons, not accordion buttons)
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    const companyBtn = within(nav).getByRole('button', { name: '公司資訊' });
     expect(companyBtn).toHaveAttribute('aria-current', 'page');
   });
 
   it('switches active nav item when another is clicked', () => {
     const Wrapper = createWrapper();
     render(<Settings />, { wrapper: Wrapper });
-    const apiBtn = screen.getByRole('menuitem', { name: 'API 金鑰' });
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    const apiBtn = within(nav).getByRole('button', { name: 'API 金鑰' });
     fireEvent.click(apiBtn);
     expect(apiBtn).toHaveAttribute('aria-current', 'page');
     // company should no longer be active
-    const companyBtn = screen.getByRole('menuitem', { name: '公司資訊' });
+    const companyBtn = within(nav).getByRole('button', { name: '公司資訊' });
     expect(companyBtn).not.toHaveAttribute('aria-current', 'page');
   });
 
   it('switches to 認證與資格 section on nav click', async () => {
     const Wrapper = createWrapper();
     render(<Settings />, { wrapper: Wrapper });
-    const verificationBtn = screen.getByRole('menuitem', { name: '認證與資格' });
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    const verificationBtn = within(nav).getByRole('button', { name: '認證與資格' });
     fireEvent.click(verificationBtn);
     await waitFor(() => {
       // OAuth identities section label rendered (may appear in desktop + mobile)
@@ -166,7 +171,8 @@ describe('Settings — empty states (sections without backing API)', () => {
   it('shows Coming soon for 團隊成員 section', async () => {
     const Wrapper = createWrapper();
     render(<Settings />, { wrapper: Wrapper });
-    fireEvent.click(screen.getByRole('menuitem', { name: '團隊成員' }));
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    fireEvent.click(within(nav).getByRole('button', { name: '團隊成員' }));
     await waitFor(() => {
       expect(screen.getAllByText(/Coming soon/i).length).toBeGreaterThanOrEqual(1);
     });
@@ -175,7 +181,8 @@ describe('Settings — empty states (sections without backing API)', () => {
   it('shows Coming soon for 方案與付款 section', async () => {
     const Wrapper = createWrapper();
     render(<Settings />, { wrapper: Wrapper });
-    fireEvent.click(screen.getByRole('menuitem', { name: '方案與付款' }));
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    fireEvent.click(within(nav).getByRole('button', { name: '方案與付款' }));
     await waitFor(() => {
       expect(screen.getAllByText(/Coming soon/i).length).toBeGreaterThanOrEqual(1);
     });
@@ -184,7 +191,8 @@ describe('Settings — empty states (sections without backing API)', () => {
   it('shows Coming soon for API 金鑰 section', async () => {
     const Wrapper = createWrapper();
     render(<Settings />, { wrapper: Wrapper });
-    fireEvent.click(screen.getByRole('menuitem', { name: 'API 金鑰' }));
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    fireEvent.click(within(nav).getByRole('button', { name: 'API 金鑰' }));
     await waitFor(() => {
       expect(screen.getAllByText(/Coming soon/i).length).toBeGreaterThanOrEqual(1);
     });
@@ -193,7 +201,8 @@ describe('Settings — empty states (sections without backing API)', () => {
   it('shows Coming soon for 通知偏好 section', async () => {
     const Wrapper = createWrapper();
     render(<Settings />, { wrapper: Wrapper });
-    fireEvent.click(screen.getByRole('menuitem', { name: '通知偏好' }));
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    fireEvent.click(within(nav).getByRole('button', { name: '通知偏好' }));
     await waitFor(() => {
       expect(screen.getAllByText(/Coming soon/i).length).toBeGreaterThanOrEqual(1);
     });
@@ -215,7 +224,8 @@ describe('Settings — error states', () => {
     mockAuthApi.listIdentities.mockRejectedValue(new Error('Network error'));
     const Wrapper = createWrapper();
     render(<Settings />, { wrapper: Wrapper });
-    fireEvent.click(screen.getByRole('menuitem', { name: '認證與資格' }));
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    fireEvent.click(within(nav).getByRole('button', { name: '認證與資格' }));
     await waitFor(() => {
       expect(screen.getAllByText(/無法載入登入方式/).length).toBeGreaterThanOrEqual(1);
     });
@@ -226,7 +236,8 @@ describe('Settings — OAuth unbind interaction', () => {
   it('shows unbind button for bound Google provider', async () => {
     const Wrapper = createWrapper();
     render(<Settings />, { wrapper: Wrapper });
-    fireEvent.click(screen.getByRole('menuitem', { name: '認證與資格' }));
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    fireEvent.click(within(nav).getByRole('button', { name: '認證與資格' }));
     await waitFor(() => {
       expect(screen.getAllByRole('button', { name: '解除綁定 Google' }).length).toBeGreaterThanOrEqual(1);
     });
@@ -235,7 +246,8 @@ describe('Settings — OAuth unbind interaction', () => {
   it('shows bind button for unbound LINE provider', async () => {
     const Wrapper = createWrapper();
     render(<Settings />, { wrapper: Wrapper });
-    fireEvent.click(screen.getByRole('menuitem', { name: '認證與資格' }));
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    fireEvent.click(within(nav).getByRole('button', { name: '認證與資格' }));
     await waitFor(() => {
       expect(screen.getAllByRole('button', { name: '綁定 LINE' }).length).toBeGreaterThanOrEqual(1);
     });
