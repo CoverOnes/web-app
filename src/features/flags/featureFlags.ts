@@ -47,7 +47,7 @@ const DEFAULTS: Record<FeatureKey, boolean> = {
   chat: false,
   contacts: false,
   payments: false,
-  avatarSettings: false,
+  avatarSettings: true,
   admin: false,
 };
 

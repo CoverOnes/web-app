@@ -25,11 +25,14 @@ describe('featureFlags — KEEP vs TBD defaults', () => {
   it('TBD features are disabled', () => {
     expect(isFeatureEnabled('chat')).toBe(false);
     expect(isFeatureEnabled('contacts')).toBe(false);
-    expect(isFeatureEnabled('avatarSettings')).toBe(false);
     expect(isFeatureEnabled('aiMatching')).toBe(false);
     expect(isFeatureEnabled('payments')).toBe(false);
     expect(isFeatureEnabled('kycOnboarding')).toBe(false);
     expect(isFeatureEnabled('admin')).toBe(false);
+  });
+
+  it('avatarSettings is enabled (enabled in P2 Settings redesign)', () => {
+    expect(isFeatureEnabled('avatarSettings')).toBe(true);
   });
 });
 
