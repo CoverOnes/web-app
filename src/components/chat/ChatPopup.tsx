@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import { chatApi } from '../../api/chat';
 import { useSSE } from '../../hooks/useSSE';
 import MessageList from './MessageList';
@@ -13,11 +14,11 @@ interface ChatPopupProps {
 }
 
 const ChatPopup = ({ room, index }: ChatPopupProps) => {
-  const { 
-    currentUser, 
-    addMessage, 
-    addRoom, 
-    closeChatPopup, 
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const {
+    addMessage,
+    addRoom,
+    closeChatPopup,
     minimizeChatPopup,
     minimizedPopups,
     rooms
@@ -30,11 +31,13 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
   const popupRef = useRef<HTMLDivElement>(null);
   const isMinimized = minimizedPopups[room.id] || false;
   
-  // 當臨時房間轉換成真實房間時更新
-  if (room.id !== actualRoomIdRef.current && !room.id.startsWith('temp_')) {
-    actualRoomIdRef.current = room.id;
-    setActualRoom(room);
-  }
+  // 當臨時房間轉換成真實房間時更新（必須在 useEffect 中，不能在 render body）
+  useEffect(() => {
+    if (room.id !== actualRoomIdRef.current && !room.id.startsWith('temp_')) {
+      actualRoomIdRef.current = room.id;
+      setActualRoom(room);
+    }
+  }, [room.id, room]);
 
   // 監聽 rooms 變化 - 當後端數據載入後，自動更新臨時房間為真實房間
   useEffect(() => {
@@ -56,14 +59,14 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
         // 方法1: 通過 members 匹配
         if (r.members && r.members.length > 0) {
           const hasContact = r.members.some(m => m.user_id === contactId);
-          const hasCurrentUser = r.members.some(m => m.user_id === currentUser);
+          const hasCurrentUser = r.members.some(m => m.user_id === userId);
           if (hasContact && hasCurrentUser) return true;
         }
         
         // 方法2: 通過 room.name 匹配
         if (r.name) {
           const nameIncludesContact = r.name.includes(contactId);
-          const nameIncludesCurrentUser = r.name.includes(currentUser);
+          const nameIncludesCurrentUser = r.name.includes(userId);
           if (nameIncludesContact && nameIncludesCurrentUser) return true;
         }
         
@@ -76,7 +79,7 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
         const roomWithMembers: Room = {
           ...matchingRoom,
           members: matchingRoom.members || [
-            { user_id: currentUser, role: 'admin' },
+            { user_id: userId, role: 'admin' },
             { user_id: contactId, role: 'member' },
           ],
         };
@@ -93,7 +96,7 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
         return;
       }
     }
-  }, [rooms, room.id, room.targetContactId, currentUser]);
+  }, [rooms, room.id, room.targetContactId, userId]);
 
   // 如果 room 標記為連線超時，直接顯示錯誤
   useEffect(() => {
@@ -109,14 +112,14 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
   // SSE 連接（只在非臨時房間時啟動）
   useSSE({
     roomId: roomIdForMessages,
-    userId: currentUser,
+    userId: userId,
     onMessage: (message) => {
       if (message.room_id === roomIdForMessages) {
         addMessage(roomIdForMessages, message);
         
         // 自動標記為已讀
         if (!currentRoom.isTemporary) {
-          chatApi.markAsRead(roomIdForMessages, currentUser).catch(console.error);
+          chatApi.markAsRead(roomIdForMessages, userId).catch(console.error);
         }
       }
     },
@@ -132,7 +135,7 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
     if (currentRoom.type === 'group') {
       return currentRoom.name;
     } else if (currentRoom.type === 'direct' && currentRoom.members && currentRoom.members.length > 0) {
-      const otherMember = currentRoom.members.find(m => m.user_id !== currentUser);
+      const otherMember = currentRoom.members.find(m => m.user_id !== userId);
       if (otherMember) {
         return getDisplayName(otherMember.user_id);
       }
@@ -146,7 +149,7 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
       if (match) {
         const user1 = `user_${match[1]}`;
         const user2 = `user_${match[2]}`;
-        const otherUserId = user1 === currentUser ? user2 : user1;
+        const otherUserId = user1 === userId ? user2 : user1;
         return getDisplayName(otherUserId);
       }
     }
@@ -159,7 +162,7 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
     if (currentRoom.type === 'group') {
       return currentRoom.name;
     }
-    const otherMember = currentRoom.members?.find(m => m.user_id !== currentUser);
+    const otherMember = currentRoom.members?.find(m => m.user_id !== userId);
     return otherMember ? otherMember.user_id : currentRoom.name;
   };
 
@@ -173,25 +176,20 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
       
       // 如果是臨時聊天室，先創建聊天室
       if (currentRoom.isTemporary) {
-        const otherMember = currentRoom.members?.find(m => m.user_id !== currentUser);
-        const roomName = otherMember ? `${currentUser}_${otherMember.user_id}` : `${currentUser}_chat`;
+        const otherMember = currentRoom.members?.find(m => m.user_id !== userId);
+        const roomName = otherMember ? `${userId}_${otherMember.user_id}` : `${userId}_chat`;
         
-        const createResponse = await chatApi.createRoom({
+        const createdRoom = await chatApi.createRoom({
           name: roomName,
           type: 'direct',
-          owner_id: currentUser,
+          owner_id: userId,
           members: currentRoom.members,
         });
 
-        if (!createResponse.success || !createResponse.data) {
-          alert('創建聊天室失敗');
-          return;
-        }
-
-        roomId = createResponse.data.id;
-        newRoom = { 
-          ...createResponse.data,
-          members: createResponse.data.members || currentRoom.members
+        roomId = createdRoom.id;
+        newRoom = {
+          ...createdRoom,
+          members: createdRoom.members || currentRoom.members
         };
         
         addRoom(newRoom);
@@ -201,11 +199,11 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
         const tempMessage = {
           id: `temp_${Date.now()}`,
           room_id: roomId,
-          sender_id: currentUser,
+          sender_id: userId,
           content: content,
           type: 'text' as const,
           created_at: Math.floor(Date.now() / 1000),
-          read_by: [currentUser],
+          read_by: [userId],
         };
         
         // 先設置訊息（包含臨時訊息）
@@ -225,22 +223,17 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
         // 發送訊息到後端
         const sendResponse = await chatApi.sendMessage({
           room_id: roomId,
-          sender_id: currentUser,
+          sender_id: userId,
           content,
           type: 'text',
         });
 
-        if (sendResponse.success && sendResponse.data) {
+        {
           const { messageHistory, setMessages } = useChatStore.getState();
           const messages = messageHistory[roomId] || [];
-          
           const withoutTemp = messages.filter(msg => msg.id !== tempMessage.id);
-          const realMessageExists = withoutTemp.some(msg => msg.id === sendResponse.data!.id);
-          
-          const updatedMessages = realMessageExists 
-            ? withoutTemp 
-            : [...withoutTemp, sendResponse.data];
-          
+          const realMessageExists = withoutTemp.some(msg => msg.id === sendResponse.id);
+          const updatedMessages = realMessageExists ? withoutTemp : [...withoutTemp, sendResponse];
           setMessages(roomId, updatedMessages);
         }
         
@@ -261,11 +254,11 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
       const tempMessage = {
         id: `temp_${Date.now()}`,
         room_id: roomId,
-        sender_id: currentUser,
+        sender_id: userId,
         content: content,
         type: 'text' as const,
         created_at: Math.floor(Date.now() / 1000),
-        read_by: [currentUser],
+        read_by: [userId],
       };
       
       addMessage(roomId, tempMessage);
@@ -283,27 +276,17 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
       // 發送訊息到後端
       const response = await chatApi.sendMessage({
         room_id: roomId,
-        sender_id: currentUser,
+        sender_id: userId,
         content,
         type: 'text',
       });
 
-      if (response.success && response.data) {
+      {
         const { messageHistory, setMessages } = useChatStore.getState();
         const messages = messageHistory[roomId] || [];
-        
         const withoutTemp = messages.filter(msg => msg.id !== tempMessage.id);
-        const realMessageExists = withoutTemp.some(msg => msg.id === response.data!.id);
-        
-        const updatedMessages = realMessageExists 
-          ? withoutTemp 
-          : [...withoutTemp, response.data];
-        
-        setMessages(roomId, updatedMessages);
-      } else {
-        const { messageHistory, setMessages } = useChatStore.getState();
-        const messages = messageHistory[roomId] || [];
-        const updatedMessages = messages.filter(msg => msg.id !== tempMessage.id);
+        const realMessageExists = withoutTemp.some(msg => msg.id === response.id);
+        const updatedMessages = realMessageExists ? withoutTemp : [...withoutTemp, response];
         setMessages(roomId, updatedMessages);
       }
     } catch (error) {
@@ -311,7 +294,7 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
       console.error('發送訊息失敗:', error);
       alert('發送訊息失敗，請稍後再試');
     }
-  }, [currentRoom, currentUser, addRoom, addMessage, room.id]);
+  }, [currentRoom, userId, addRoom, addMessage, room.id]);
 
   const displayName = getRoomDisplayName();
   const avatarName = getAvatarName();

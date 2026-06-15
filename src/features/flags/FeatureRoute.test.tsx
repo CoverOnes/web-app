@@ -32,6 +32,10 @@ describe('featureFlags — KEEP vs TBD defaults', () => {
     expect(isFeatureEnabled('kycOnboarding')).toBe(false);
     expect(isFeatureEnabled('admin')).toBe(false);
   });
+
+  it('avatarSettings is enabled (enabled in P2 Settings redesign)', () => {
+    expect(isFeatureEnabled('avatarSettings')).toBe(true);
+  });
 });
 
 describe('FeatureRoute — gating behaviour', () => {

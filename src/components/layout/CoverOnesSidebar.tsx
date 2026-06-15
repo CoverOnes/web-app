@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { isFeatureEnabled } from '../../features/flags/featureFlags';
+import { useUnreadCount } from '../../lib/query';
 import { Icon } from '../ui/Icon';
 
 /* --- Nav item definition --- */
@@ -141,15 +141,24 @@ const CoverOnesSidebar = () => {
   const location = useLocation();
   const user = useAuthStore((s) => s.user);
 
-  const settingsEnabled = isFeatureEnabled('avatarSettings');
+  const settingsEnabled = true;
   const handleOpenSettings = useCallback(() => {
     if (settingsEnabled) navigate('/settings');
   }, [navigate, settingsEnabled]);
 
+  const { data: unreadData } = useUnreadCount();
+  const unreadCount = unreadData?.count ?? 0;
+
   // Use exact match for '/' so 首頁 only lights up on the dashboard,
   // not on every route (mirrors CoverOnesMobileBottomNav's pathname === '/' guard).
-  const isActive = (path: string) =>
-    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+  // Chat canonical route is /chat; also match legacy /messages path.
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    if (path === '/chat') {
+      return location.pathname.startsWith('/chat') || location.pathname.startsWith('/messages');
+    }
+    return location.pathname.startsWith(path);
+  };
 
   const initial = (user?.displayName ?? 'U').charAt(0).toUpperCase();
 
@@ -158,12 +167,14 @@ const CoverOnesSidebar = () => {
 
   // Core nav items (主選單)
   const coreNav: NavEntry[] = [
-    { path: '/',          label: '首頁',      icon: (s) => <Icon.Home size={s} /> },
-    { path: '/jobs',      label: '案件看板',  icon: (s) => <Icon.Briefcase size={s} /> },
-    { path: '/bids',      label: '招標進度',  icon: (s) => <Icon.Tag size={s} /> },
-    { path: '/contracts', label: '合約管理',  icon: (s) => <Icon.FileText size={s} /> },
-    // 訊息: shown in sidebar pointing to placeholder page (chat deferred)
-    { path: '/messages',  label: '訊息',      icon: (s) => <Icon.MessageSquare size={s} /> },
+    { path: '/',               label: '首頁',      icon: (s) => <Icon.Home size={s} /> },
+    { path: '/jobs',           label: '案件看板',  icon: (s) => <Icon.Briefcase size={s} /> },
+    { path: '/bids',           label: '招標進度',  icon: (s) => <Icon.Tag size={s} /> },
+    { path: '/contracts',      label: '合約管理',  icon: (s) => <Icon.FileText size={s} /> },
+    // 訊息: canonical route is /chat; isActive also matches legacy /messages
+    { path: '/chat',           label: '訊息',      icon: (s) => <Icon.MessageSquare size={s} /> },
+    { path: '/search',         label: '搜尋',      icon: (s) => <Icon.Search size={s} /> },
+    { path: '/notifications',  label: '通知',      icon: (s) => <Icon.Bell size={s} />, badge: unreadCount },
   ];
 
   // Account nav items (帳號)

@@ -3,11 +3,13 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/query';
 import CoverOnesLayout from './components/layout/CoverOnesLayout';
 import Login from './pages/Login';
+import OAuthCallback from './pages/OAuthCallback';
 import Register from './pages/Register';
 import VerifyEmailSent from './pages/VerifyEmailSent';
 import VerifyEmail from './pages/VerifyEmail';
 import OAuthCallback from './pages/OAuthCallback';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import Home from './pages/Home';
 import JobBoardPage from './pages/JobBoardPage';
 import PostJobPage from './pages/PostJobPage';
@@ -16,9 +18,12 @@ import MyBidsPage from './pages/MyBidsPage';
 import MyContractsPage from './pages/MyContractsPage';
 import ContractDetailPage from './pages/ContractDetailPage';
 import KycPage from './pages/KycPage';
-import MessagesPlaceholderPage from './pages/MessagesPlaceholderPage';
+import ChatRoomPage from './pages/ChatRoomPage';
+import Messages from './pages/Messages';
 import Contacts from './pages/Contacts';
 import Settings from './pages/Settings';
+import NotificationsPage from './pages/NotificationsPage';
+import SearchPage from './pages/SearchPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { FeatureRoute } from './features/flags/FeatureRoute';
@@ -34,12 +39,14 @@ function App() {
         <Routes>
           {/* Public auth routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/auth/callback" element={<OAuthCallback />} />
           <Route path="/register" element={<Register />} />
           <Route path="/register/verify-sent" element={<VerifyEmailSent />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           {/* OAuth social-login landing (receives tokens in URL fragment) */}
           <Route path="/oauth/callback" element={<OAuthCallback />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Protected app routes */}
           <Route
@@ -69,13 +76,15 @@ function App() {
             <Route path="contracts/:id" element={<ContractDetailPage />} />
 
             {/*
-             * 訊息 — routes to placeholder page (chat deferred, backend not built).
-             * Locked decision 2026-06-04: DO NOT un-park chat here.
-             * When chat flag is false the FeatureRoute shows the placeholder anyway,
-             * but we bypass it by rendering MessagesPlaceholderPage directly since
-             * the placeholder IS the intended UX for this phase.
+             * Chat — live as of 2026-06-13, superseding locked decision 2026-06-04.
+             * Gateway contract: REST via /api/chat/v1/*; SSE via /api/chat/v1/messages/stream.
+             * Identity sourced from authStore (decision 5adf4b20).
              */}
-            <Route path="messages" element={<MessagesPlaceholderPage />} />
+            {/* /messages kept as alias for deep links that still use it */}
+            <Route path="messages" element={<Messages />} />
+            {/* /chat → room list; /chat/:roomId → conversation */}
+            <Route path="chat" element={<Messages />} />
+            <Route path="chat/:roomId" element={<ChatRoomPage />} />
 
             {/* Contacts (gated — no backend yet) */}
             <Route
@@ -87,15 +96,13 @@ function App() {
               }
             />
 
-            {/* Settings (gated) */}
-            <Route
-              path="settings"
-              element={
-                <FeatureRoute flag="avatarSettings" feature="設定" description="個人設定功能正在開發中，敬請期待。">
-                  <Settings />
-                </FeatureRoute>
-              }
-            />
+            {/* Notifications */}
+            <Route path="notifications" element={<NotificationsPage />} />
+            {/* Search — full-site search over real listings; company/people tabs show empty-state */}
+            <Route path="search" element={<SearchPage />} />
+
+            {/* Settings — ungated: accessible to all authenticated users */}
+            <Route path="settings" element={<Settings />} />
 
             {/* 404 within the app shell */}
             <Route path="*" element={<NotFoundPage />} />

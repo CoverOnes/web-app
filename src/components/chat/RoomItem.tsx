@@ -2,6 +2,7 @@ import { memo } from 'react';
 import type { Room } from '../../types';
 import { formatMessageTime, formatMessagePreview, getInitials, getDisplayName, getAvatarColor } from '../../utils/formatters';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 
 
 interface RoomItemProps {
@@ -10,14 +11,15 @@ interface RoomItemProps {
 }
 
 const RoomItem = memo(({ room, onClick }: RoomItemProps) => {
-  const { currentRoom, currentUser } = useChatStore();
+  const { currentRoom } = useChatStore();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
   const isActive = currentRoom?.id === room.id;
 
   const getRoomDisplayName = (r: Room): string => {
     if (r.type === 'group') {
       return r.name;
     } else if (r.type === 'direct' && r.members) {
-      const otherMember = r.members.find((m) => m.user_id !== currentUser);
+      const otherMember = r.members.find((m) => m.user_id !== userId);
       if (otherMember) {
         return getDisplayName(otherMember.user_id);
       }
@@ -34,7 +36,7 @@ const RoomItem = memo(({ room, onClick }: RoomItemProps) => {
 
   let avatarId = room.id;
   if (room.type === 'direct' && room.members) {
-    const otherMember = room.members.find((m) => m.user_id !== currentUser);
+    const otherMember = room.members.find((m) => m.user_id !== userId);
     if (otherMember) {
       avatarId = otherMember.user_id;
     }

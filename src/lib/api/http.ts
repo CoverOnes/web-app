@@ -1,6 +1,39 @@
 import axios, { type AxiosInstance, AxiosError } from 'axios';
 import { generateRequestId } from '../../utils/requestId';
 
+// ─── Shared API error-envelope helpers ────────────────────────────────────────
+// Backend error shape: { error: { code: string; message: string } }
+// (Primary) with flat fallbacks for legacy paths.
+// ALL error-code reads in the app MUST use these helpers, never read
+// body.code / body.data.code directly — they miss the real envelope.
+
+type ApiErrorBody = {
+  error?: { code?: string; message?: string };
+  code?: string;
+  message?: string;
+  data?: { code?: string; message?: string };
+};
+
+/**
+ * Extracts the backend error code from an axios (or axios-like) error.
+ * Reads the canonical envelope first: body.error.code,
+ * then flat fallbacks: body.code → body.data.code.
+ */
+export function getApiErrorCode(error: unknown): string | undefined {
+  const body = (error as { response?: { data?: ApiErrorBody } })?.response?.data;
+  return body?.error?.code ?? body?.code ?? body?.data?.code;
+}
+
+/**
+ * Extracts the backend error message from an axios (or axios-like) error.
+ * Reads the canonical envelope first: body.error.message,
+ * then flat fallbacks: body.message → body.data.message.
+ */
+export function getApiErrorMessage(error: unknown): string | undefined {
+  const body = (error as { response?: { data?: ApiErrorBody } })?.response?.data;
+  return body?.error?.message ?? body?.message ?? body?.data?.message;
+}
+
 // WA-M3: All backend calls route through the gateway. Production/dev should
 // inject VITE_API_BASE_URL when the gateway is not same-origin.
 const GATEWAY_URL = import.meta.env.VITE_API_BASE_URL ?? '';
@@ -33,9 +66,12 @@ export const isAuthFlowRequest = (url?: string): boolean =>
   (url.includes('/v1/auth/login') ||
     url.includes('/v1/auth/register') ||
     url.includes('/v1/auth/refresh') ||
-    // OAuth social-login start/callback are browser navigations, not XHR, but
-    // guard defensively so any future OAuth XHR is never masked by the 401
-    // refresh-retry (contract §5.1).
+    // Password-reset endpoints issue/validate tokens themselves; a 400 from them
+    // must NOT trigger the access-token refresh retry loop.
+    url.includes('/v1/auth/forgot-password') ||
+    url.includes('/v1/auth/reset-password') ||
+    // OAuth start, callback and exchange endpoints issue/validate credentials
+    // themselves; a 401 from them must NOT trigger the access-token refresh loop.
     url.includes('/v1/auth/oauth/'));
 
 /**
@@ -93,9 +129,9 @@ const createHttpClient = (): AxiosInstance => {
       // Surface it by flipping the store flag so the unverified banner + action
       // gates reappear even if the JWT claim was stale. The original error is
       // still rejected so the caller can show its own inline message.
+      // Uses getApiErrorCode so the correct nested envelope {error:{code}} is read.
       if (error.response?.status === 403) {
-        const body = error.response.data as { code?: string; data?: { code?: string } } | undefined;
-        const code = body?.code ?? body?.data?.code;
+        const code = getApiErrorCode(error);
         if (code === 'EMAIL_NOT_VERIFIED') {
           const { useAuthStore } = await import('../../store/authStore');
           useAuthStore.getState().setEmailVerified(false);

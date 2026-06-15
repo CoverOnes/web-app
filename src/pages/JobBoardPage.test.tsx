@@ -3,13 +3,15 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import JobBoardPage from './JobBoardPage';
 import { useAuthStore, type AuthUser } from '../store/authStore';
-import { useListings } from '../lib/query';
+import { useListings, useMyBids } from '../lib/query';
 
 vi.mock('../lib/query', () => ({
   useListings: vi.fn(),
+  useMyBids: vi.fn(),
 }));
 
 const mockUseListings = vi.mocked(useListings);
+const mockUseMyBids = vi.mocked(useMyBids);
 
 const mockUser: AuthUser = {
   id: 'u1',
@@ -42,6 +44,13 @@ function apiError(code: string) {
 describe('JobBoardPage — onboarding states', () => {
   beforeEach(() => {
     mockUseListings.mockReset();
+    mockUseMyBids.mockReset();
+    mockUseMyBids.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useMyBids>);
     useAuthStore.setState({
       accessToken: 'access',
       refreshToken: 'refresh',

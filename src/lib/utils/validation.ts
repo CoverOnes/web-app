@@ -51,18 +51,15 @@ export const validateUserId = (userId: string): void => {
 };
 
 /**
- * 驗證聊天室 ID (MongoDB ObjectID 格式)
+ * 驗證聊天室 ID (UUID v4 格式 — backend uses gen_random_uuid())
+ * Pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars, 8-4-4-4-12 hex groups)
  */
 export const validateRoomId = (roomId: string): void => {
   if (!roomId || roomId.trim().length === 0) {
     throw new Error('聊天室 ID 不能為空');
   }
 
-  if (roomId.length !== 24) {
-    throw new Error('聊天室 ID 格式錯誤');
-  }
-
-  if (!/^[0-9a-fA-F]{24}$/.test(roomId)) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(roomId)) {
     throw new Error('聊天室 ID 格式錯誤');
   }
 };

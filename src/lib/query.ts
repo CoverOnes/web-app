@@ -5,9 +5,11 @@ import {
   kycApi,
   marketplaceApi,
   workspaceApi,
+  notificationApi,
   type ContractStatus,
   type KycSubmitRequest,
   type OAuthProvider,
+  type ResetPasswordRequest,
 } from './api/coverones';
 import { useAuthStore } from '../store/authStore';
 
@@ -37,6 +39,24 @@ export function useVerifyEmail() {
 export function useResendVerification() {
   return useMutation({
     mutationFn: (email: string) => authApi.resendVerification({ email }),
+    retry: false,
+  });
+}
+
+// Request a password-reset link. The backend always responds 202 with a generic
+// message — never reveals whether the email exists (anti-enumeration).
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: (email: string) => authApi.forgotPassword({ email }),
+    retry: false,
+  });
+}
+
+// Consume the reset link token from /reset-password?token=. retry:false because
+// 400 INVALID_RESET_TOKEN and 422 WEAK_PASSWORD are deterministic errors.
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: (data: ResetPasswordRequest) => authApi.resetPassword(data),
     retry: false,
   });
 }
@@ -295,5 +315,63 @@ export function useUpdateTask(contractId: string) {
       workspaceApi.updateTask(contractId, taskId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', contractId] }),
     onError: (err) => { console.error('[useUpdateTask]', err); },
+  });
+}
+
+// ===== Notification hooks =====
+
+// Gate on auth readiness (same pattern as useMyBids / useKycStatus).
+function useAuthReady() {
+  const isHydrating = useAuthStore((s) => s.isHydrating);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
+  return !isHydrating && (!!accessToken || !!refreshToken);
+}
+
+// useNotifications — cursor-paginated list.
+// Pass cursor=undefined for the first page.
+export function useNotifications(cursor?: string) {
+  const authReady = useAuthReady();
+  return useQuery({
+    queryKey: ['notifications', cursor],
+    queryFn: () => notificationApi.list(cursor ? { cursor } : undefined),
+    enabled: authReady,
+    staleTime: 30_000,
+  });
+}
+
+// useUnreadCount — lightweight badge counter, polled every 60 s.
+export function useUnreadCount() {
+  const authReady = useAuthReady();
+  return useQuery({
+    queryKey: ['notifications-unread-count'],
+    queryFn: () => notificationApi.unreadCount(),
+    enabled: authReady,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+}
+
+// useMarkNotificationRead — mark a single notification read.
+export function useMarkNotificationRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => notificationApi.markRead(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notifications-unread-count'] });
+    },
+  });
+}
+
+// useMarkAllNotificationsRead — bulk mark-all-read.
+export function useMarkAllNotificationsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => notificationApi.markAllRead(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notifications-unread-count'] });
+    },
   });
 }

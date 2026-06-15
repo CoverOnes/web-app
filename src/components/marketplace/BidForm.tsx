@@ -69,7 +69,7 @@ export function BidForm({ onSubmit, isSubmitting, error }: BidFormProps) {
             color: '#FCA5A5',
           }}
         >
-          {error ?? formError}
+          {error || formError}
         </div>
       )}
 

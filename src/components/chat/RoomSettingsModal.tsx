@@ -1,72 +1,21 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import { chatApi } from '../../api/chat';
+import { getDisplayName } from '../../utils/formatters';
 
 interface RoomSettingsModalProps {
   onClose: () => void;
 }
 
-const users = [
-  { id: 'user_alice', name: 'Alice' },
-  { id: 'user_bob', name: 'Bob' },
-  { id: 'user_charlie', name: 'Charlie' },
-  { id: 'user_david', name: 'David' },
-  { id: 'user_emma', name: 'Emma' },
-  { id: 'user_frank', name: 'Frank' },
-  { id: 'user_grace', name: 'Grace' },
-];
-
 const RoomSettingsModal = ({ onClose }: RoomSettingsModalProps) => {
-  const { currentUser, currentRoom, setCurrentRoom, setRooms } = useChatStore();
-  const [selectedUser, setSelectedUser] = useState('');
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { currentRoom, setCurrentRoom, setRooms } = useChatStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   if (!currentRoom || currentRoom.type !== 'group') return null;
-
-  // 可添加的用戶（不在群組中的）
-  const memberIds = currentRoom.members?.map(m => m.user_id) || [];
-  const availableUsers = users.filter(u => !memberIds.includes(u.id));
-
-  // 添加成員
-  const handleAddMember = async () => {
-    if (!selectedUser) {
-      setError('請選擇要添加的成員');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const response = await chatApi.addMember(currentRoom.id, selectedUser);
-      
-      if (response.success) {
-        setSuccess('成員添加成功');
-        
-        // 只在需要時才重新載入（減少請求）
-        // 樂觀更新：手動添加成員到 currentRoom
-        if (currentRoom.members) {
-          const updatedRoom = {
-            ...currentRoom,
-            members: [...currentRoom.members, { user_id: selectedUser, role: 'member' as const }]
-          };
-          setCurrentRoom(updatedRoom);
-        }
-        
-        setSelectedUser('');
-        setTimeout(() => setSuccess(''), 3000);
-      } else {
-        setError('添加成員失敗');
-      }
-    } catch {
-      setError('添加成員失敗，請稍後再試');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // 移除成員
   const handleRemoveMember = async (userId: string) => {
@@ -77,24 +26,19 @@ const RoomSettingsModal = ({ onClose }: RoomSettingsModalProps) => {
     setSuccess('');
 
     try {
-      const response = await chatApi.removeMember(currentRoom.id, userId);
-      
-      if (response.success) {
-        setSuccess('成員移除成功');
-        
-        // 樂觀更新：直接從 currentRoom 移除成員
-        if (currentRoom.members) {
-          const updatedRoom = {
-            ...currentRoom,
-            members: currentRoom.members.filter(m => m.user_id !== userId)
-          };
-          setCurrentRoom(updatedRoom);
-        }
-        
-        setTimeout(() => setSuccess(''), 3000);
-      } else {
-        setError('移除成員失敗');
+      await chatApi.removeMember(currentRoom.id, userId);
+      setSuccess('成員移除成功');
+
+      // 樂觀更新：直接從 currentRoom 移除成員
+      if (currentRoom.members) {
+        const updatedRoom = {
+          ...currentRoom,
+          members: currentRoom.members.filter(m => m.user_id !== userId)
+        };
+        setCurrentRoom(updatedRoom);
       }
+
+      setTimeout(() => setSuccess(''), 3000);
     } catch {
       setError('移除成員失敗，請稍後再試');
     } finally {
@@ -110,19 +54,14 @@ const RoomSettingsModal = ({ onClose }: RoomSettingsModalProps) => {
     setError('');
 
     try {
-      const response = await chatApi.removeMember(currentRoom.id, currentUser);
-      
-      if (response.success) {
-        // 清除當前聊天室
-        setCurrentRoom(null);
-        
-        // 樂觀更新：直接從 rooms 移除這個聊天室
-        setRooms((prevRooms) => prevRooms.filter(r => r.id !== currentRoom.id));
-        
-        onClose();
-      } else {
-        setError('退出群組失敗');
-      }
+      await chatApi.removeMember(currentRoom.id, userId);
+      // 清除當前聊天室
+      setCurrentRoom(null);
+
+      // 樂觀更新：直接從 rooms 移除這個聊天室
+      setRooms((prevRooms) => prevRooms.filter(r => r.id !== currentRoom.id));
+
+      onClose();
     } catch {
       setError('退出群組失敗，請稍後再試');
     } finally {
@@ -176,13 +115,12 @@ const RoomSettingsModal = ({ onClose }: RoomSettingsModalProps) => {
             <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-main-text)', marginBottom: 12 }}>群組成員 ({currentRoom.members?.length || 0})</h4>
             <div style={{ border: '1px solid var(--color-main-border)', borderRadius: 8, maxHeight: 300, overflowY: 'auto', background: 'var(--color-main-bg)' }}>
               {currentRoom.members?.map(member => {
-                const user = users.find(u => u.id === member.user_id);
-                const isCurrentUser = member.user_id === currentUser;
+                const isCurrentUser = member.user_id === userId;
 
                 return (
                   <div key={member.user_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--color-main-border)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--color-main-text)' }}>{user?.name || member.user_id}</span>
+                      <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--color-main-text)' }}>{getDisplayName(member.user_id)}</span>
                       {member.role === 'admin' && <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, fontWeight: 600, background: 'var(--color-accent-soft)', color: 'var(--color-accent)' }}>管理員</span>}
                       {isCurrentUser && <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: 'var(--color-sb-tint)', color: 'var(--color-main-text-dim)' }}>我</span>}
                     </div>
@@ -202,32 +140,12 @@ const RoomSettingsModal = ({ onClose }: RoomSettingsModalProps) => {
             </div>
           </div>
 
-          {availableUsers.length > 0 && (
-            <div style={{ marginBottom: 24 }}>
-              <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-main-text)', marginBottom: 12 }}>添加成員</h4>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <select
-                  value={selectedUser}
-                  onChange={(e) => setSelectedUser(e.target.value)}
-                  disabled={loading}
-                  style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--color-main-border)', borderRadius: 8, background: 'var(--color-input-bg)', color: 'var(--color-main-text)', fontSize: 14, cursor: 'pointer' }}
-                >
-                  <option value="">選擇要添加的成員</option>
-                  {availableUsers.map(user => (
-                    <option key={user.id} value={user.id}>{user.name}</option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={handleAddMember}
-                  disabled={loading || !selectedUser}
-                  style={{ ...btnBase, background: 'var(--color-accent)', color: '#fff', border: 'none', opacity: loading || !selectedUser ? 0.5 : 1 }}
-                >
-                  添加
-                </button>
-              </div>
-            </div>
-          )}
+          <div style={{ marginBottom: 24 }}>
+            <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-main-text)', marginBottom: 12 }}>添加成員</h4>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--color-main-text-dim)' }}>
+              聯絡人功能即將推出，屆時可在此新增群組成員。
+            </p>
+          </div>
         </div>
 
         <div style={{ padding: '16px 24px', borderTop: '1px solid var(--color-main-border)', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>

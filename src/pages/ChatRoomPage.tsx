@@ -2,15 +2,33 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useMemo } from 'react';
 import ChatRoom from '../components/chat/ChatRoom';
 import { useChatStore } from '../store/chatStore';
+import { useAuthStore } from '../store/authStore';
 import { chatApi } from '../api/chat';
 import type { Room } from '../types';
 import './ChatRoomPage.css';
+
+// Shown on cold deep-link while the layout is still loading rooms.
+const RoomsLoadingScreen = () => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100%',
+      color: 'var(--color-main-text-dim)',
+      fontSize: 14,
+    }}
+  >
+    載入中...
+  </div>
+);
 
 const ChatRoomPage = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { rooms, setCurrentRoom, currentRoom, setRooms, currentUser } = useChatStore();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { rooms, roomsLoaded, setCurrentRoom, currentRoom, setRooms } = useChatStore();
 
   // 使用 useMemo 同步計算需要的聊天室
   const targetRoom = useMemo(() => {
@@ -40,9 +58,9 @@ const ChatRoomPage = () => {
         id: roomId,
         name: '', // 名稱會由 getRoomDisplayName 計算
         type: 'direct' as const,
-        owner_id: currentUser,
+        owner_id: userId,
         members: [
-          { user_id: currentUser, role: 'admin' as const },
+          { user_id: userId, role: 'admin' as const },
           { user_id: contactId, role: 'member' as const },
         ],
         created_at: Math.floor(Date.now() / 1000),
@@ -52,7 +70,22 @@ const ChatRoomPage = () => {
     }
 
     return null;
-  }, [roomId, currentRoom, rooms, currentUser, location.state]);
+  }, [roomId, currentRoom, rooms, userId, location.state]);
+
+  // Major finding fix: navigate calls moved OUT of render body into useEffect.
+  // !roomId guard: should be unreachable under normal routing but kept as safety net.
+  useEffect(() => {
+    if (!roomId) {
+      navigate('/chat', { replace: true });
+    }
+  }, [roomId, navigate]);
+
+  // Finding 1 + 4: redirect when rooms are loaded and the target room is not found.
+  useEffect(() => {
+    if (roomId && roomsLoaded && !targetRoom) {
+      navigate('/chat', { replace: true });
+    }
+  }, [roomId, roomsLoaded, targetRoom, navigate]);
 
   // 更新 currentRoom（如果需要）
   useEffect(() => {
@@ -66,36 +99,34 @@ const ChatRoomPage = () => {
 
   // 處理未讀訊息
   useEffect(() => {
-    if (!roomId || !targetRoom) return;
-    
+    if (!roomId || !targetRoom || !userId) return;
+
     if (targetRoom.unread_count && targetRoom.unread_count > 0) {
       setTimeout(() => {
-        setRooms((prevRooms) => 
+        setRooms((prevRooms) =>
           prevRooms.map(r => r.id === roomId ? { ...r, unread_count: 0 } : r)
         );
-        chatApi.markAsRead(roomId, currentUser).catch(console.error);
+        chatApi.markAsRead(roomId, userId).catch(console.error);
       }, 2000);
     }
-  }, [roomId, targetRoom, setRooms, currentUser]);
+  }, [roomId, targetRoom, setRooms, userId]);
 
-  // 清除 router state
+  // 清除 router state（使用 react-router navigate 而非 window.history 直接操作）
   useEffect(() => {
     if (location.state) {
-      window.history.replaceState({}, document.title);
+      navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location.state]);
+  }, [location.state, location.pathname, navigate]);
 
-  if (!roomId) {
-    navigate('/messages');
-    return null;
+  // Finding 4: roomsLoaded guard MUST fire before targetRoom check so a cold
+  // deep-link waits for rooms to arrive before deciding to redirect.
+  if (!roomId || !roomsLoaded) {
+    return <RoomsLoadingScreen />;
   }
 
-  // 找不到聊天室
+  // Still loading the specific room (targetRoom not resolved yet)
   if (!targetRoom) {
-    if (rooms.length > 0) {
-      navigate('/messages');
-    }
-    return null;
+    return <RoomsLoadingScreen />;
   }
 
   return (
@@ -108,4 +139,3 @@ const ChatRoomPage = () => {
 };
 
 export default ChatRoomPage;
-

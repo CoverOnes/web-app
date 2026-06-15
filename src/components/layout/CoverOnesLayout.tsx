@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
+import { chatApi } from '../../api/chat';
 import AppShell from './AppShell';
 import CoverOnesSidebar from './CoverOnesSidebar';
 import CoverOnesTopbar from './CoverOnesTopbar';
@@ -13,7 +15,11 @@ import MobileFABProvider from './MobileFABProvider';
 const MOBILE_BREAKPOINT = 768;
 
 const CoverOnesLayout = () => {
-  const { openPopups } = useChatStore();
+  const location = useLocation();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { openPopups, setRooms, setRoomsLoaded, setRoomsLoadError } = useChatStore();
+  const loadingRef = useRef(false);
+  const hasInitialLoadRef = useRef(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < MOBILE_BREAKPOINT);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -53,6 +59,68 @@ const CoverOnesLayout = () => {
       document.removeEventListener('touchend', onTouchEnd);
     };
   }, [isMobile]);
+
+  /* Load rooms on initial mount (once per authenticated session) */
+  useEffect(() => {
+    if (!userId || loadingRef.current || hasInitialLoadRef.current) return;
+
+    const loadRooms = async () => {
+      loadingRef.current = true;
+      try {
+        const { rooms } = await chatApi.getRooms(userId, 50, '');
+        setRooms(rooms);
+        setRoomsLoadError(false);
+        hasInitialLoadRef.current = true;
+      } catch (err) {
+        console.error('[CoverOnesLayout] loadRooms failed:', err);
+        setRoomsLoadError(true);
+        // hasInitialLoadRef.current stays false on error → retries on next userId change.
+      } finally {
+        // Always mark attempted so ChatRoomPage / ChatList never wait forever.
+        setRoomsLoaded(true);
+        loadingRef.current = false;
+      }
+    };
+
+    loadRooms();
+  }, [userId, setRooms, setRoomsLoaded, setRoomsLoadError]);
+
+  /* Refresh rooms when navigating away from chat pages */
+  useEffect(() => {
+    if (!userId) return;
+    const isMessagesPage =
+      location.pathname.startsWith('/messages') ||
+      location.pathname.startsWith('/chat');
+
+    if (!isMessagesPage && hasInitialLoadRef.current && !loadingRef.current) {
+      const refreshRooms = async () => {
+        loadingRef.current = true;
+        try {
+          const { rooms: newRooms } = await chatApi.getRooms(userId, 50, '');
+          setRooms((prevRooms) => {
+            if (prevRooms.length === 0) return newRooms;
+            return newRooms.map((newRoom) => {
+              const prevRoom = prevRooms.find((r) => r.id === newRoom.id);
+              if (
+                prevRoom &&
+                prevRoom.unread_count === 0 &&
+                (newRoom.unread_count || 0) > 0
+              ) {
+                return { ...newRoom, unread_count: 0 };
+              }
+              return newRoom;
+            });
+          });
+        } catch (err) {
+          console.error('[CoverOnesLayout] refreshRooms failed:', err);
+        } finally {
+          loadingRef.current = false;
+        }
+      };
+
+      refreshRooms();
+    }
+  }, [location.pathname, userId, setRooms]);
 
   return (
     <MobileFABProvider>

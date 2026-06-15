@@ -3,6 +3,7 @@ import ChatList from '../components/chat/ChatList';
 import CreateModal from '../components/chat/CreateModal';
 import ChatRoom from '../components/chat/ChatRoom';
 import { useChatStore } from '../store/chatStore';
+import { useAuthStore } from '../store/authStore';
 import { chatApi } from '../api/chat';
 import { Icon } from '../components/ui/Icon';
 import { getDisplayName } from '../utils/formatters';
@@ -12,7 +13,9 @@ import { useIsMobile } from '../hooks/useIsMobile';
 const Messages = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [groupCreateError, setGroupCreateError] = useState<string | null>(null);
-  const { rooms, currentRoom, setCurrentRoom, addRoom, openChatPopup, currentUser, setRooms } = useChatStore();
+  const [dmCreateError, setDmCreateError] = useState<string | null>(null);
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { rooms, currentRoom, setCurrentRoom, addRoom, openChatPopup, setRooms } = useChatStore();
 
   // On desktop: clicking a room opens popup (existing behavior)
   // On mobile (<768px): clicking a room sets it as currentRoom → full-screen view
@@ -32,11 +35,14 @@ const Messages = () => {
     }
   };
 
-  const handleCreateDM = async (userId: string) => {
-    // Find existing DM room or create a temporary one
+  const handleCreateDM = async (contactId: string) => {
+    setDmCreateError(null);
+    const selfId = useAuthStore.getState().user?.id ?? '';
+
+    // Find existing DM room — must contain BOTH the logged-in user AND the contact
     const existingRoom = rooms.find(r => {
       if (r.type !== 'direct') return false;
-      return r.members?.some(m => m.user_id === userId) && r.members?.some(m => m.user_id === currentUser);
+      return r.members?.some(m => m.user_id === selfId) && r.members?.some(m => m.user_id === contactId);
     });
 
     if (existingRoom) {
@@ -51,43 +57,24 @@ const Messages = () => {
     // Create new DM room
     try {
       const members: Member[] = [
-        { user_id: currentUser, role: 'admin' },
-        { user_id: userId, role: 'member' },
+        { user_id: selfId, role: 'admin' },
+        { user_id: contactId, role: 'member' },
       ];
-      const response = await chatApi.createRoom({
-        name: `${currentUser}_${userId}`,
+      const createdRoom = await chatApi.createRoom({
+        name: `${selfId}_${contactId}`,
         type: 'direct',
-        owner_id: currentUser,
+        owner_id: selfId,
         members,
       });
-      if (response.success && response.data) {
-        addRoom(response.data);
-        if (isMobile) {
-          setCurrentRoom(response.data);
-        } else {
-          openChatPopup(response.data);
-        }
-      }
-    } catch {
-      // Create temporary room for immediate chat
-      const tempRoom = {
-        id: `temp_${userId}`,
-        name: '',
-        type: 'direct' as const,
-        owner_id: currentUser,
-        members: [
-          { user_id: currentUser, role: 'admin' as const },
-          { user_id: userId, role: 'member' as const },
-        ],
-        created_at: Math.floor(Date.now() / 1000),
-        isTemporary: true,
-        targetContactId: userId,
-      };
+      addRoom(createdRoom);
       if (isMobile) {
-        setCurrentRoom(tempRoom);
+        setCurrentRoom(createdRoom);
       } else {
-        openChatPopup(tempRoom);
+        openChatPopup(createdRoom);
       }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '建立私訊失敗，請稍後再試';
+      setDmCreateError(msg);
     }
   };
 
@@ -95,22 +82,20 @@ const Messages = () => {
     setGroupCreateError(null);
     try {
       const members: Member[] = [
-        { user_id: currentUser, role: 'admin' },
+        { user_id: userId, role: 'admin' },
         ...userIds.map(id => ({ user_id: id, role: 'member' as const })),
       ];
-      const response = await chatApi.createRoom({
+      const createdRoom = await chatApi.createRoom({
         name,
         type: 'group',
-        owner_id: currentUser,
+        owner_id: userId,
         members,
       });
-      if (response.success && response.data) {
-        addRoom(response.data);
-        if (isMobile) {
-          setCurrentRoom(response.data);
-        } else {
-          openChatPopup(response.data);
-        }
+      addRoom(createdRoom);
+      if (isMobile) {
+        setCurrentRoom(createdRoom);
+      } else {
+        openChatPopup(createdRoom);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to create group';
@@ -130,7 +115,7 @@ const Messages = () => {
     // Derive room display name
     let roomTitle = currentRoom.name;
     if (currentRoom.type === 'direct' && currentRoom.members?.length > 0) {
-      const other = currentRoom.members.find(m => m.user_id !== currentUser);
+      const other = currentRoom.members.find(m => m.user_id !== userId);
       if (other) roomTitle = getDisplayName(other.user_id);
     }
 
@@ -223,6 +208,11 @@ const Messages = () => {
                   {groupCreateError}
                 </p>
               )}
+              {dmCreateError && (
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--color-red, #ef4444)' }}>
+                  {dmCreateError}
+                </p>
+              )}
             <button
               type="button"
               onClick={() => setShowCreateModal(true)}
@@ -252,7 +242,7 @@ const Messages = () => {
             </div>
           </div>
 
-          <ChatList onCreateRoom={() => setShowCreateModal(true)} onSelectRoom={handleRoomSelect} />
+          <ChatList onSelectRoom={handleRoomSelect} />
         </div>
 
         {/* Desktop empty state / info panel */}
@@ -317,7 +307,7 @@ const Messages = () => {
 
       <CreateModal
         open={showCreateModal}
-        onClose={() => { setShowCreateModal(false); setGroupCreateError(null); }}
+        onClose={() => { setShowCreateModal(false); setGroupCreateError(null); setDmCreateError(null); }}
         onCreateDM={handleCreateDM}
         onCreateGroup={handleCreateGroup}
       />

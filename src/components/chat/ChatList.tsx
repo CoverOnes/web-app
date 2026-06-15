@@ -1,23 +1,27 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useChatStore } from '../../store/chatStore';
+import { useAuthStore } from '../../store/authStore';
 import { chatApi } from '../../api/chat';
 import type { Room } from '../../types';
 import RoomItem from './RoomItem';
 
+// Consistent page size used by both the layout prefetch and ChatList pagination.
+const ROOMS_PAGE_SIZE = 50;
+
 interface ChatListProps {
-  onCreateRoom: () => void;
   onSelectRoom?: (roomId: string) => void;
 }
 
 const ChatList = ({ onSelectRoom }: ChatListProps) => {
-  const { currentUser, rooms, setRooms, setCurrentRoom } = useChatStore();
+  const userId = useAuthStore((s) => s.user?.id ?? '');
+  const { rooms, roomsLoaded, roomsLoadError, setRooms, setCurrentRoom } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
   const [cursor, setCursor] = useState('');
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
-  // 載入聊天室列表
+  // 載入更多聊天室（分頁）— 只用於 load-more；初始渲染從 store 取
   const loadRooms = useCallback(async (loadMore = false) => {
     if (loadingRef.current) return;
     if (loadMore && !hasMore) return;
@@ -26,44 +30,47 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
     setIsLoading(true);
     try {
       const currentCursor = loadMore ? cursor : '';
-      const response = await chatApi.getRooms(currentUser, 20, currentCursor);
-      
-      if (response.success && response.data) {
-        if (loadMore) {
-          setRooms((prevRooms: Room[]) => [...prevRooms, ...response.data!]);
-        } else {
-          setRooms(response.data);
-        }
-        setCursor(response.cursor || '');
-        setHasMore(response.has_more || false);
+      const { rooms: fetched, cursor: nextCursor, hasMore: more } =
+        await chatApi.getRooms(userId, ROOMS_PAGE_SIZE, currentCursor);
+
+      if (loadMore) {
+        setRooms((prevRooms: Room[]) => [...prevRooms, ...fetched]);
+      } else {
+        setRooms(fetched);
       }
+      setCursor(nextCursor);
+      setHasMore(more);
     } catch (error) {
       console.error('載入聊天室失敗:', error);
     } finally {
       setIsLoading(false);
       loadingRef.current = false;
     }
-  }, [currentUser, cursor, hasMore, setRooms]);
+  }, [userId, cursor, hasMore, setRooms]);
 
-  // 初始載入 - 只在 currentUser 改變時觸發
+  // 初始載入 — 僅在 roomsLoaded 為 false（layout 尚未完成 prefetch）時才自行 fetch。
+  // 正常情況下 CoverOnesLayout 會先載入，此 effect 不執行 API call。
   useEffect(() => {
+    if (roomsLoaded) {
+      // Layout prefetch already populated the store — skip redundant fetch.
+      return;
+    }
+
+    // Fallback: layout not yet done (e.g. ChatList rendered before layout effect fires).
     setCursor('');
     setHasMore(true);
-    
-    // 直接在這裡載入，不依賴 loadRooms
+
     const initialLoad = async () => {
       if (loadingRef.current) return;
-      
+
       loadingRef.current = true;
       setIsLoading(true);
       try {
-        const response = await chatApi.getRooms(currentUser, 20, '');
-        
-        if (response.success && response.data) {
-          setRooms(response.data);
-          setCursor(response.cursor || '');
-          setHasMore(response.has_more || false);
-        }
+        const { rooms: fetched, cursor: nextCursor, hasMore: more } =
+          await chatApi.getRooms(userId, ROOMS_PAGE_SIZE, '');
+        setRooms(fetched);
+        setCursor(nextCursor);
+        setHasMore(more);
       } catch (error) {
         console.error('載入聊天室失敗:', error);
       } finally {
@@ -71,9 +78,9 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
         loadingRef.current = false;
       }
     };
-    
+
     initialLoad();
-  }, [currentUser, setRooms]);
+  }, [userId, roomsLoaded, setRooms]);
 
   // 滾動載入更多（使用節流優化）
   const handleScroll = useCallback(() => {
@@ -124,11 +131,11 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
           );
           
           // 異步發送已讀請求，不阻塞 UI
-          chatApi.markAsRead(roomId, currentUser).catch(console.error);
+          chatApi.markAsRead(roomId, userId).catch(console.error);
         });
       });
     }
-  }, [onSelectRoom, rooms, setCurrentRoom, setRooms, currentUser]);
+  }, [onSelectRoom, rooms, setCurrentRoom, setRooms, userId]);
 
   // 排序聊天室（使用 useMemo 優化）
   const sortedRooms = useMemo(() => {
@@ -146,7 +153,9 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
         onScroll={throttledScroll}
         style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: 4 }}
       >
-        {sortedRooms.length === 0 && !isLoading ? (
+        {sortedRooms.length === 0 && !isLoading && roomsLoadError ? (
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-main-text-dim)', fontSize: 14 }}>載入失敗，請重試</div>
+        ) : sortedRooms.length === 0 && !isLoading ? (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-main-text-dim)', fontSize: 14 }}>暫無聊天室</div>
         ) : (
           sortedRooms.map(room => (

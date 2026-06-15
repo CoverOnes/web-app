@@ -66,17 +66,99 @@ export interface ResendVerificationResponse {
   message: string;
 }
 
+// ── Password reset ──────────────────────────────────────────────────────────
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+// Backend always returns a generic 202 — never reveals whether the email exists.
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+// 200 { reset: true } on success; 400 INVALID_RESET_TOKEN / 422 WEAK_PASSWORD on error.
+export interface ResetPasswordResponse {
+  reset: boolean;
+}
+
 // ===== OAuth social login (Google OIDC + LINE v2.1) =====
 // Identity key is (provider, provider_subject) — NEVER email. See the social-login
 // contract §0/§2. email is masked by the server (e.g. j***@e***.com) and may be
 // null when the provider did not assert one (LINE without email permission).
 export type OAuthProvider = 'google' | 'line';
 
+export interface OAuthExchangeRequest {
+  code: string;
+}
+
+// Exchange response mirrors LoginResponse shape (tokenType confirmed by contract).
+export interface OAuthExchangeResponse {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn?: number;
+}
+
+// Legacy alias used by identitiesApi.list() in the OAuth branch.
 export interface Identity {
   provider: 'GOOGLE' | 'LINE';
   email: string | null;
   linkedAt: string;
 }
+
+export interface OAuthIdentity {
+  provider: OAuthProvider;
+  // Provider-registered email for this identity.
+  email: string;
+  linkedAt: string;
+}
+
+// GET /api/user/v1/me/identities response envelope.
+// hasPassword: true when the user has a password-based login method —
+// used to decide whether unbinding the last social identity is safe.
+export interface ListIdentitiesResponse {
+  identities: OAuthIdentity[];
+  hasPassword: boolean;
+}
+
+// POST /api/user/v1/me/identities/:provider → { authorizeUrl }
+// FE follows the URL with window.location.href to start the bind flow.
+export interface OAuthBindStartResponse {
+  authorizeUrl: string;
+}
+
+// ── OAuth registration (no-email provider e.g. LINE) ──────────────────────────
+// When a provider (e.g. LINE) does not supply an email address the backend
+// cannot complete registration automatically. Instead of silently creating a
+// placeholder account it redirects to /auth/callback?register=<regToken>.
+// The FE collects an email, then calls POST /v1/auth/oauth/register.
+
+export interface OAuthRegisterRequest {
+  // Opaque short-lived token issued by the backend identifying the pending
+  // OAuth registration session.
+  regToken: string;
+  // Email collected from the user (provider did not supply one).
+  email: string;
+}
+
+// Backend returns a one-time code to exchange for tokens (same as normal OAuth
+// login code flow), or email_exists if the email is already registered.
+// FLAG: field name `code` assumed — reconcile with eng-oauth-be if the backend
+//       returns tokens directly instead of a code. The current assumption is:
+//       201 { code: string } → FE calls oauthExchange({ code }) to get tokens.
+export interface OAuthRegisterResponse {
+  // One-time code to pass to oauthExchange. Backend issues this so the same
+  // exchange path is reused regardless of whether this is a first-time login
+  // or registration completion.
+  code: string;
+}
+
 
 // ===== Marketplace =====
 export interface Listing {
@@ -229,12 +311,82 @@ export const authApi = {
   resendVerification: (data: ResendVerificationRequest) =>
     http.post<ResendVerificationResponse>('/v1/auth/resend-verification', data).then((r) => r.data),
 
+  // POST /v1/auth/forgot-password — always 202 with generic message; never leaks
+  // whether the email exists (anti-enumeration). isAuthFlowRequest covers this path.
+  forgotPassword: (data: ForgotPasswordRequest) =>
+    http.post<ForgotPasswordResponse>('/v1/auth/forgot-password', data).then((r) => r.data),
+
+  // POST /v1/auth/reset-password — 200 { reset: true } on success.
+  // 400 INVALID_RESET_TOKEN when the token is expired/invalid.
+  // 422 WEAK_PASSWORD when the password does not meet the policy (min 12 chars).
+  // isAuthFlowRequest covers this path so a 400 never triggers the refresh loop.
+  resetPassword: (data: ResetPasswordRequest) =>
+    http.post<ResetPasswordResponse>('/v1/auth/reset-password', data).then((r) => r.data),
+
   // /api/user/v1/me → gateway strips /api/user → user service receives /v1/me
   // Accepts an optional token to use directly (bypasses store, for post-login hydration).
   me: (token?: string) =>
     http.get<AuthUser>('/api/user/v1/me', {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     }).then((r) => r.data),
+
+  // ── OAuth ──────────────────────────────────────────────────────────────────
+  // Exchange a one-time authorisation code (from the OAuth callback) for tokens.
+  // isAuthFlowRequest covers /v1/auth/oauth/ so a 401 never triggers the
+  // access-token refresh-retry loop.
+  oauthExchange: (data: OAuthExchangeRequest) =>
+    http.post<OAuthExchangeResponse>('/v1/auth/oauth/exchange', data).then((r) => r.data),
+
+  // List social identities bound to the current user.
+  // GET /api/user/v1/me/identities → { identities: [...], hasPassword: boolean }
+  listIdentities: () =>
+    http.get<ListIdentitiesResponse>('/api/user/v1/me/identities').then((r) => r.data),
+
+  // Initiate OAuth bind flow for an already-authenticated user.
+  // POST /api/user/v1/me/identities/:provider → { authorizeUrl }
+  // FE follows the returned URL (window.location.href) so the backend can
+  // attach the new identity to the already-authenticated session.
+  bindIdentity: (provider: OAuthProvider) =>
+    http
+      .post<OAuthBindStartResponse>(`/api/user/v1/me/identities/${provider}`)
+      .then((r) => {
+        // Security: validate the server-supplied redirect URL before navigating
+        // (CWE-601 open redirect defence). Only allow HTTPS origins from the
+        // real OAuth providers — google and line are the only OAuthProvider values.
+        const ALLOWED_ORIGINS: Record<OAuthProvider, string> = {
+          google: 'https://accounts.google.com',
+          line: 'https://access.line.me',
+        };
+        let parsed: URL;
+        try {
+          parsed = new URL(r.data.authorizeUrl);
+        } catch {
+          throw new Error('Invalid authorizeUrl returned by server.');
+        }
+        if (parsed.protocol !== 'https:' || parsed.origin !== ALLOWED_ORIGINS[provider]) {
+          throw new Error('authorizeUrl origin is not an allowed OAuth provider.');
+        }
+        window.location.href = r.data.authorizeUrl;
+      }),
+
+  // Remove a social identity from the current user.
+  // DELETE /api/user/v1/me/identities/:provider → 204
+  // 409 LAST_LOGIN_METHOD when trying to remove the only remaining method.
+  unbindIdentity: (provider: OAuthProvider) =>
+    http.delete(`/api/user/v1/me/identities/${provider}`).then((r) => r.data),
+
+  // Complete OAuth registration when the provider did not supply an email.
+  // POST /v1/auth/oauth/register { regToken, email }
+  //   201 { code } → FE calls oauthExchange({ code }) to mint session tokens.
+  //   409 EMAIL_EXISTS → surface "use password login + bind in Settings" UX.
+  // isAuthFlowRequest covers /v1/auth/oauth/ so a 401 here never triggers
+  // the access-token refresh-retry loop.
+  // FLAG: path confirmed as /v1/auth/oauth/register (gateway public route,
+  //       no /api/:svc prefix) — reconcile with eng-oauth-be if it moves.
+  oauthRegister: (data: OAuthRegisterRequest) =>
+    http
+      .post<OAuthRegisterResponse>('/v1/auth/oauth/register', data)
+      .then((r) => r.data),
 };
 
 // ===== OAuth social login API =====
@@ -394,4 +546,70 @@ export const workspaceApi = {
 
   updateTask: (contractId: string, taskId: string, data: UpdateTaskRequest) =>
     http.patch<Task>(`/api/workspace/v1/contracts/${contractId}/tasks/${taskId}`, data).then((r) => r.data),
+};
+
+// ===== Notifications =====
+// notification service: GET /api/notification/v1/me/notifications
+//                       GET /api/notification/v1/me/notifications/unread-count
+//                       POST /api/notification/v1/me/notifications/:id/read
+//                       POST /api/notification/v1/me/notifications/read-all
+// (gateway strips /api/notification → notification service receives /v1/me/notifications)
+
+export type NotificationType =
+  | 'KYC_TIER_CHANGED'
+  | 'BID_RECEIVED'
+  | 'BID_ACCEPTED'
+  | 'MILESTONE_REACHED'
+  | 'CONTRACT_SIGNED'
+  | 'ACCOUNT_SUSPENDED'
+  | 'KYC_STATUS_CHANGED';
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  // Raw JSON payload — structure varies per type.
+  data?: Record<string, unknown>;
+  sourceEventId?: string;
+  // null when unread
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface ListNotificationsResponse {
+  items: Notification[];
+  // Opaque cursor for the next page; absent when no more pages.
+  nextCursor?: string;
+}
+
+export interface UnreadCountResponse {
+  count: number;
+}
+
+export const notificationApi = {
+  // GET /api/notification/v1/me/notifications
+  // Cursor-paginated list; limit defaults to 20 server-side.
+  list: (params?: { cursor?: string; limit?: number }) =>
+    http
+      .get<ListNotificationsResponse>('/api/notification/v1/me/notifications', { params })
+      .then((r) => r.data),
+
+  // GET /api/notification/v1/me/notifications/unread-count
+  unreadCount: () =>
+    http
+      .get<UnreadCountResponse>('/api/notification/v1/me/notifications/unread-count')
+      .then((r) => r.data),
+
+  // POST /api/notification/v1/me/notifications/:id/read → 204 No Content
+  markRead: (id: string) =>
+    http
+      .post<void>(`/api/notification/v1/me/notifications/${id}/read`)
+      .then((r) => r.data),
+
+  // POST /api/notification/v1/me/notifications/read-all → 204 No Content
+  markAllRead: () =>
+    http
+      .post<void>('/api/notification/v1/me/notifications/read-all')
+      .then((r) => r.data),
 };

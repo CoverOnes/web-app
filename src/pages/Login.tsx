@@ -16,7 +16,7 @@
  */
 
 import { useState, useId } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { authApi, oauthStartUrl, type OAuthProvider } from '../lib/api/coverones';
@@ -54,11 +54,6 @@ const IconLockSmall = () => (
   </svg>
 );
 
-const IconBuilding = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="1.75" aria-hidden="true">
-    <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/>
-  </svg>
-);
 
 // ─── Owl brand mark SVG ──────────────────────────────────────────────────────
 
@@ -84,12 +79,6 @@ const IconGoogle = () => (
   </svg>
 );
 
-// Apple
-const IconApple = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
-    <path d="M17 12.5c0-2.6 2.1-3.8 2.2-3.9-1.2-1.7-3-2-3.7-2-1.6-.2-3 .9-3.8.9s-2-.9-3.3-.9c-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.5 1.3 0 1.8-.8 3.4-.8s2 .8 3.4.8c1.4 0 2.3-1.2 3.1-2.4.6-.9 1.1-1.8 1.4-2.8-1.5-.6-3-2.2-3-4.1zM14.5 4.7c.7-.8 1.2-2 1-3.2-1 0-2.3.7-3 1.5-.7.7-1.2 1.9-1.1 3.1 1.1 0 2.3-.6 3.1-1.4z"/>
-  </svg>
-);
 
 // LINE
 const IconLine = () => (
@@ -216,14 +205,14 @@ const FloatingCards = () => (
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, var(--co-accent-blue), var(--co-accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>台</div>
+        <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, var(--co-accent-blue), var(--co-accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>B</div>
         <div>
-          <div style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--co-text)' }}>台積電子</div>
-          <div style={{ fontSize: 10.5, color: 'var(--co-text-muted)' }}>已驗證 · 半導體</div>
+          <div style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--co-text)' }}>採購方 B</div>
+          <div style={{ fontSize: 10.5, color: 'var(--co-text-muted)' }}>已驗證 · 科技業</div>
         </div>
         <span style={{ marginLeft: 'auto', width: 16, height: 16, borderRadius: '50%', background: 'rgba(16,185,129,0.2)', color: 'var(--co-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>✓</span>
       </div>
-      <div style={{ fontSize: 11.5, color: 'var(--co-text-dim)', lineHeight: 1.5 }}>徵求 PCB 後段組裝合作夥伴 · 預算 NT$ 2.4M</div>
+      <div style={{ fontSize: 11.5, color: 'var(--co-text-dim)', lineHeight: 1.5 }}>正在尋找合作夥伴</div>
     </div>
 
     {/* Card 2 — live match */}
@@ -243,15 +232,15 @@ const FloatingCards = () => (
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
         {[
-          ['鴻', 'linear-gradient(135deg,var(--co-amber),var(--co-red))'],
-          ['新', 'linear-gradient(135deg,var(--co-green),#059669)'],
-          ['奇', 'linear-gradient(135deg,var(--co-accent-2),var(--co-pink))'],
+          ['A', 'linear-gradient(135deg,var(--co-amber),var(--co-red))'],
+          ['B', 'linear-gradient(135deg,var(--co-green),#059669)'],
+          ['C', 'linear-gradient(135deg,var(--co-accent-2),var(--co-pink))'],
         ].map(([ch, bg], i) => (
           <div key={ch} style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: '2px solid var(--co-bg-3)', marginLeft: i > 0 ? -10 : 0, fontSize: 11, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 3 - i }}>{ch}</div>
         ))}
       </div>
-      <div style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--co-text)' }}>智慧製造 ERP 系統開發案</div>
-      <div style={{ fontSize: 10.5, color: 'var(--co-text-muted)', marginTop: 2 }}>預算 NT$ 850K · 截標 4/28</div>
+      <div style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--co-text)' }}>企業數位轉型專案</div>
+      <div style={{ fontSize: 10.5, color: 'var(--co-text-muted)', marginTop: 2 }}>已有多家廠商洽談中</div>
     </div>
 
     {/* Card 3 — encryption */}
@@ -282,7 +271,10 @@ const FloatingCards = () => (
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuthStore();
+  // resetSuccess is set by ResetPasswordPage after a successful password reset.
+  const resetSuccess = (location.state as { resetSuccess?: boolean } | null)?.resetSuccess === true;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -437,22 +429,15 @@ const Login = () => {
             </h1>
 
             <p style={{ fontSize: 17, lineHeight: 1.65, color: 'var(--co-text-dim)', maxWidth: 520, margin: '0 0 36px 0', fontWeight: 400 }}>
-              從上市公司到新創團隊，超過 12,000 家企業在 CoverOnes 上發掘合作夥伴、發布專案需求，並以加密通訊安心協作。
+              從上市公司到新創團隊，CoverOnes 連結企業合作夥伴、媒合專案需求，並以加密通訊安心協作。
             </p>
 
-            {/* Stats */}
-            <div style={{ display: 'flex', gap: 36, marginTop: 16, paddingTop: 28, borderTop: '1px solid var(--co-line)' }}>
-              {[
-                { num: '12,400+', lbl: '已認證企業' },
-                { num: '86,200', lbl: '本月新發專案' },
-                { num: 'NT$ 4.8B', lbl: '累計媒合金額' },
-                { num: '98.6%', lbl: '合作完成率' },
-              ].map((s) => (
-                <div key={s.lbl}>
-                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', background: 'linear-gradient(180deg, #fff, #C7D2FE)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    {s.num}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--co-text-dim)', marginTop: 2, letterSpacing: '0.02em' }}>{s.lbl}</div>
+            {/* Brand trust strip — no fabricated numbers */}
+            <div style={{ display: 'flex', gap: 24, marginTop: 16, paddingTop: 28, borderTop: '1px solid var(--co-line)', flexWrap: 'wrap' }}>
+              {['統編驗證', 'AI 智慧媒合', '合約簽署', '發票結算'].map((feat) => (
+                <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--co-accent)', flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, color: 'var(--co-text-dim)', fontWeight: 500 }}>{feat}</span>
                 </div>
               ))}
             </div>
@@ -508,6 +493,20 @@ const Login = () => {
               <p style={{ fontSize: 13.5, color: 'var(--co-text-dim)', margin: '0 0 26px 0' }}>
                 使用您的公司 Email 登入，開始探索合作機會。
               </p>
+
+              {/* Reset-success banner (shown after a successful password reset) */}
+              {resetSuccess && (
+                <div
+                  role="status"
+                  style={{
+                    padding: '10px 14px', marginBottom: 16,
+                    background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
+                    borderRadius: 10, fontSize: 13, color: '#4ade80',
+                  }}
+                >
+                  密碼已重設，請使用新密碼登入。
+                </div>
+              )}
 
               {/* Error banner */}
               {error && (
@@ -652,32 +651,26 @@ const Login = () => {
                 <span style={{ flex: 1, height: 1, background: 'var(--co-line)' }} />
               </div>
 
-              {/* SSO grid */}
+              {/* SSO grid — Google + LINE only (full-page redirect to backend OAuth start) */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                {([
-                  // Google + LINE are wired to the OAuth start flow. Apple is out of
-                  // scope this wave (no provider config) → rendered disabled.
-                  { icon: <IconGoogle />, label: 'Google', provider: 'google' as OAuthProvider },
-                  { icon: <IconApple />, label: 'Apple', provider: null },
-                  { icon: <IconLine />, label: 'LINE', provider: 'line' as OAuthProvider },
-                ]).map(({ icon, label, provider }) => (
+                {(
+                  [
+                    { icon: <IconGoogle />, label: 'Google', provider: 'google' },
+                    { icon: <IconLine />, label: 'LINE', provider: 'line' },
+                  ] as const
+                ).map(({ icon, label, provider }) => (
                   <button
-                    key={label}
+                    key={provider}
                     type="button"
                     aria-label={`使用 ${label} 登入`}
-                    disabled={!provider}
-                    onClick={
-                      provider
-                        ? () => { window.location.href = oauthStartUrl(provider, '/jobs'); }
-                        : undefined
-                    }
+                    onClick={() => { window.location.href = oauthStartUrl(provider, '/jobs'); }}
                     style={{
                       height: 42, borderRadius: 10, border: 'none',
                       background: 'rgba(15,23,42,0.5)', borderStyle: 'solid', borderWidth: 1, borderColor: 'var(--co-line-strong)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                       fontSize: 13, fontWeight: 500, color: 'var(--co-text)',
-                      cursor: provider ? 'pointer' : 'not-allowed',
-                      opacity: provider ? 1 : 0.45,
+                      cursor: 'pointer',
+                      opacity: 1,
                       transition: 'background 150ms, border-color 150ms',
                     }}
                   >
@@ -685,24 +678,6 @@ const Login = () => {
                     {label}
                   </button>
                 ))}
-
-                {/* Enterprise SSO — spans full width */}
-                <button
-                  type="button"
-                  aria-label="企業單一登入 SAML 2.0 / OIDC"
-                  style={{
-                    gridColumn: 'span 2', height: 42, borderRadius: 10, border: 'none',
-                    background: 'linear-gradient(180deg, rgba(99,102,241,0.1), rgba(139,92,246,0.06))',
-                    borderStyle: 'solid', borderWidth: 1, borderColor: 'rgba(99,102,241,0.3)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    fontSize: 13, fontWeight: 500, color: 'var(--co-text)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <IconBuilding />
-                  <span>企業單一登入 (SAML 2.0 / OIDC)</span>
-                  <span style={{ fontSize: 10, color: 'var(--co-text-muted)', marginLeft: 4 }}>為大型企業設計</span>
-                </button>
               </div>
 
               {/* Footer: sign up link */}

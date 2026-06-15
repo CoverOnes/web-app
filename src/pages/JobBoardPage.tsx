@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { useListings } from '../lib/query';
+import { useListings, useMyBids } from '../lib/query';
+import { getApiErrorCode } from '../lib/api/http';
 
 /* Design-system palette constants — all values from shared.css / index.css :root tokens */
 const P = {
@@ -39,16 +40,6 @@ const TABS: { id: TabId; label: string; disabled?: true }[] = [
 ];
 
 const FILTER_CHIPS = ['軟體開發', 'UI/UX 設計', '行銷推廣', '硬體製造', '資料分析', '法務財會'];
-
-type ApiErrorBody = {
-  code?: string;
-  data?: { code?: string };
-};
-
-function getApiErrorCode(error: unknown): string | undefined {
-  const r = (error as { response?: { data?: ApiErrorBody } })?.response;
-  return r?.data?.code ?? r?.data?.data?.code;
-}
 
 /* ── Role badge ─────────────────────────────────────────────────────── */
 type BadgeVariant = 'dev' | 'design' | 'mfg' | 'mkt' | 'grey' | 'cyan' | 'amber' | 'green';
@@ -280,6 +271,8 @@ const JobBoardPage = () => {
   const user = useAuthStore((s) => s.user);
   const kycTier = user?.kycTier ?? 0;
   const { data: listings, isLoading, isError, error } = useListings({ status: 'OPEN' });
+  // APPLIED tab: use real bid data from the user's submitted bids
+  const { data: myBids } = useMyBids();
   // Default to first enabled tab ('ALL'); RECOMMEND is disabled / coming-soon
   const [activeTab, setActiveTab] = useState<TabId>('ALL');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -293,9 +286,27 @@ const JobBoardPage = () => {
 
   const totalCount = listings?.length ?? 0;
 
+  // Map category chip labels to keywords matched against title + description.
+  // NOTE: The API has no category field yet; this is a client-side text filter.
+  // TODO (backend): add category/tag field to Listing and filter server-side.
+  const CHIP_KEYWORDS: Record<string, string[]> = {
+    '軟體開發':  ['軟體', '開發', '程式', 'software', 'dev', 'code', 'api', 'backend', 'frontend', 'golang', 'go ', 'react', 'microservice', '微服務'],
+    'UI/UX 設計': ['設計', 'design', 'ui', 'ux', '品牌', 'visual', '介面'],
+    '行銷推廣':  ['行銷', 'marketing', 'campaign', 'social', 'kol', '媒體', '推廣'],
+    '硬體製造':  ['硬體', 'hardware', 'pcb', '製造', '代工', '機械', '機電', '電路'],
+    '資料分析':  ['資料', 'data', 'analytics', 'bi', '分析', 'ml', 'ai', '機器學習'],
+    '法務財會':  ['法務', '財會', '會計', '法律', 'legal', 'finance', 'audit', '稽核'],
+  };
+
   function filterListings(items: Listing[]): Listing[] {
-    if (activeTab === 'APPLIED') return items.filter((l) => l.status === 'AWARDED' || l.status === 'CLOSED');
-    // ALL (and any future active tab) shows everything
+    // Category chip filter: client-side keyword match on title + description
+    if (activeFilter && CHIP_KEYWORDS[activeFilter]) {
+      const keywords = CHIP_KEYWORDS[activeFilter];
+      return items.filter((l) => {
+        const haystack = `${l.title} ${l.description}`.toLowerCase();
+        return keywords.some((kw) => haystack.includes(kw.toLowerCase()));
+      });
+    }
     return items;
   }
 
@@ -384,7 +395,7 @@ const JobBoardPage = () => {
         {TABS.map((tab) => {
           const isTabActive = activeTab === tab.id;
           // Show real count only for tabs with a live filter; disabled tabs show no count
-          const liveCount = tab.id === 'ALL' ? totalCount : tab.id === 'APPLIED' ? displayed.length : undefined;
+          const liveCount = tab.id === 'ALL' ? totalCount : tab.id === 'APPLIED' ? (myBids?.length ?? 0) : undefined;
           return (
             <button
               key={tab.id}
@@ -501,28 +512,6 @@ const JobBoardPage = () => {
           </button>
         ))}
 
-        <div style={{ width: 1, height: 20, background: 'var(--co-line)' }} aria-hidden="true" />
-
-        <button
-          aria-label="篩選預算 50萬+"
-          style={{
-            padding: '6px 12px',
-            borderRadius: 999,
-            background: 'rgba(99,102,241,0.18)',
-            border: '1px solid var(--co-accent)',
-            color: P.textIndigoLt,
-            fontSize: 12.5,
-            fontWeight: 500,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          預算 50萬+
-          <Icon.X size={10} />
-        </button>
-
         <div style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--co-text-dim)' }}>
           排序：最新發布 ▾
         </div>
@@ -541,43 +530,6 @@ const JobBoardPage = () => {
       >
         {/* ── Left: stats + listings ── */}
         <div>
-          {/* Stat row */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 12,
-              marginBottom: 14,
-            }}
-            className="jb-stat-row"
-          >
-            {[
-              { label: '本月已應標',  value: '9',      sub: '/ 月限 20',  delta: '較上月 +3',      up: true },
-              { label: '中標率',      value: '42%',    sub: '',           delta: '業界前 15%',     up: true },
-              { label: '進行中',      value: '7',      sub: '',           delta: '3 件預計本週交付', up: false },
-              { label: '本季營收',    value: 'NT$ 3.2M', sub: '',         delta: '較上季 +28%',    up: true },
-            ].map(({ label, value, sub, delta, up }) => (
-              <div
-                key={label}
-                style={{
-                  background: 'var(--co-bg-card)',
-                  border: '1px solid var(--co-line-strong)',
-                  borderRadius: 'var(--co-card-r)',
-                  padding: '14px 16px',
-                }}
-              >
-                <div style={{ fontSize: 11, color: 'var(--co-text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 500 }}>{label}</div>
-                <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', marginTop: 4 }}>
-                  {value}
-                  {sub && <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--co-text-dim)' }}>{sub}</span>}
-                </div>
-                <div style={{ fontSize: 11, color: up ? 'var(--co-green)' : 'var(--co-text-dim)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  {up && '▲ '}{delta}
-                </div>
-              </div>
-            ))}
-          </div>
-
           {/* Section label */}
           <div
             style={{
@@ -589,7 +541,7 @@ const JobBoardPage = () => {
               padding: '2px 4px 8px 4px',
             }}
           >
-            ⚡ 為你精選
+            ⚡ 開放案件
           </div>
 
           {/* Listings */}
@@ -598,7 +550,23 @@ const JobBoardPage = () => {
             id={`jobs-panel-${activeTab}`}
             aria-labelledby={`jobs-tab-${activeTab}`}
           >
-            {isLoading ? (
+            {/* APPLIED tab: show real bids from useMyBids(); Bid type doesn't
+                map to ListingRow, so render EmptyState with honest bid count */}
+            {activeTab === 'APPLIED' ? (
+              myBids && myBids.length > 0 ? (
+                <EmptyState
+                  icon={<Icon.Briefcase size={48} />}
+                  title={`已應標 ${myBids.length} 個專案`}
+                  description="詳細應標記錄請至各專案頁面查看。"
+                />
+              ) : (
+                <EmptyState
+                  icon={<Icon.Briefcase size={48} />}
+                  title="尚無應標紀錄"
+                  description="瀏覽案件並提交您的第一個投標。"
+                />
+              )
+            ) : isLoading ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <LoadingSkeleton count={4} height="h-32" />
               </div>
@@ -641,9 +609,12 @@ const JobBoardPage = () => {
                     onBid={() => navigate(`/jobs/${listing.id}`)}
                   />
                 ))}
+                {/* Pagination not yet implemented — disable until cursor-based
+                    load-more is wired to the API's next_cursor/has_more fields */}
                 <div style={{ textAlign: 'center', padding: 14 }}>
                   <button
-                    aria-label="載入更多案件"
+                    aria-label="載入更多案件（即將推出）"
+                    disabled
                     style={{
                       padding: '8px 20px',
                       borderRadius: 'var(--co-btn-r)',
@@ -651,10 +622,11 @@ const JobBoardPage = () => {
                       border: '1px solid var(--co-line-strong)',
                       color: 'var(--co-text-dim)',
                       fontSize: 13,
-                      cursor: 'pointer',
+                      cursor: 'not-allowed',
+                      opacity: 0.55,
                     }}
                   >
-                    載入更多 (還有 343 件)
+                    即將推出分頁載入
                   </button>
                 </div>
               </>
@@ -665,57 +637,26 @@ const JobBoardPage = () => {
         {/* ── Right rail ── */}
         <aside style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }} aria-label="側邊資訊欄">
 
-          {/* Smart match alert */}
+          {/* Smart match — no backend source yet */}
           <div
             style={{
-              background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.06))',
-              border: '1px solid rgba(99,102,241,0.3)',
+              background: 'var(--co-bg-card)',
+              border: '1px solid var(--co-line-strong)',
               borderRadius: 'var(--co-card-r)',
               padding: 16,
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                fontSize: 12,
-                color: P.textViolet,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                marginBottom: 8,
-              }}
-            >
+            <h3 style={{ fontSize: 13, fontWeight: 600, margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Icon.Bell size={14} />
               智慧媒合提醒
-            </div>
-            <div style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.4, marginBottom: 6 }}>3 個高度相關專案</div>
-            <div style={{ fontSize: 12, color: 'var(--co-text-dim)', lineHeight: 1.55 }}>
-              根據貴司過往實績，我們找到 3 件「Vue 3 + 金融業」高匹配度專案。
-            </div>
-            <button
-              aria-label="查看推薦案件"
-              style={{
-                marginTop: 10,
-                width: '100%',
-                padding: '8px 0',
-                borderRadius: 'var(--co-btn-r)',
-                background: 'transparent',
-                border: '1px solid var(--co-accent)',
-                color: P.textIndigoLt,
-                fontSize: 12.5,
-                fontWeight: 500,
-                cursor: 'pointer',
-                justifyContent: 'center',
-                display: 'flex',
-              }}
-            >
-              查看推薦
-            </button>
+            </h3>
+            <EmptyState
+              title="媒合功能即將推出"
+              description="AI 智慧媒合功能正在開發中，敬請期待。"
+            />
           </div>
 
-          {/* Bid progress */}
+          {/* Bid progress — link to real bids page */}
           <div
             style={{
               background: 'var(--co-bg-card)',
@@ -734,32 +675,16 @@ const JobBoardPage = () => {
                 查看全部
               </button>
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {[
-                { name: '台積電 Wafer 良率分析', pct: 65, status: '評審中', color: 'var(--co-amber)', note: '提案已送出 · 預計 5/3 公布' },
-                { name: 'Cathay 行員培訓 LMS',  pct: 85, status: '已入圍', color: 'var(--co-green)', note: '已入圍最終三家 · 5/8 簡報' },
-                { name: '誠品線上會員系統',      pct: 30, status: '資料補件', color: 'var(--co-text-dim)', note: '需於 4/29 前補上 ISO 認證' },
-              ].map(({ name, pct, status, color, note }) => (
-                <div key={name}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{name}</span>
-                    <RoleBadge variant={status === '已入圍' ? 'green' : status === '評審中' ? 'amber' : 'grey'}>
-                      {status}
-                    </RoleBadge>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ flex: 1, height: 6, borderRadius: 999, background: 'rgba(148,163,184,0.1)', overflow: 'hidden' }}>
-                      <span style={{ display: 'block', width: `${pct}%`, height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${color}, ${color === 'var(--co-green)' ? P.textGreenBright : 'var(--co-amber)'})` }} />
-                    </div>
-                    <span style={{ fontSize: 11, color: 'var(--co-text-dim)' }}>{pct}%</span>
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--co-text-muted)', marginTop: 4 }}>{note}</div>
-                </div>
-              ))}
-            </div>
+            <EmptyState
+              icon={<Icon.Star size={32} />}
+              title="查看應標紀錄"
+              description="前往「我的投標」查看您的應標狀態與進度。"
+              ctaLabel="前往我的投標"
+              onCta={() => navigate('/bids')}
+            />
           </div>
 
-          {/* Saved */}
+          {/* Saved — no backend source yet */}
           <div
             style={{
               background: 'var(--co-bg-card)',
@@ -768,49 +693,14 @@ const JobBoardPage = () => {
               padding: 16,
             }}
           >
-            <h3 style={{ fontSize: 13, fontWeight: 600, margin: '0 0 10px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 600, margin: '0 0 10px 0' }}>
               已收藏
-              <span style={{ fontSize: 11, color: 'var(--co-text-dim)' }}>6</span>
             </h3>
-            {[
-              { letter: '中', bg: P.gradCyan,   title: '中華電信 5G 邊緣運算 PoC', meta: 'NT$ 2.5M · 5/14 截止' },
-              { letter: 'P', bg: P.gradPurple, title: 'Pinkoi 設計師後台',        meta: 'NT$ 600k · 5/20 截止' },
-              { letter: '統', bg: P.gradAmber, title: '統一超 POS 維運',           meta: 'NT$ 1.2M · 6/01 截止' },
-            ].map(({ letter, bg, title, meta }, i) => (
-              <div
-                key={title}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: i === 0 ? '0 0 8px 0' : '8px 0',
-                  borderTop: i === 0 ? 'none' : '1px solid var(--co-line)',
-                }}
-              >
-                <div
-                  aria-hidden="true"
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 7,
-                    background: bg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: '#fff',
-                    flexShrink: 0,
-                  }}
-                >
-                  {letter}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--co-text-dim)' }}>{meta}</div>
-                </div>
-              </div>
-            ))}
+            <EmptyState
+              icon={<Icon.Star size={32} />}
+              title="收藏功能即將推出"
+              description="案件收藏功能正在開發中，敬請期待。"
+            />
           </div>
 
           {/* AI helper */}
@@ -873,7 +763,6 @@ const JobBoardPage = () => {
         }
         @media (max-width: 767px) {
           .jb-body { padding: 16px 16px 80px 16px !important; }
-          .jb-stat-row { grid-template-columns: 1fr 1fr !important; }
         }
       `}</style>
     </div>

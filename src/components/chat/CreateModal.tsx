@@ -19,16 +19,9 @@ interface ContactPerson {
   color: [string, string];
 }
 
-// Static contact list (matches existing Sidebar pattern)
-const ALL_CONTACTS: ContactPerson[] = [
-  { id: 'user_alice', name: 'Alice', status: 'online', color: ['#2563EB', '#6366F1'] },
-  { id: 'user_bob', name: 'Bob', status: 'online', color: ['#059669', '#0D9488'] },
-  { id: 'user_charlie', name: 'Charlie', status: 'away', color: ['#D97706', '#DC2626'] },
-  { id: 'user_david', name: 'David', status: 'offline', color: ['#7C3AED', '#DB2777'] },
-  { id: 'user_emma', name: 'Emma', status: 'online', color: ['#0891B2', '#0D9488'] },
-  { id: 'user_frank', name: 'Frank', status: 'offline', color: ['#B45309', '#92400E'] },
-  { id: 'user_grace', name: 'Grace', status: 'online', color: ['#065F46', '#0F766E'] },
-];
+// Contact list is empty until the user-directory API is available (GTD task 84a7e46c).
+// Do NOT populate with fake/hardcoded users.
+const ALL_CONTACTS: ContactPerson[] = [];
 
 interface ContactRowProps {
   person: ContactPerson;
@@ -499,7 +492,7 @@ const CreateModal = ({ open, onClose, onCreateDM, onCreateGroup }: CreateModalPr
                 color: 'var(--color-main-text-dim)',
                 fontSize: 13,
               }}>
-                找不到「{query}」
+                {query ? `找不到「${query}」` : '聯絡人功能即將推出'}
               </div>
             )}
           </div>

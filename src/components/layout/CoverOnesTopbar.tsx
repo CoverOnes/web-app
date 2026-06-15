@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Icon } from '../ui/Icon';
@@ -13,7 +13,19 @@ const CoverOnesTopbar = ({ drawerOpen = false, onMenuOpen }: CoverOnesTopbarProp
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const handleSearchSubmit = () => {
+    const q = searchQuery.trim();
+    navigate(q ? `/search?q=${encodeURIComponent(q)}` : '/search');
+  };
+
+  const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit();
+    }
+  };
 
   const initial = (user?.displayName ?? 'U').charAt(0).toUpperCase();
 
@@ -100,19 +112,37 @@ const CoverOnesTopbar = ({ drawerOpen = false, onMenuOpen }: CoverOnesTopbarProp
           color: 'var(--co-text-dim)',
         }}
       >
-        <Icon.Search size={16} />
+        <button
+          type="button"
+          onClick={handleSearchSubmit}
+          aria-label="執行搜尋"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            color: 'inherit',
+            flexShrink: 0,
+          }}
+        >
+          <Icon.Search size={16} />
+        </button>
         <input
-          disabled
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
           placeholder="搜尋案件、關鍵字..."
-          aria-label="搜尋（即將推出）"
+          aria-label="搜尋案件或關鍵字"
           style={{
             flex: 1,
             fontSize: 13,
             background: 'transparent',
             border: 'none',
             outline: 'none',
-            color: 'var(--co-text-dim)',
-            cursor: 'not-allowed',
+            color: 'var(--co-text)',
+            cursor: 'text',
           }}
         />
         {/* Keyboard shortcut badge — shared.css .search .kbd */}
@@ -138,6 +168,7 @@ const CoverOnesTopbar = ({ drawerOpen = false, onMenuOpen }: CoverOnesTopbarProp
         <div style={{ position: 'relative' }}>
           <button
             aria-label="通知"
+            onClick={() => navigate('/notifications')}
             style={{
               width: 36,
               height: 36,
