@@ -169,6 +169,7 @@ const CoverOnesSidebar = () => {
     { path: '/contracts', label: '合約管理',  icon: (s) => <Icon.FileText size={s} /> },
     // 訊息: canonical route is /chat; isActive also matches legacy /messages
     { path: '/chat',      label: '訊息',      icon: (s) => <Icon.MessageSquare size={s} /> },
+    { path: '/search',    label: '搜尋',      icon: (s) => <Icon.Search size={s} /> },
   ];
 
   // Account nav items (帳號)
