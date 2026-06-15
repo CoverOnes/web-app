@@ -23,6 +23,7 @@ import Contacts from './pages/Contacts';
 import Settings from './pages/Settings';
 import NotificationsPage from './pages/NotificationsPage';
 import SearchPage from './pages/SearchPage';
+import DiscoverPage from './pages/DiscoverPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { FeatureRoute } from './features/flags/FeatureRoute';
@@ -95,6 +96,9 @@ function App() {
 
             {/* Notifications */}
             <Route path="notifications" element={<NotificationsPage />} />
+            {/* Discover — company explorer; empty-state until backend company API ships */}
+            <Route path="discover" element={<DiscoverPage />} />
+
             {/* Search — full-site search over real listings; company/people tabs show empty-state */}
             <Route path="search" element={<SearchPage />} />
 
