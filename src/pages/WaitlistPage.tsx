@@ -401,6 +401,8 @@ const WaitlistPage = () => {
                           onFocus={() => setEmailFocus(true)}
                           onBlur={() => setEmailFocus(false)}
                           aria-required="true"
+                          aria-invalid={validationError ? true : undefined}
+                          aria-describedby={validationError ? errorId : undefined}
                           style={{
                             flex: 1, fontSize: 14, background: 'transparent',
                             border: 'none', outline: 'none', color: 'var(--co-text)',

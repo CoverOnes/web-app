@@ -1,4 +1,4 @@
-import { http } from './http';
+import { http, publicHttp } from './http';
 import type { AuthUser } from '../../store/authStore';
 
 // ===== Auth =====
@@ -521,8 +521,10 @@ export interface WaitlistJoinResponse {
 }
 
 export const waitlistApi = {
+  // Uses publicHttp (no Authorization header) — /v1/waitlist is a public
+  // endpoint and must not receive the user's Bearer token even when logged in.
   join: (data: WaitlistJoinRequest) =>
-    http.post<WaitlistJoinResponse>('/v1/waitlist', data).then((r) => r.data),
+    publicHttp.post<WaitlistJoinResponse>('/v1/waitlist', data).then((r) => r.data),
 };
 
 // ===== Notifications =====

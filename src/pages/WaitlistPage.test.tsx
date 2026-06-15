@@ -139,6 +139,26 @@ describe('WaitlistPage — validation', () => {
     expect(alert).toHaveTextContent('請輸入 Email。');
     expect(mockMutate).not.toHaveBeenCalled();
   });
+
+  it('marks email input aria-invalid=true on validation failure', async () => {
+    // a11y fix: the email input must carry aria-invalid so screen readers
+    // announce it as invalid without relying solely on the banner.
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: /申請加入候補/i }));
+    await screen.findByRole('alert');
+
+    const emailInput = screen.getByLabelText(/電子郵件/);
+    expect(emailInput).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('does NOT mark email input aria-invalid when no validation error', () => {
+    renderPage();
+    const emailInput = screen.getByLabelText(/電子郵件/);
+    // aria-invalid should be absent (undefined) before any submission attempt.
+    expect(emailInput).not.toHaveAttribute('aria-invalid');
+  });
 });
 
 // ── Interaction / success tests ───────────────────────────────────────────────
