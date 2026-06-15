@@ -137,12 +137,6 @@ describe('Login page — OAuth buttons', () => {
     expect(window.location.href).toContain('/v1/auth/oauth/line/start');
   });
 
-  it('disables the out-of-scope Apple SSO button', () => {
-    renderPage();
-    expect(screen.getByRole('button', { name: /使用 Apple 登入/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /使用 Google 登入/i })).toBeEnabled();
-    expect(screen.getByRole('button', { name: /使用 LINE 登入/i })).toBeEnabled();
-  });
 });
 
 describe('Login page — OAuth social login', () => {

@@ -19,7 +19,7 @@ import { useState, useId } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
-import { authApi, oauthStartUrl, type OAuthProvider } from '../lib/api/coverones';
+import { authApi, oauthStartUrl } from '../lib/api/coverones';
 
 // NOTE: No remember-me / remember-device state here — the backend has no
 // persistent session / remember-me API.  The field was removed to avoid
