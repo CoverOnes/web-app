@@ -21,6 +21,7 @@ import ChatRoomPage from './pages/ChatRoomPage';
 import Messages from './pages/Messages';
 import Contacts from './pages/Contacts';
 import Settings from './pages/Settings';
+import SearchPage from './pages/SearchPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { FeatureRoute } from './features/flags/FeatureRoute';
@@ -90,6 +91,9 @@ function App() {
                 </FeatureRoute>
               }
             />
+
+            {/* Search — full-site search over real listings; company/people tabs show empty-state */}
+            <Route path="search" element={<SearchPage />} />
 
             {/* Settings — ungated: accessible to all authenticated users */}
             <Route path="settings" element={<Settings />} />
