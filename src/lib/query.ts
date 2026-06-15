@@ -5,9 +5,11 @@ import {
   marketplaceApi,
   workspaceApi,
   notificationApi,
+  waitlistApi,
   type ContractStatus,
   type KycSubmitRequest,
   type ResetPasswordRequest,
+  type WaitlistJoinRequest,
 } from './api/coverones';
 import { useAuthStore } from '../store/authStore';
 
@@ -344,5 +346,18 @@ export function useMarkAllNotificationsRead() {
       qc.invalidateQueries({ queryKey: ['notifications'] });
       qc.invalidateQueries({ queryKey: ['notifications-unread-count'] });
     },
+  });
+}
+
+// ===== Waitlist hook =====
+
+// useJoinWaitlist — public mutation; no auth required.
+// POST /v1/waitlist → any 2xx (including 202 for duplicate email) resolves as success.
+// retry:false — a network error should surface inline; the user can retry manually.
+// The hook does NOT need to invalidate any cache — it is a one-shot side-effect.
+export function useJoinWaitlist() {
+  return useMutation({
+    mutationFn: (data: WaitlistJoinRequest) => waitlistApi.join(data),
+    retry: false,
   });
 }

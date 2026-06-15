@@ -210,3 +210,33 @@ const createHttpClient = (): AxiosInstance => {
 
 export const http = createHttpClient();
 export default http;
+
+/**
+ * Public HTTP client — for unauthenticated endpoints (e.g. /v1/waitlist).
+ * Uses the same baseURL and Content-Type as `http`, and unwraps the
+ * {data: payload} response envelope, but does NOT attach Authorization headers
+ * and does NOT include the 401-refresh interceptor. This prevents access tokens
+ * from being forwarded to public upstream services (defense-in-depth).
+ *
+ * Pattern mirrors the bare axios.post used for /v1/auth/refresh (line ~179).
+ */
+export const publicHttp = (() => {
+  const client = axios.create({
+    baseURL: GATEWAY_URL,
+    timeout: 30000,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  // Unwrap the {data: payload} response envelope — same as the auth client.
+  client.interceptors.response.use(
+    (response) => {
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        response.data = (response.data as { data: unknown }).data;
+      }
+      return response;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  return client;
+})();
