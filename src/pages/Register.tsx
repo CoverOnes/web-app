@@ -599,18 +599,20 @@ const Register = () => {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {([
-              { icon: <IconGoogle />, label: 'Google', provider: 'google' as OAuthProvider },
-              { icon: <IconLine />, label: 'LINE', provider: 'line' as OAuthProvider },
-            ]).map(({ icon, label, provider }) => (
+            {(
+              [
+                { icon: <IconGoogle />, label: 'Google', provider: 'google' as OAuthProvider },
+                { icon: <IconLine />, label: 'LINE', provider: 'line' as OAuthProvider },
+              ] satisfies { icon: React.ReactNode; label: string; provider: OAuthProvider }[]
+            ).map(({ icon, label, provider }) => (
               <button
-                key={label}
+                key={provider}
                 type="button"
                 aria-label={`使用 ${label} 註冊`}
                 onClick={() => { window.location.href = oauthStartUrl(provider, '/jobs'); }}
                 style={{
                   height: 42, borderRadius: 10,
-                  background: 'var(--co-bg-3)', borderStyle: 'solid', borderWidth: 1, borderColor: 'var(--co-line-strong)',
+                  background: 'rgba(15,23,42,0.5)', borderStyle: 'solid', borderWidth: 1, borderColor: 'var(--co-line-strong)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   fontSize: 13, fontWeight: 500, color: 'var(--co-text)',
                   cursor: 'pointer', transition: 'background 150ms, border-color 150ms',

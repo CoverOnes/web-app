@@ -23,6 +23,21 @@ import { useAuthStore } from '../store/authStore';
 import { authApi } from '../lib/api/coverones';
 import axios from 'axios';
 
+// ─── OAuth error code → fixed zh-TW copy (M2: no raw param interpolation) ────
+// Mapping only known, expected OAuth error codes. Unknown codes fall back to a
+// generic message — the raw param value is NEVER rendered in the UI to prevent
+// phishing/social-engineering via crafted ?error= query strings.
+const OAUTH_ERROR_COPY: Record<string, string> = {
+  access_denied: '您取消了授權，請重新嘗試。',
+  server_error: '登入服務暫時無法使用，請稍後再試。',
+  temporarily_unavailable: '登入服務暫時無法使用，請稍後再試。',
+  invalid_request: '登入請求無效，請重新嘗試。',
+  invalid_client: '登入設定錯誤，請聯絡客服。',
+  unauthorized_client: '登入設定錯誤，請聯絡客服。',
+  unsupported_response_type: '登入設定錯誤，請聯絡客服。',
+  invalid_scope: '登入設定錯誤，請聯絡客服。',
+};
+
 // ─── Status machine ───────────────────────────────────────────────────────────
 
 type Status =
@@ -419,7 +434,13 @@ const OAuthCallback = () => {
       if (error === 'email_exists') {
         setStatus({ kind: 'email_exists' });
       } else {
-        setStatus({ kind: 'error', message: `登入失敗（${error}），請重試。` });
+        // Do NOT interpolate the raw `error` param — it comes from the URL and
+        // could contain attacker-controlled text (phishing/social-engineering).
+        // Use an allowlist of known OAuth error codes mapped to fixed zh-TW copy.
+        setStatus({
+          kind: 'error',
+          message: OAUTH_ERROR_COPY[error] ?? '登入失敗，請重試。如需協助請聯繫客服。',
+        });
       }
       return;
     }

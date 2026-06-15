@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import OAuthCallback from './OAuthCallback';
@@ -37,13 +37,13 @@ const mockMe = vi.mocked(authApi.me);
 
 function renderWithSearch(search: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  return { queryClient, ...render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[`/oauth/callback${search}`]}>
+      <MemoryRouter initialEntries={[`/auth/callback${search}`]}>
         <OAuthCallback />
       </MemoryRouter>
     </QueryClientProvider>,
-  );
+  )};
 }
 
 const sampleUser = {
@@ -151,5 +151,52 @@ describe('OAuthCallback — no code / no error', () => {
 
     const heading = await screen.findByRole('heading', { name: /登入失敗/i });
     expect(heading).toBeInTheDocument();
+  });
+});
+
+describe('OAuthCallback — bind=success', () => {
+  beforeEach(() => {
+    mockExchange.mockReset();
+    mockMe.mockReset();
+    mockNavigate.mockReset();
+    useAuthStore.setState({
+      accessToken: null, refreshToken: null, user: null,
+      isAuthenticated: false, isHydrating: false,
+    });
+  });
+
+  it('invalidates the identities query cache and navigates to /settings', async () => {
+    // Use fake timers only for setTimeout so waitFor (which uses setInterval/Promise)
+    // is not affected. The shouldAdvanceTime option lets microtasks/promises resolve.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    // Create the client before rendering so we can spy before the effect fires.
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/auth/callback?bind=success']}>
+          <OAuthCallback />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // The component shows the "綁定成功" processing label immediately.
+    expect(screen.getByText('綁定成功，正在跳轉…')).toBeInTheDocument();
+
+    // The identities cache is invalidated synchronously in the useEffect.
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['me', 'identities'] });
+
+    // No auth token exchange should occur for a bind flow.
+    expect(mockExchange).not.toHaveBeenCalled();
+
+    // After the 1500ms setTimeout, the component navigates to /settings.
+    await act(async () => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(mockNavigate).toHaveBeenCalledWith('/settings', { replace: true });
+
+    vi.useRealTimers();
   });
 });

@@ -42,8 +42,6 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/register/verify-sent" element={<VerifyEmailSent />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          {/* OAuth social-login landing (receives tokens in URL fragment) */}
-          <Route path="/oauth/callback" element={<OAuthCallback />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
 

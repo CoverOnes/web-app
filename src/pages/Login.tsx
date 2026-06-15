@@ -19,7 +19,7 @@ import { useState, useId } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
-import { authApi, oauthStartUrl } from '../lib/api/coverones';
+import { authApi, oauthStartUrl, type OAuthProvider } from '../lib/api/coverones';
 
 // NOTE: No remember-me / remember-device state here — the backend has no
 // persistent session / remember-me API.  The field was removed to avoid
@@ -655,9 +655,9 @@ const Login = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
                 {(
                   [
-                    { icon: <IconGoogle />, label: 'Google', provider: 'google' },
-                    { icon: <IconLine />, label: 'LINE', provider: 'line' },
-                  ] as const
+                    { icon: <IconGoogle />, label: 'Google', provider: 'google' as OAuthProvider },
+                    { icon: <IconLine />, label: 'LINE', provider: 'line' as OAuthProvider },
+                  ] satisfies { icon: React.ReactNode; label: string; provider: OAuthProvider }[]
                 ).map(({ icon, label, provider }) => (
                   <button
                     key={provider}
@@ -670,7 +670,6 @@ const Login = () => {
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                       fontSize: 13, fontWeight: 500, color: 'var(--co-text)',
                       cursor: 'pointer',
-                      opacity: 1,
                       transition: 'background 150ms, border-color 150ms',
                     }}
                   >
