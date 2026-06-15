@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import CoverOnesSidebar from './CoverOnesSidebar';
 import { useAuthStore, type AuthUser } from '../../store/authStore';
 
@@ -17,10 +18,13 @@ const mockUser: AuthUser = {
 };
 
 function renderSidebar(initialPath = '/jobs') {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <CoverOnesSidebar />
-    </MemoryRouter>,
+    <QueryClientProvider client={qc}>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <CoverOnesSidebar />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

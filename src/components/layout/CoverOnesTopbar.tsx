@@ -168,6 +168,7 @@ const CoverOnesTopbar = ({ drawerOpen = false, onMenuOpen }: CoverOnesTopbarProp
         <div style={{ position: 'relative' }}>
           <button
             aria-label="通知"
+            onClick={() => navigate('/notifications')}
             style={{
               width: 36,
               height: 36,
