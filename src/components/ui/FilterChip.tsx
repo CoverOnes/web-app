@@ -13,19 +13,23 @@ const XIcon = () => (
 );
 
 export function FilterChip({ label, active = false, onRemove, onClick }: FilterChipProps) {
+  const isInteractive = Boolean(onClick);
   return (
     <span
+      role={isInteractive ? 'button' : undefined}
+      tabIndex={isInteractive ? 0 : undefined}
       onClick={onClick}
+      onKeyDown={isInteractive ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } } : undefined}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         gap: 6,
         padding: '6px 12px',
         borderRadius: 999,
-        background: active ? 'rgba(99,102,241,0.18)' : 'var(--co-bg-3)',
+        background: active ? 'var(--co-bdg-dev-bg)' : 'var(--co-bg-3)',
         border: `1px solid ${active ? 'var(--co-accent)' : 'var(--co-line-strong)'}`,
         fontSize: 12.5,
-        color: active ? '#C7D2FE' : 'var(--co-text-dim)',
+        color: active ? 'var(--co-indigo-lt)' : 'var(--co-text-dim)',
         fontWeight: active ? 500 : 400,
         cursor: onClick ? 'pointer' : 'default',
         transition: 'background 150ms, border-color 150ms, color 150ms',

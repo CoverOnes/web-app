@@ -10,7 +10,7 @@
  *
  * The filter bar, right-rail industry list, and geography distribution panels
  * are rendered as interactive UI shells with empty-states in their content areas.
- * All tokens are from var(--co-*) defined in src/index.css.
+ * All colours use var(--co-*) tokens defined in src/index.css.
  *
  * RWD:
  *   ≥768px: two-column layout (grid 3-col + right rail 320px), filter bar visible
@@ -18,16 +18,17 @@
  */
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { EmptyState } from '../components/ui/EmptyState';
 import { FilterChip } from '../components/ui/FilterChip';
 
-/* ── Design-system colour constants (shared.css values without a --co-* token) ── */
+/* ── Design-system colour constants via --co-* tokens ── */
 const P = {
-  textIndigoLt: '#C7D2FE',
+  textIndigoLt: 'var(--co-indigo-lt)',
   gradBlue:     'linear-gradient(135deg, var(--co-accent-blue), var(--co-accent))',
-  gradCyan:     'linear-gradient(135deg, #0EA5E9, var(--co-cyan))',
-  gradAmber:    'linear-gradient(135deg, var(--co-amber), #F97316)',
-  gradGreen:    'linear-gradient(135deg, var(--co-green), #059669)',
+  gradCyan:     'linear-gradient(135deg, var(--co-sky), var(--co-cyan))',
+  gradAmber:    'linear-gradient(135deg, var(--co-amber), var(--co-orange))',
+  gradGreen:    'linear-gradient(135deg, var(--co-green), var(--co-green-dk))',
   gradRose:     'linear-gradient(135deg, var(--co-amber), var(--co-red))',
   gradPurple:   'linear-gradient(135deg, var(--co-pink), var(--co-accent-2))',
 } as const;
@@ -52,15 +53,17 @@ interface IndustryItem {
 }
 
 const INDUSTRY_LIST: IndustryItem[] = [
-  { icon: '🤖', name: 'AI / 機器學習',  count: '—',   iconBg: 'rgba(99,102,241,0.15)',  iconColor: '#A78BFA' },
-  { icon: '💎', name: '半導體',         count: '—',   iconBg: 'rgba(34,211,238,0.15)', iconColor: '#67E8F9' },
-  { icon: '🏦', name: '金融科技',       count: '—',   iconBg: 'rgba(16,185,129,0.15)', iconColor: '#6EE7B7' },
-  { icon: '🏭', name: '智慧製造',       count: '—',   iconBg: 'rgba(245,158,11,0.15)', iconColor: '#FCD34D' },
-  { icon: '🛍️', name: '零售 / 電商',   count: '—',   iconBg: 'rgba(236,72,153,0.15)', iconColor: '#F9A8D4' },
-  { icon: '🎨', name: '創意 / 設計',   count: '—',   iconBg: 'rgba(139,92,246,0.15)', iconColor: '#C4B5FD' },
+  { icon: '🤖', name: 'AI / 機器學習',  count: '—', iconBg: 'var(--co-bdg-dev-bg)',    iconColor: 'var(--co-bdg-dev-text)'    },
+  { icon: '💎', name: '半導體',         count: '—', iconBg: 'var(--co-bdg-design-bg)', iconColor: 'var(--co-bdg-design-text)' },
+  { icon: '🏦', name: '金融科技',       count: '—', iconBg: 'var(--co-bdg-green-bg)',  iconColor: 'var(--co-bdg-green-text)'  },
+  { icon: '🏭', name: '智慧製造',       count: '—', iconBg: 'var(--co-bdg-mfg-bg)',    iconColor: 'var(--co-bdg-mfg-text)'    },
+  { icon: '🛍️', name: '零售 / 電商',   count: '—', iconBg: 'var(--co-bdg-mkt-bg)',    iconColor: 'var(--co-bdg-mkt-text)'    },
+  { icon: '🎨', name: '創意 / 設計',   count: '—', iconBg: 'var(--co-bdg-violet-bg)', iconColor: 'var(--co-bdg-violet-text)' },
 ];
 
-/* ── Geography list (right-rail static) ── */
+/* ── Geography list (right-rail static) ──
+   barPct: 0 — honest empty-state until the backend company/discover API ships.
+   Counts show "—" so no fake ranking is implied. */
 interface GeoItem {
   name: string;
   dotColor: string;
@@ -69,11 +72,11 @@ interface GeoItem {
 }
 
 const GEO_LIST: GeoItem[] = [
-  { name: '大台北',        dotColor: 'var(--co-accent)',  barColor: 'linear-gradient(90deg, var(--co-accent), var(--co-cyan))', barPct: 90 },
-  { name: '新竹科技園區',  dotColor: 'var(--co-cyan)',    barColor: 'linear-gradient(90deg, var(--co-cyan), #67E8F9)',           barPct: 60 },
-  { name: '台中',          dotColor: 'var(--co-green)',   barColor: 'linear-gradient(90deg, var(--co-green), #6EE7B7)',          barPct: 45 },
-  { name: '高雄',          dotColor: 'var(--co-amber)',   barColor: 'linear-gradient(90deg, var(--co-amber), #FCD34D)',          barPct: 30 },
-  { name: '台南',          dotColor: 'var(--co-pink)',    barColor: 'linear-gradient(90deg, var(--co-pink), #F9A8D4)',           barPct: 22 },
+  { name: '大台北',        dotColor: 'var(--co-accent)',  barColor: 'linear-gradient(90deg, var(--co-accent), var(--co-cyan))',                    barPct: 0 },
+  { name: '新竹科技園區',  dotColor: 'var(--co-cyan)',    barColor: 'linear-gradient(90deg, var(--co-cyan), var(--co-bdg-design-text))',            barPct: 0 },
+  { name: '台中',          dotColor: 'var(--co-green)',   barColor: 'linear-gradient(90deg, var(--co-green), var(--co-bdg-green-text))',            barPct: 0 },
+  { name: '高雄',          dotColor: 'var(--co-amber)',   barColor: 'linear-gradient(90deg, var(--co-amber), var(--co-bdg-mfg-text))',              barPct: 0 },
+  { name: '台南',          dotColor: 'var(--co-pink)',    barColor: 'linear-gradient(90deg, var(--co-pink), var(--co-bdg-mkt-text))',               barPct: 0 },
 ];
 
 /* ── Sort icon (filter-bar) ── */
@@ -108,12 +111,13 @@ const BuildingIcon = () => (
 
 export default function DiscoverPage() {
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>(INDUSTRY_FILTERS);
+  const navigate = useNavigate();
 
   const removeFilter = (id: string) =>
     setActiveFilters((prev) => prev.filter((f) => f.id !== id));
 
   return (
-    <div
+    <main
       aria-label="探索企業"
       style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', background: 'var(--co-bg)' }}
     >
@@ -326,12 +330,12 @@ export default function DiscoverPage() {
                   <span style={{ flex: 1 }}>{geo.name}</span>
                   <span style={{ fontSize: 11, color: 'var(--co-text-dim)', fontWeight: 600 }}>—</span>
                 </div>
-                {/* Bar */}
+                {/* Bar track — empty (barPct: 0) until backend API ships */}
                 <div
                   aria-hidden="true"
                   style={{
                     height: 6, borderRadius: 999,
-                    background: 'rgba(148,163,184,0.1)',
+                    background: 'var(--co-line)',
                     overflow: 'hidden',
                     marginBottom: i < GEO_LIST.length - 1 ? 8 : 0,
                   }}
@@ -351,8 +355,8 @@ export default function DiscoverPage() {
           {/* Profile-completion suggestion card */}
           <div
             style={{
-              background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.06))',
-              border: '1px solid rgba(99,102,241,0.3)',
+              background: `linear-gradient(135deg, var(--co-suggest-bg-from), var(--co-suggest-bg-to))`,
+              border: '1px solid var(--co-suggest-border)',
               borderRadius: 12,
               padding: 16,
             }}
@@ -363,14 +367,15 @@ export default function DiscoverPage() {
             </div>
             <button
               type="button"
+              onClick={() => navigate('/settings')}
               style={{
                 width: '100%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
                 background: P.gradBlue,
-                color: '#fff',
+                color: 'var(--co-text-on-accent)',
                 border: 'none', cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(99,102,241,0.25)',
+                boxShadow: `0 4px 12px var(--co-suggest-shadow)`,
               }}
             >
               完善公司檔案 →
@@ -412,6 +417,6 @@ export default function DiscoverPage() {
           }
         }
       `}</style>
-    </div>
+    </main>
   );
 }

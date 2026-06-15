@@ -180,6 +180,28 @@
   --co-bdg-mkt-bg:       rgba(236,72,153,0.15);
   --co-bdg-mkt-text:     #F9A8D4;
   --co-bdg-mkt-border:   rgba(236,72,153,0.3);
+
+  /* --- Green badge tokens (fintech, geo bars) --- */
+  --co-bdg-green-bg:     rgba(16,185,129,0.15);
+  --co-bdg-green-text:   #6EE7B7;
+  --co-bdg-green-border: rgba(16,185,129,0.3);
+
+  /* --- Violet badge tokens (creative/design category) --- */
+  --co-bdg-violet-bg:     rgba(139,92,246,0.15);
+  --co-bdg-violet-text:   #C4B5FD;
+  --co-bdg-violet-border: rgba(139,92,246,0.3);
+
+  /* --- Extended palette (gradient endpoints used in logo squares + Discover gradients) --- */
+  --co-sky:       #0EA5E9;   /* sky-500: cyan gradient start (co-lg-cyan) */
+  --co-orange:    #F97316;   /* orange-500: amber gradient end (co-lg-amber) */
+  --co-green-dk:  #059669;   /* emerald-600: dark green gradient end (co-lg-green) */
+  --co-indigo-lt: #C7D2FE;   /* indigo-200: active chip text, textIndigoLt */
+
+  /* --- Suggestion card tokens (profile-completion card) --- */
+  --co-suggest-bg-from:   rgba(99,102,241,0.12);
+  --co-suggest-bg-to:     rgba(139,92,246,0.06);
+  --co-suggest-border:    rgba(99,102,241,0.3);
+  --co-suggest-shadow:    rgba(99,102,241,0.25);
 }
 
 /* CoverOnes v2 base */
