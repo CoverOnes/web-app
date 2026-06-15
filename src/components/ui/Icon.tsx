@@ -338,6 +338,13 @@ const Clock = ({ size = 16, style, className }: IconBaseProps) => (
   </svg>
 );
 
+const Compass = ({ size = 16, style, className }: IconBaseProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={base(size, style)} className={className}>
+    <circle cx="12" cy="12" r="10" />
+    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+  </svg>
+);
+
 export const Icon = {
   Owl,
   Plus,
@@ -381,6 +388,7 @@ export const Icon = {
   FileText,
   Shield,
   Clock,
+  Compass,
 } as const;
 
 export type IconName = keyof typeof Icon;
