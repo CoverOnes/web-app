@@ -105,13 +105,6 @@ export interface OAuthExchangeResponse {
   expiresIn?: number;
 }
 
-// Legacy alias used by identitiesApi.list() in the OAuth branch.
-export interface Identity {
-  provider: 'GOOGLE' | 'LINE';
-  email: string | null;
-  linkedAt: string;
-}
-
 export interface OAuthIdentity {
   provider: OAuthProvider;
   // Provider-registered email for this identity.
@@ -404,27 +397,6 @@ const OAUTH_GATEWAY = import.meta.env.VITE_API_BASE_URL ?? '';
 export function oauthStartUrl(provider: OAuthProvider, redirect = '/jobs'): string {
   return `${OAUTH_GATEWAY}/v1/auth/oauth/${provider}/start?redirect=${encodeURIComponent(redirect)}`;
 }
-
-// Authed XHR helpers — ride the /api/:svc proxy (gateway strips /api/user →
-// user service receives /v1/me/identities*). Account-linking happens ONLY for an
-// already-authenticated user via Settings (contract §2.3–2.7).
-export const identitiesApi = {
-  // GET /api/user/v1/me/identities → { data: [{ provider, email, linkedAt }] }
-  list: () =>
-    http.get<Identity[]>('/api/user/v1/me/identities').then((r) => r.data),
-
-  // POST /api/user/v1/me/identities/:provider/link → { data: { authorizeUrl } }.
-  // The caller then does window.location.href = authorizeUrl (XHR can't 302-navigate).
-  linkStart: (provider: OAuthProvider) =>
-    http
-      .post<{ authorizeUrl: string }>(`/api/user/v1/me/identities/${provider}/link`)
-      .then((r) => r.data),
-
-  // DELETE /api/user/v1/me/identities/:provider → 204. 409 LAST_LOGIN_METHOD if
-  // unlinking would strand the account with no usable login method.
-  unlink: (provider: OAuthProvider) =>
-    http.delete(`/api/user/v1/me/identities/${provider}`),
-};
 
 export const marketplaceApi = {
   listListings: (params?: { status?: string; mine?: boolean }) =>
