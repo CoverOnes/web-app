@@ -14,13 +14,12 @@
 
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   useNotifications,
   useUnreadCount,
   useMarkAllNotificationsRead,
+  useMarkNotificationRead,
 } from '../lib/query';
-import { notificationApi } from '../lib/api/coverones';
 import type { Notification, NotificationType } from '../lib/api/coverones';
 import { LoadingSkeleton } from '../components/ui/LoadingSkeleton';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -457,35 +456,38 @@ interface NotificationListProps {
 }
 
 function NotificationList({ items }: NotificationListProps) {
-  const qc = useQueryClient();
-  const [markingIds, setMarkingIds] = useState<Set<string>>(new Set());
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [markReadError, setMarkReadError] = useState<string | null>(null);
 
-  const handleMarkRead = async (id: string) => {
-    if (markingIds.has(id)) return;
-    setMarkingIds((prev) => new Set(prev).add(id));
-    try {
-      await notificationApi.markRead(id);
-      await qc.invalidateQueries({ queryKey: ['notifications'] });
-      await qc.invalidateQueries({ queryKey: ['notifications-unread-count'] });
-    } catch {
-      // Non-fatal: silently swallow; row will still appear unread on next refetch
-    } finally {
-      setMarkingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }
+  const markRead = useMarkNotificationRead();
+
+  const handleMarkRead = (id: string) => {
+    if (pendingId === id) return;
+    setMarkReadError(null);
+    setPendingId(id);
+    markRead.mutate(id, {
+      onError: () => {
+        setMarkReadError('標為已讀失敗，請稍後再試。');
+      },
+      onSettled: () => {
+        setPendingId(null);
+      },
+    });
   };
 
   return (
     <div>
+      {markReadError && (
+        <p role="alert" style={{ fontSize: 13, color: 'var(--co-red)', marginBottom: 12, textAlign: 'center' }}>
+          {markReadError}
+        </p>
+      )}
       {items.map((n) => (
         <NotificationRow
           key={n.id}
           notification={n}
           onMarkRead={handleMarkRead}
-          isMarkingRead={markingIds.has(n.id)}
+          isMarkingRead={pendingId === n.id}
         />
       ))}
     </div>

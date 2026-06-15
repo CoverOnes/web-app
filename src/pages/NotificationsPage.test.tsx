@@ -19,6 +19,7 @@ import {
   useNotifications,
   useUnreadCount,
   useMarkAllNotificationsRead,
+  useMarkNotificationRead,
 } from '../lib/query';
 import type { Notification, ListNotificationsResponse, UnreadCountResponse } from '../lib/api/coverones';
 
@@ -28,9 +29,10 @@ vi.mock('../lib/query', () => ({
   useNotifications: vi.fn(),
   useUnreadCount: vi.fn(),
   useMarkAllNotificationsRead: vi.fn(),
+  useMarkNotificationRead: vi.fn(),
 }));
 
-// notificationApi.markRead is called imperatively inside NotificationList.
+// notificationApi is mocked to prevent real HTTP calls from test helpers.
 vi.mock('../lib/api/coverones', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/api/coverones')>();
   return {
@@ -46,6 +48,7 @@ vi.mock('../lib/api/coverones', async (importOriginal) => {
 const mockUseNotifications = vi.mocked(useNotifications);
 const mockUseUnreadCount = vi.mocked(useUnreadCount);
 const mockUseMarkAllNotificationsRead = vi.mocked(useMarkAllNotificationsRead);
+const mockUseMarkNotificationRead = vi.mocked(useMarkNotificationRead);
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -114,6 +117,7 @@ describe('NotificationsPage', () => {
     });
 
     mockUseMarkAllNotificationsRead.mockReturnValue(makeMutationResult());
+    mockUseMarkNotificationRead.mockReturnValue(makeMutationResult());
     mockUseUnreadCount.mockReturnValue(
       makeQueryResult<UnreadCountResponse>({ count: 0 })
     );
