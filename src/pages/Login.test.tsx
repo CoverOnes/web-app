@@ -25,12 +25,15 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-// Mock authApi
+// Mock authApi + oauthStartUrl (real implementation kept for the OAuth helper so
+// the button click produces a deterministic URL).
 vi.mock('../lib/api/coverones', () => ({
   authApi: {
     login: vi.fn(),
     me: vi.fn(),
   },
+  oauthStartUrl: (provider: string, redirect = '/jobs') =>
+    `/v1/auth/oauth/${provider}/start?redirect=${encodeURIComponent(redirect)}`,
 }));
 
 import { authApi } from '../lib/api/coverones';
@@ -132,6 +135,37 @@ describe('Login page — OAuth buttons', () => {
     await user.click(screen.getByRole('button', { name: /使用 LINE 登入/i }));
 
     expect(window.location.href).toContain('/v1/auth/oauth/line/start');
+  });
+
+});
+
+describe('Login page — OAuth social login', () => {
+  beforeEach(() => {
+    useAuthStore.setState({
+      accessToken: null, refreshToken: null, user: null,
+      isAuthenticated: false, isHydrating: false,
+    });
+  });
+
+  it.each([
+    ['Google', 'google'],
+    ['LINE', 'line'],
+  ])('navigates to the %s OAuth start endpoint on click', async (label, provider) => {
+    const user = userEvent.setup();
+    // jsdom's window.location.href is not writable by default — replace it.
+    const originalLocation = window.location;
+    const hrefSetter = vi.fn();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...originalLocation, set href(v: string) { hrefSetter(v); } },
+    });
+
+    renderPage();
+    await user.click(screen.getByRole('button', { name: new RegExp(`使用 ${label} 登入`) }));
+
+    expect(hrefSetter).toHaveBeenCalledWith(`/v1/auth/oauth/${provider}/start?redirect=%2Fjobs`);
+
+    Object.defineProperty(window, 'location', { configurable: true, value: originalLocation });
   });
 });
 

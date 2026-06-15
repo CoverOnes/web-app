@@ -87,8 +87,10 @@ export interface ResetPasswordResponse {
   reset: boolean;
 }
 
-// ===== OAuth / Social Login =====
-
+// ===== OAuth social login (Google OIDC + LINE v2.1) =====
+// Identity key is (provider, provider_subject) — NEVER email. See the social-login
+// contract §0/§2. email is masked by the server (e.g. j***@e***.com) and may be
+// null when the provider did not assert one (LINE without email permission).
 export type OAuthProvider = 'google' | 'line';
 
 export interface OAuthExchangeRequest {
@@ -140,15 +142,14 @@ export interface OAuthRegisterRequest {
 
 // Backend returns a one-time code to exchange for tokens (same as normal OAuth
 // login code flow), or email_exists if the email is already registered.
-// FLAG: field name `code` assumed — reconcile with eng-oauth-be if the backend
-//       returns tokens directly instead of a code. The current assumption is:
-//       201 { code: string } → FE calls oauthExchange({ code }) to get tokens.
+// Contract confirmed: 201 { code: string } → FE calls oauthExchange({ code }) to get tokens.
 export interface OAuthRegisterResponse {
   // One-time code to pass to oauthExchange. Backend issues this so the same
   // exchange path is reused regardless of whether this is a first-time login
   // or registration completion.
   code: string;
 }
+
 
 // ===== Marketplace =====
 export interface Listing {
@@ -371,13 +372,38 @@ export const authApi = {
   //   409 EMAIL_EXISTS → surface "use password login + bind in Settings" UX.
   // isAuthFlowRequest covers /v1/auth/oauth/ so a 401 here never triggers
   // the access-token refresh-retry loop.
-  // FLAG: path confirmed as /v1/auth/oauth/register (gateway public route,
-  //       no /api/:svc prefix) — reconcile with eng-oauth-be if it moves.
+  // Path confirmed: /v1/auth/oauth/register (gateway public route, no /api/:svc prefix).
   oauthRegister: (data: OAuthRegisterRequest) =>
     http
       .post<OAuthRegisterResponse>('/v1/auth/oauth/register', data)
       .then((r) => r.data),
 };
+
+// ===== OAuth social login API =====
+// The gateway origin (same value http.ts uses as baseURL). Empty string keeps
+// same-origin behaviour when VITE_API_BASE_URL is omitted.
+const OAUTH_GATEWAY = import.meta.env.VITE_API_BASE_URL ?? '';
+
+/**
+ * Build the public OAuth start URL for a provider. This is a BROWSER NAVIGATION
+ * target (window.location.href = ...), NOT an XHR — the user service responds
+ * with a 302 to the provider's authorize URL. `redirect` is the post-login SPA
+ * path the user should land on (validated server-side as a same-origin relative
+ * path; defaults to /jobs).
+ *
+ * Client-side guard: only same-origin relative paths are accepted (defense-in-depth;
+ * the server also validates). Values starting with '//' or containing '://' are
+ * rejected and replaced with the safe default '/jobs'.
+ */
+export function oauthStartUrl(provider: OAuthProvider, redirect = '/jobs'): string {
+  // Reject absolute URLs (e.g. //evil.com or https://evil.com) that could be
+  // used to construct open-redirect vectors. Only relative paths are safe here.
+  const safeRedirect =
+    redirect.startsWith('//') || /[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(redirect)
+      ? '/jobs'
+      : redirect;
+  return `${OAUTH_GATEWAY}/v1/auth/oauth/${provider}/start?redirect=${encodeURIComponent(safeRedirect)}`;
+}
 
 export const marketplaceApi = {
   listListings: (params?: { status?: string; mine?: boolean }) =>

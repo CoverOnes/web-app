@@ -19,7 +19,7 @@ import { useState, useId } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
-import { authApi } from '../lib/api/coverones';
+import { authApi, oauthStartUrl, type OAuthProvider } from '../lib/api/coverones';
 
 // NOTE: No remember-me / remember-device state here — the backend has no
 // persistent session / remember-me API.  The field was removed to avoid
@@ -655,18 +655,15 @@ const Login = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
                 {(
                   [
-                    { icon: <IconGoogle />, label: 'Google', provider: 'google' },
-                    { icon: <IconLine />, label: 'LINE', provider: 'line' },
-                  ] as const
+                    { icon: <IconGoogle />, label: 'Google', provider: 'google' as OAuthProvider },
+                    { icon: <IconLine />, label: 'LINE', provider: 'line' as OAuthProvider },
+                  ] satisfies { icon: React.ReactNode; label: string; provider: OAuthProvider }[]
                 ).map(({ icon, label, provider }) => (
                   <button
                     key={provider}
                     type="button"
                     aria-label={`使用 ${label} 登入`}
-                    onClick={() => {
-                      const base = import.meta.env.VITE_API_BASE_URL ?? '';
-                      window.location.href = `${base}/v1/auth/oauth/${provider}/start`;
-                    }}
+                    onClick={() => { window.location.href = oauthStartUrl(provider, '/jobs'); }}
                     style={{
                       height: 42, borderRadius: 10, border: 'none',
                       background: 'rgba(15,23,42,0.5)', borderStyle: 'solid', borderWidth: 1, borderColor: 'var(--co-line-strong)',
