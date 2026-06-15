@@ -21,6 +21,7 @@ import ChatRoomPage from './pages/ChatRoomPage';
 import Messages from './pages/Messages';
 import Contacts from './pages/Contacts';
 import Settings from './pages/Settings';
+import NotificationsPage from './pages/NotificationsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { FeatureRoute } from './features/flags/FeatureRoute';
@@ -90,6 +91,9 @@ function App() {
                 </FeatureRoute>
               }
             />
+
+            {/* Notifications */}
+            <Route path="notifications" element={<NotificationsPage />} />
 
             {/* Settings — ungated: accessible to all authenticated users */}
             <Route path="settings" element={<Settings />} />

@@ -500,3 +500,69 @@ export const workspaceApi = {
   updateTask: (contractId: string, taskId: string, data: UpdateTaskRequest) =>
     http.patch<Task>(`/api/workspace/v1/contracts/${contractId}/tasks/${taskId}`, data).then((r) => r.data),
 };
+
+// ===== Notifications =====
+// notification service: GET /api/notification/v1/me/notifications
+//                       GET /api/notification/v1/me/notifications/unread-count
+//                       POST /api/notification/v1/me/notifications/:id/read
+//                       POST /api/notification/v1/me/notifications/read-all
+// (gateway strips /api/notification → notification service receives /v1/me/notifications)
+
+export type NotificationType =
+  | 'KYC_TIER_CHANGED'
+  | 'BID_RECEIVED'
+  | 'BID_ACCEPTED'
+  | 'MILESTONE_REACHED'
+  | 'CONTRACT_SIGNED'
+  | 'ACCOUNT_SUSPENDED'
+  | 'KYC_STATUS_CHANGED';
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  // Raw JSON payload — structure varies per type.
+  data?: Record<string, unknown>;
+  sourceEventId?: string;
+  // null when unread
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface ListNotificationsResponse {
+  items: Notification[];
+  // Opaque cursor for the next page; absent when no more pages.
+  nextCursor?: string;
+}
+
+export interface UnreadCountResponse {
+  count: number;
+}
+
+export const notificationApi = {
+  // GET /api/notification/v1/me/notifications
+  // Cursor-paginated list; limit defaults to 20 server-side.
+  list: (params?: { cursor?: string; limit?: number }) =>
+    http
+      .get<ListNotificationsResponse>('/api/notification/v1/me/notifications', { params })
+      .then((r) => r.data),
+
+  // GET /api/notification/v1/me/notifications/unread-count
+  unreadCount: () =>
+    http
+      .get<UnreadCountResponse>('/api/notification/v1/me/notifications/unread-count')
+      .then((r) => r.data),
+
+  // POST /api/notification/v1/me/notifications/:id/read → 204 No Content
+  markRead: (id: string) =>
+    http
+      .post<void>(`/api/notification/v1/me/notifications/${id}/read`)
+      .then((r) => r.data),
+
+  // POST /api/notification/v1/me/notifications/read-all → 204 No Content
+  markAllRead: () =>
+    http
+      .post<void>('/api/notification/v1/me/notifications/read-all')
+      .then((r) => r.data),
+};

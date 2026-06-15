@@ -4,6 +4,7 @@ import {
   kycApi,
   marketplaceApi,
   workspaceApi,
+  notificationApi,
   type ContractStatus,
   type KycSubmitRequest,
   type ResetPasswordRequest,
@@ -285,5 +286,63 @@ export function useUpdateTask(contractId: string) {
       workspaceApi.updateTask(contractId, taskId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', contractId] }),
     onError: (err) => { console.error('[useUpdateTask]', err); },
+  });
+}
+
+// ===== Notification hooks =====
+
+// Gate on auth readiness (same pattern as useMyBids / useKycStatus).
+function useAuthReady() {
+  const isHydrating = useAuthStore((s) => s.isHydrating);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
+  return !isHydrating && (!!accessToken || !!refreshToken);
+}
+
+// useNotifications — cursor-paginated list.
+// Pass cursor=undefined for the first page.
+export function useNotifications(cursor?: string) {
+  const authReady = useAuthReady();
+  return useQuery({
+    queryKey: ['notifications', cursor],
+    queryFn: () => notificationApi.list(cursor ? { cursor } : undefined),
+    enabled: authReady,
+    staleTime: 30_000,
+  });
+}
+
+// useUnreadCount — lightweight badge counter, polled every 60 s.
+export function useUnreadCount() {
+  const authReady = useAuthReady();
+  return useQuery({
+    queryKey: ['notifications-unread-count'],
+    queryFn: () => notificationApi.unreadCount(),
+    enabled: authReady,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+}
+
+// useMarkNotificationRead — mark a single notification read.
+export function useMarkNotificationRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => notificationApi.markRead(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notifications-unread-count'] });
+    },
+  });
+}
+
+// useMarkAllNotificationsRead — bulk mark-all-read.
+export function useMarkAllNotificationsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => notificationApi.markAllRead(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notifications-unread-count'] });
+    },
   });
 }
