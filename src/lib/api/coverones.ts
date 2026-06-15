@@ -501,6 +501,30 @@ export const workspaceApi = {
     http.patch<Task>(`/api/workspace/v1/contracts/${contractId}/tasks/${taskId}`, data).then((r) => r.data),
 };
 
+// ===== Waitlist (public) =====
+// POST /v1/waitlist — no auth required; gateway public route (no /api/:svc prefix).
+// Duplicate email returns 202 (privacy-preserving); any 2xx is treated as success.
+// isAuthFlowRequest does NOT need to cover this path because it is only called by
+// useJoinWaitlist which fires before the user is authenticated, and no refresh
+// interceptor logic applies to non-401 responses.
+
+export interface WaitlistJoinRequest {
+  email: string;
+  company?: string;
+  interestedIn?: string;
+}
+
+// Backend returns 202 with a generic envelope; we only need status (unwrapped by
+// the response interceptor). Callers treat any resolved promise as success.
+export interface WaitlistJoinResponse {
+  message?: string;
+}
+
+export const waitlistApi = {
+  join: (data: WaitlistJoinRequest) =>
+    http.post<WaitlistJoinResponse>('/v1/waitlist', data).then((r) => r.data),
+};
+
 // ===== Notifications =====
 // notification service: GET /api/notification/v1/me/notifications
 //                       GET /api/notification/v1/me/notifications/unread-count

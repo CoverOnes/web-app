@@ -24,6 +24,7 @@ import Settings from './pages/Settings';
 import NotificationsPage from './pages/NotificationsPage';
 import SearchPage from './pages/SearchPage';
 import NotFoundPage from './pages/NotFoundPage';
+import WaitlistPage from './pages/WaitlistPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { FeatureRoute } from './features/flags/FeatureRoute';
 import { useTheme } from './hooks/useTheme';
@@ -37,6 +38,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public auth routes */}
+          <Route path="/waitlist" element={<WaitlistPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/auth/callback" element={<OAuthCallback />} />
           <Route path="/register" element={<Register />} />
