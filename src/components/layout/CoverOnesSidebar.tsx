@@ -174,6 +174,7 @@ const CoverOnesSidebar = () => {
     // 訊息: canonical route is /chat; isActive also matches legacy /messages
     { path: '/chat',           label: '訊息',      icon: (s) => <Icon.MessageSquare size={s} /> },
     { path: '/discover',        label: '探索企業',  icon: (s) => <Icon.Compass size={s} /> },
+    { path: '/network',        label: '網路人脈',  icon: (s) => <Icon.Users size={s} /> },
     { path: '/search',         label: '搜尋',      icon: (s) => <Icon.Search size={s} /> },
     { path: '/notifications',  label: '通知',      icon: (s) => <Icon.Bell size={s} />, badge: unreadCount },
   ];

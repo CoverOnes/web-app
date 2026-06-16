@@ -25,6 +25,7 @@ import ProfilePage from './pages/ProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
 import SearchPage from './pages/SearchPage';
 import DiscoverPage from './pages/DiscoverPage';
+import NetworkPage from './pages/NetworkPage';
 import NotFoundPage from './pages/NotFoundPage';
 import WaitlistPage from './pages/WaitlistPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -101,6 +102,9 @@ function App() {
             <Route path="notifications" element={<NotificationsPage />} />
             {/* Discover — company explorer; empty-state until backend company API ships */}
             <Route path="discover" element={<DiscoverPage />} />
+
+            {/* Network (P4) — business connections + invites, wired to /api/user/v1/me/connections */}
+            <Route path="network" element={<NetworkPage />} />
 
             {/* Search — full-site search over real listings; company/people tabs show empty-state */}
             <Route path="search" element={<SearchPage />} />
