@@ -6,6 +6,7 @@ import { authApi } from '../lib/api/coverones';
 import type { PublicProfile, OwnProfile, UpdateProfileRequest } from '../lib/api/coverones';
 import { useAuthStore } from '../store/authStore';
 import { getApiErrorCode } from '../lib/api/http';
+import { httpsUrl } from '../lib/url';
 import Avatar from '../components/ui/Avatar';
 
 // ─── Inline SVG icons (no extra deps; mirrors Settings.tsx pattern) ───────────
@@ -38,6 +39,10 @@ function IconEdit() {
 
 const TABS = ['總覽', '經歷', '專案作品', '評價', '活動', '推薦語'] as const;
 type TabId = (typeof TABS)[number];
+
+// Stable id for the tabpanel content region (referenced by every tab's
+// aria-controls; the panel's aria-labelledby points back at the active tab).
+const PANEL_ID = 'profile-tabpanel';
 
 // ─── Empty-state shell (deferred sections / no backing data) ──────────────────
 
@@ -86,7 +91,7 @@ function EditForm({ profile, onClose }: EditFormProps) {
     mutationFn: (data) => authApi.updateMyProfile(data),
     onSuccess: () => {
       setErrorMsg(null);
-      qc.invalidateQueries({ queryKey: ['me', 'profile'] });
+      qc.invalidateQueries({ queryKey: ['profile', 'own'] });
       onClose();
     },
     onError: (err: unknown) => {
@@ -254,8 +259,11 @@ const ProfilePage = () => {
   const [editing, setEditing] = React.useState(false);
 
   // Own profile — only when own mode (never fetch own data in other mode).
+  // Distinct key ['profile','own']: Settings.tsx owns ['me','profile'] with a
+  // DIFFERENT endpoint/shape (authApi.me() → AuthUser); sharing the key caused
+  // stale/blank fields + cross-page cache coupling.
   const ownQuery = useQuery<OwnProfile>({
-    queryKey: ['me', 'profile'],
+    queryKey: ['profile', 'own'],
     queryFn: () => authApi.getMyProfile(),
     enabled: isOwn,
   });
@@ -299,14 +307,27 @@ const ProfilePage = () => {
 
   const handleStr = profile.handle ? `@${profile.handle}` : null;
 
+  // URL sink hardening (public page): only allow https: URLs as image sinks so
+  // an attacker-set coverUrl/avatarUrl can't trigger an outbound fetch from any
+  // viewer (tracking / SSRF-from-victim). CSS.escape() prevents url() injection.
+  const safeCoverUrl = httpsUrl(profile.coverUrl);
+  const safeAvatarUrl = httpsUrl(profile.avatarUrl);
+
+  // The content region is the tabpanel for the active tab; label it by that tab.
+  const activeTabId = `profile-tab-${TABS.indexOf(activeTab)}`;
+
   return (
     <div className="profile-page">
       {/* §1 Cover — LIVE (coverUrl bg; null → design gradient) */}
       <div
         className="profile-cover"
         style={
-          profile.coverUrl
-            ? { backgroundImage: `url(${profile.coverUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+          safeCoverUrl
+            ? {
+                backgroundImage: `url('${CSS.escape(safeCoverUrl)}')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
             : undefined
         }
       >
@@ -329,7 +350,7 @@ const ProfilePage = () => {
           <div className="profile-ava-wrap">
             <Avatar
               name={profile.displayName}
-              src={profile.avatarUrl ?? undefined}
+              src={safeAvatarUrl}
               pixelSize={144}
               color={['var(--co-accent)', 'var(--co-accent-2)']}
               ring
@@ -386,12 +407,14 @@ const ProfilePage = () => {
 
         {/* §7 Tabs — static bar (總覽 default); non-總覽 → empty-state panel */}
         <div className="profile-tabs" role="tablist" aria-label="個人檔案分頁">
-          {TABS.map((tab) => (
+          {TABS.map((tab, i) => (
             <button
               key={tab}
               type="button"
               role="tab"
+              id={`profile-tab-${i}`}
               aria-selected={activeTab === tab}
+              aria-controls={PANEL_ID}
               className={`profile-tab${activeTab === tab ? ' profile-tab--on' : ''}`}
               onClick={() => setActiveTab(tab)}
             >
@@ -403,13 +426,13 @@ const ProfilePage = () => {
 
       {/* Edit form (own only) replaces the layout body while editing */}
       {isOwn && editing ? (
-        <div className="profile-layout">
+        <div className="profile-layout" role="tabpanel" id={PANEL_ID} aria-labelledby={activeTabId}>
           <div className="profile-col-main">
             <EditForm profile={profile} onClose={() => setEditing(false)} />
           </div>
         </div>
       ) : activeTab !== '總覽' ? (
-        <div className="profile-layout">
+        <div className="profile-layout" role="tabpanel" id={PANEL_ID} aria-labelledby={activeTabId}>
           <div className="profile-col-main">
             <div className="profile-card">
               <EmptyState />
@@ -417,7 +440,7 @@ const ProfilePage = () => {
           </div>
         </div>
       ) : (
-        <div className="profile-layout">
+        <div className="profile-layout" role="tabpanel" id={PANEL_ID} aria-labelledby={activeTabId}>
           {/* Main column */}
           <div className="profile-col-main">
             {/* §8 About — LIVE (bio; null → 尚無自我介紹) */}

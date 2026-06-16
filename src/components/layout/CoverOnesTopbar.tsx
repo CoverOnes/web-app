@@ -45,6 +45,11 @@ const CoverOnesTopbar = ({ drawerOpen = false, onMenuOpen }: CoverOnesTopbarProp
     navigate('/login');
   };
 
+  const handleProfile = () => {
+    setMenuOpen(false);
+    navigate('/profile');
+  };
+
   const handleSettings = () => {
     setMenuOpen(false);
     navigate('/settings');
@@ -274,6 +279,26 @@ const CoverOnesTopbar = ({ drawerOpen = false, onMenuOpen }: CoverOnesTopbarProp
                 zIndex: 20,
               }}
             >
+              <button
+                role="menuitem"
+                onClick={handleProfile}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  fontSize: 13,
+                  color: 'var(--co-text-dim)',
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'block',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+              >
+                個人檔案
+              </button>
               <button
                 role="menuitem"
                 onClick={handleSettings}

@@ -269,4 +269,106 @@ describe('ProfilePage — own edit', () => {
       expect(screen.getByText(/此 handle 已被使用/)).toBeInTheDocument();
     });
   });
+
+  it('shows the validation message when the API returns VALIDATION_ERROR', async () => {
+    mockAuthApi.getMyProfile.mockResolvedValue(fullProfile);
+    mockAuthApi.updateMyProfile.mockRejectedValue({ code: 'VALIDATION_ERROR' });
+    renderProfile('/profile');
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /編輯個人檔案/ })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /編輯個人檔案/ }));
+    await screen.findByRole('form', { name: '編輯個人檔案表單' });
+    fireEvent.click(screen.getByRole('button', { name: '儲存變更' }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/欄位格式不正確/)).toBeInTheDocument();
+    });
+  });
+});
+
+// ── 7. URL sink hardening (public page) ────────────────────────────────────────
+// coverUrl → background-image and avatarUrl → <Avatar src> are rendered on a
+// PUBLIC page; only https: URLs may be used as image sinks (no javascript:/data:/
+// plain http:), so an attacker-set value cannot trigger an outbound fetch from a
+// viewer (tracking / SSRF-from-victim).
+
+describe('ProfilePage — coverUrl sink hardening', () => {
+  it.each([
+    ['javascript:', 'javascript:alert(1)'],
+    ['data:', 'data:image/png;base64,AAAA'],
+    ['plain http:', 'http://x/cover.png'],
+  ])('does NOT set backgroundImage for an unsafe coverUrl (%s)', async (_label, coverUrl) => {
+    mockAuthApi.getPublicProfile.mockResolvedValue({ ...emptyProfile, coverUrl });
+    const { container } = renderProfile('/profile/other-9');
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    });
+
+    const cover = container.querySelector('.profile-cover') as HTMLElement;
+    expect(cover).toBeTruthy();
+    expect(cover.style.backgroundImage).toBe('');
+  });
+
+  it('applies an escaped/quoted backgroundImage for an https coverUrl', async () => {
+    mockAuthApi.getPublicProfile.mockResolvedValue({
+      ...emptyProfile,
+      coverUrl: 'https://x/a.png',
+    });
+    const { container } = renderProfile('/profile/other-9');
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    });
+
+    const cover = container.querySelector('.profile-cover') as HTMLElement;
+    expect(cover.style.backgroundImage).toContain('https://x/a.png');
+    // value is wrapped in url('...') (quoted) — jsdom normalizes to url("...")
+    expect(cover.style.backgroundImage).toMatch(/^url\(["']https:\/\/x\/a\.png["']\)$/);
+  });
+});
+
+describe('ProfilePage — avatarUrl sink hardening', () => {
+  it.each([
+    ['data:', 'data:image/png;base64,AAAA'],
+    ['plain http:', 'http://x/avatar.png'],
+  ])('does NOT render an <img> for an unsafe avatarUrl (%s)', async (_label, avatarUrl) => {
+    mockAuthApi.getPublicProfile.mockResolvedValue({ ...emptyProfile, avatarUrl });
+    renderProfile('/profile/other-9');
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    });
+
+    // The real <img> carries alt "<name> 的頭像"; the initials fallback is a
+    // role="img" div labelled by name only. Unsafe URL → fallback, no real img.
+    expect(screen.queryByRole('img', { name: /的頭像/ })).not.toBeInTheDocument();
+  });
+});
+
+// ── 8. Verified badge (DERIVED) ────────────────────────────────────────────────
+
+describe('ProfilePage — verified badge', () => {
+  it('renders the verified badge when verified === true', async () => {
+    mockAuthApi.getPublicProfile.mockResolvedValue({ ...emptyProfile, verified: true });
+    renderProfile('/profile/other-9');
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText('已驗證帳號')).toBeInTheDocument();
+  });
+
+  it('hides the verified badge when verified === false', async () => {
+    mockAuthApi.getPublicProfile.mockResolvedValue({ ...emptyProfile, verified: false });
+    renderProfile('/profile/other-9');
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    });
+    expect(screen.queryByLabelText('已驗證帳號')).not.toBeInTheDocument();
+  });
 });

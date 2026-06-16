@@ -15,7 +15,7 @@
 /* §1 Cover */
 .profile-cover {
   height: 200px;
-  background: linear-gradient(135deg, var(--co-accent-2) 0%, var(--co-accent) 50%, var(--co-cyan) 100%);
+  background: linear-gradient(135deg, var(--co-cover-from) 0%, var(--co-accent) 50%, var(--co-cyan) 100%);
   position: relative;
   overflow: hidden;
 }
@@ -259,8 +259,8 @@
 .profile-error {
   padding: 14px 18px;
   border-radius: var(--co-card-r);
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: color-mix(in srgb, var(--co-red) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--co-red) 25%, transparent);
   color: var(--co-red);
   font-size: 13.5px;
 }
@@ -278,8 +278,8 @@
 .profile-edit-error {
   padding: 8px 12px;
   border-radius: var(--co-btn-r);
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: color-mix(in srgb, var(--co-red) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--co-red) 25%, transparent);
   color: var(--co-red);
   font-size: 13px;
 }
