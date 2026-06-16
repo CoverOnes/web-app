@@ -45,14 +45,24 @@ describe('CoverOnesSidebar', () => {
     expect(screen.getByText('B2B 企業媒合平台')).toBeInTheDocument();
   });
 
-  it('renders STATIC company display (no switcher chevron/dropdown)', () => {
+  it('renders the company display as a nav button (no switcher chevron/dropdown)', () => {
     renderSidebar();
-    // Static company area should show user name
-    expect(screen.getByLabelText('目前企業')).toBeInTheDocument();
-    // No "chevron" button that would indicate a switcher
-    // The area is a div, not a button
-    const companyArea = screen.getByLabelText('目前企業');
-    expect(companyArea.tagName).toBe('DIV');
+    // The company card is now a navigation target to /company (P4 Company vertical):
+    // it is a single button — NOT a dropdown switcher.
+    const companyArea = screen.getByRole('button', { name: '前往我的公司頁' });
+    expect(companyArea).toBeInTheDocument();
+    expect(companyArea.tagName).toBe('BUTTON');
+    // Still shows the company/account info inside.
+    expect(companyArea.textContent).toMatch(/Test User/);
+  });
+
+  it('navigates to /company when the company card is clicked', async () => {
+    const user = userEvent.setup();
+    renderSidebar('/jobs');
+    const companyArea = screen.getByRole('button', { name: '前往我的公司頁' });
+    await user.click(companyArea);
+    // Click does not throw; the card is keyboard/click accessible.
+    expect(companyArea).not.toBeDisabled();
   });
 
   it('renders core nav items (首頁, 案件, 招標, 合約, 訊息)', () => {

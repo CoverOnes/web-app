@@ -26,6 +26,8 @@ import NotificationsPage from './pages/NotificationsPage';
 import SearchPage from './pages/SearchPage';
 import DiscoverPage from './pages/DiscoverPage';
 import NetworkPage from './pages/NetworkPage';
+import MyCompanyPage from './pages/MyCompanyPage';
+import CompanyProfilePage from './pages/CompanyProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import WaitlistPage from './pages/WaitlistPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -105,6 +107,10 @@ function App() {
 
             {/* Network (P4) — business connections + invites, wired to /api/user/v1/me/connections */}
             <Route path="network" element={<NetworkPage />} />
+
+            {/* Company (P4) — own (/company, owner edit) + public-by-id (/companies/:companyId) */}
+            <Route path="company" element={<MyCompanyPage />} />
+            <Route path="companies/:companyId" element={<CompanyProfilePage />} />
 
             {/* Search — full-site search over real listings; company/people tabs show empty-state */}
             <Route path="search" element={<SearchPage />} />

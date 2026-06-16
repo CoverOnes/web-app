@@ -175,6 +175,9 @@ const CoverOnesSidebar = () => {
     { path: '/chat',           label: '訊息',      icon: (s) => <Icon.MessageSquare size={s} /> },
     { path: '/discover',        label: '探索企業',  icon: (s) => <Icon.Compass size={s} /> },
     { path: '/network',        label: '網路人脈',  icon: (s) => <Icon.Users size={s} /> },
+    // 我的公司: Icon.Building does not exist in the Icon set; Icon.Briefcase is the
+    // closest existing semantic match (a building/case glyph) per house convention.
+    { path: '/company',        label: '我的公司',  icon: (s) => <Icon.Briefcase size={s} /> },
     { path: '/search',         label: '搜尋',      icon: (s) => <Icon.Search size={s} /> },
     { path: '/notifications',  label: '通知',      icon: (s) => <Icon.Bell size={s} />, badge: unreadCount },
   ];
@@ -276,9 +279,14 @@ const CoverOnesSidebar = () => {
         </button>
       </div>
 
-      {/* STATIC company display — per locked decision: no switcher widget */}
-      <div
+      {/* Company display — navigates to 我的公司 (/company); no switcher widget */}
+      <button
+        type="button"
+        onClick={() => navigate('/company')}
         style={{
+          width: '100%',
+          textAlign: 'left',
+          cursor: 'pointer',
           margin: '0 0 14px 0',
           padding: '10px 12px',
           background: 'linear-gradient(180deg, rgba(99,102,241,0.08), rgba(139,92,246,0.04))',
@@ -288,7 +296,7 @@ const CoverOnesSidebar = () => {
           alignItems: 'center',
           gap: 10,
         }}
-        aria-label="目前企業"
+        aria-label="前往我的公司頁"
       >
         {/* Company logo square (amber-to-red gradient per shared.css .company-switcher .logo) */}
         <div
@@ -326,7 +334,7 @@ const CoverOnesSidebar = () => {
             {user?.accountType === 'PERSONAL' ? '個人帳號' : '企業帳號'}
           </div>
         </div>
-      </div>
+      </button>
 
       {/* 主選單 section */}
       <NavSectionLabel label="主選單" />
