@@ -3,18 +3,19 @@ import { validateMessage } from '../../utils/validation';
 import { sanitizeInput } from '../../utils/sanitize';
 import { Icon } from '../ui/Icon';
 import { uploadFile } from '../../lib/api/file';
+import { getApiErrorCode } from '../../lib/api/http';
 import type { MessageAttachment } from '../../types';
 
 // Client-side size limit: 10 MiB (matches gateway limit)
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
-// Allowed MIME types: images, PDF, Office documents, text, CSV
+// Allowed MIME types for generic file attachment (Paperclip).
+// image/svg+xml is intentionally excluded — SVG can carry embedded scripts (XSS vector).
 const ACCEPTED_MIME = [
   'image/jpeg',
   'image/png',
   'image/gif',
   'image/webp',
-  'image/svg+xml',
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -25,6 +26,9 @@ const ACCEPTED_MIME = [
   'text/plain',
   'text/csv',
 ].join(',');
+
+// Allowed MIME types for the Image button — images only (no SVG for XSS reasons).
+const ACCEPTED_IMAGE_MIME = 'image/jpeg,image/png,image/gif,image/webp';
 
 interface PendingAttachment {
   file: File;
@@ -48,7 +52,9 @@ const Composer = ({ onSend, roomTitle, disabled = false }: ComposerProps) => {
   const [uploading, setUploading] = useState(false);
   const [pending, setPending] = useState<PendingAttachment | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Two separate hidden inputs: one for generic files (Paperclip), one image-only (Image button).
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const isSendingRef = useRef(false);
 
   // Auto-grow textarea
@@ -86,18 +92,21 @@ const Composer = ({ onSend, roomTitle, disabled = false }: ComposerProps) => {
         messageType,
       });
     } catch (err: unknown) {
-      const status = (err as { response?: { status?: number } })?.response?.status;
-      if (status === 413) {
+      // Use shared helper to read the canonical error code from the backend envelope.
+      const code = getApiErrorCode(err);
+      const httpStatus = (err as { response?: { status?: number } })?.response?.status;
+      if (httpStatus === 413 || code === 'FILE_TOO_LARGE') {
         showError('檔案超過伺服器大小限制');
-      } else if (status === 415) {
+      } else if (httpStatus === 415 || code === 'UNSUPPORTED_MEDIA_TYPE') {
         showError('不支援此檔案類型');
       } else {
         showError('上傳失敗，請稍後再試');
       }
     } finally {
       setUploading(false);
-      // Reset input so the same file can be re-selected after removal
+      // Reset both inputs so the same file can be re-selected after removal.
       if (fileInputRef.current) fileInputRef.current.value = '';
+      if (imageInputRef.current) imageInputRef.current.value = '';
     }
   }, []);
 
@@ -107,9 +116,16 @@ const Composer = ({ onSend, roomTitle, disabled = false }: ComposerProps) => {
     handleFileSelected(file);
   }, [handleFileSelected]);
 
+  // Paperclip: opens the generic file picker (all allowed types).
   const handleAttachClick = () => {
     if (uploading || disabled) return;
     fileInputRef.current?.click();
+  };
+
+  // Image button: opens an image-only picker (no SVG).
+  const handleImageClick = () => {
+    if (uploading || disabled) return;
+    imageInputRef.current?.click();
   };
 
   const handleSend = () => {
@@ -126,9 +142,10 @@ const Composer = ({ onSend, roomTitle, disabled = false }: ComposerProps) => {
           file_size: pending.fileSize,
           file_type: pending.fileType,
         };
-        // Content for file messages: use file name as fallback label
-        const content = trimmed || pending.fileName;
-        onSend(content, attachment, pending.messageType);
+        // Sanitize the optional caption the same way text messages are sanitized.
+        // Fall back to file name if no caption was typed.
+        const caption = trimmed ? sanitizeInput(trimmed) : pending.fileName;
+        onSend(caption, attachment, pending.messageType);
         setPending(null);
         setVal('');
       } else {
@@ -230,11 +247,19 @@ const Composer = ({ onSend, roomTitle, disabled = false }: ComposerProps) => {
         </div>
       )}
 
-      {/* Hidden file input */}
+      {/* Hidden file inputs — generic (Paperclip) and image-only (Image button) */}
       <input
         ref={fileInputRef}
         type="file"
         accept={ACCEPTED_MIME}
+        style={{ display: 'none' }}
+        aria-hidden="true"
+        onChange={handleInputChange}
+      />
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept={ACCEPTED_IMAGE_MIME}
         style={{ display: 'none' }}
         aria-hidden="true"
         onChange={handleInputChange}
@@ -312,10 +337,10 @@ const Composer = ({ onSend, roomTitle, disabled = false }: ComposerProps) => {
             <Icon.Paperclip size={16} />
           </button>
 
-          {/* Image — triggers file input restricted to images */}
+          {/* Image — triggers image-only picker (no SVG) */}
           <button
             aria-label="圖片"
-            onClick={handleAttachClick}
+            onClick={handleImageClick}
             disabled={uploading || disabled}
             style={{
               width: 28,

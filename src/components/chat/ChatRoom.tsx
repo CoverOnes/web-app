@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import { chatApi } from '../../api/chat';
@@ -9,7 +9,6 @@ import RoomHeader from './RoomHeader';
 import MembersPanel from './MembersPanel';
 import RoomSettingsModal from './RoomSettingsModal';
 import { getDisplayName } from '../../utils/formatters';
-import { useState } from 'react';
 import type { MessageAttachment } from '../../types';
 
 const ChatRoom = () => {
@@ -20,6 +19,7 @@ const ChatRoom = () => {
   const setMessages = useChatStore((s) => s.setMessages);
   const [showMembers, setShowMembers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   useSSE({
     roomId: currentRoom?.id ?? '',
@@ -112,7 +112,8 @@ const ChatRoom = () => {
       const exists = withoutTemp.some(m => m.id === sentMsg.id);
       setMessages(roomId, exists ? withoutTemp : [...withoutTemp, sentMsg]);
     } catch {
-      alert('發送訊息失敗，請稍後再試');
+      setSendError('發送訊息失敗，請稍後再試');
+      setTimeout(() => setSendError(null), 4000);
     }
   }, [currentRoom, userId, addRoom, setCurrentRoom, addMessage, messageHistory, setMessages]);
 
@@ -139,6 +140,17 @@ const ChatRoom = () => {
         {showMembers && <MembersPanel onClose={() => setShowMembers(false)} />}
       </div>
 
+      {sendError && (
+        <div style={{
+          padding: '6px 24px',
+          fontSize: 12,
+          color: 'var(--color-red)',
+          background: 'var(--color-main-bg)',
+          borderTop: '1px solid var(--color-main-border)',
+        }}>
+          {sendError}
+        </div>
+      )}
       <Composer onSend={handleSendMessage} roomTitle={roomDisplayName} />
 
       {showSettings && <RoomSettingsModal onClose={() => setShowSettings(false)} />}

@@ -95,12 +95,19 @@ const MessageGroup = memo(({ messages, own, sender }: MessageGroupProps) => {
               border: own ? 'none' : '1px solid var(--color-main-border)',
               boxShadow: own ? '0 1px 0 rgba(0,0,0,0.1) inset' : 'none',
             }}>
-              {/* Show content text only for text/system messages */}
+              {/* Show content text for text/system messages */}
               {(msg.type === 'text' || msg.type === 'system' || !msg.type) && msg.content}
 
-              {/* Attachment tile for file/image messages */}
-              {msg.attachment && (msg.type === 'file' || msg.type === 'image') && (
-                <Attachment messageId={msg.id} attachment={msg.attachment} />
+              {/* File/image messages: render optional caption above the tile */}
+              {(msg.type === 'file' || msg.type === 'image') && msg.attachment && (
+                <>
+                  {/* Caption: only show when content differs from the bare file name
+                      (the file name is already visible in the Attachment tile) */}
+                  {msg.content && msg.content !== msg.attachment.file_name && (
+                    <div style={{ marginBottom: 4 }}>{msg.content}</div>
+                  )}
+                  <Attachment messageId={msg.id} attachment={msg.attachment} />
+                </>
               )}
             </div>
 

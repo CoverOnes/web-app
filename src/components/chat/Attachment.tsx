@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { getAttachmentDownloadUrl } from '../../lib/api/file';
 import { Icon } from '../ui/Icon';
 import type { MessageAttachment } from '../../types';
@@ -28,17 +28,31 @@ function formatBytes(bytes: number): string {
 const Attachment = ({ messageId, attachment }: AttachmentProps) => {
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Ref guard prevents concurrent download calls without including `downloading`
+  // in useCallback deps (which would recreate the callback on every state toggle).
+  const isDownloadingRef = useRef(false);
 
   const isImage = attachment.file_type.startsWith('image/');
   const IconComp = isImage ? Icon.Image : Icon.File;
 
   const handleDownload = useCallback(async () => {
-    if (downloading) return;
+    // Use a ref guard (not `downloading` state) to block concurrent calls —
+    // this avoids including `downloading` in the deps array, which would cause
+    // the callback to be recreated on every state toggle (unnecessary churn).
+    if (isDownloadingRef.current) return;
+    isDownloadingRef.current = true;
     setDownloading(true);
     setError(null);
     try {
       const { url } = await getAttachmentDownloadUrl(messageId);
-      // Trigger browser download without navigating away
+
+      // XSS guard: reject non-http(s) protocols (e.g. javascript:, data:).
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+        throw new Error('invalid download url');
+      }
+
+      // Trigger browser download without navigating away.
       const a = document.createElement('a');
       a.href = url;
       a.download = attachment.file_name;
@@ -50,9 +64,10 @@ const Attachment = ({ messageId, attachment }: AttachmentProps) => {
       setError('下載失敗，請稍後再試');
       setTimeout(() => setError(null), 4000);
     } finally {
+      isDownloadingRef.current = false;
       setDownloading(false);
     }
-  }, [messageId, attachment.file_name, downloading]);
+  }, [messageId, attachment.file_name]);
 
   return (
     <div style={{ marginTop: 6 }}>
