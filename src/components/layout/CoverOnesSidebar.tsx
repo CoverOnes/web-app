@@ -184,6 +184,10 @@ const CoverOnesSidebar = () => {
     // sidebar's existing fallback convention (see Icon.Building note above).
     { path: '/reports',        label: '產業報告',  icon: (s) => <Icon.FileText size={s} /> },
     { path: '/insights',       label: '數據洞察',  icon: (s) => <Icon.Star size={s} /> },
+    // 收藏: Icon.Bookmark does not exist in the Icon set; Icon.Pin is the closest
+    // existing save/bookmark glyph (Tag/Star are already taken by 招標進度/數據洞察)
+    // per the sidebar's fallback convention (see Icon.Building note above).
+    { path: '/saved',          label: '收藏',      icon: (s) => <Icon.Pin size={s} /> },
     { path: '/search',         label: '搜尋',      icon: (s) => <Icon.Search size={s} /> },
     { path: '/notifications',  label: '通知',      icon: (s) => <Icon.Bell size={s} />, badge: unreadCount },
   ];
