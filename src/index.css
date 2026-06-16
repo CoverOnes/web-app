@@ -146,6 +146,7 @@
   --co-amber:        #F59E0B;
   --co-red:          #EF4444;
   --co-pink:         #EC4899;
+  --co-cover-from:   #312E81;   /* Profile cover gradient start (design) */
 
   /* --- Text on accent/gradient backgrounds --- */
   --co-text-on-accent: #fff;
