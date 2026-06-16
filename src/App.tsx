@@ -21,6 +21,7 @@ import ChatRoomPage from './pages/ChatRoomPage';
 import Messages from './pages/Messages';
 import Contacts from './pages/Contacts';
 import Settings from './pages/Settings';
+import ProfilePage from './pages/ProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
 import SearchPage from './pages/SearchPage';
 import DiscoverPage from './pages/DiscoverPage';
@@ -106,6 +107,10 @@ function App() {
 
             {/* Settings — ungated: accessible to all authenticated users */}
             <Route path="settings" element={<Settings />} />
+
+            {/* Profile (P4) — own (/profile) + public-by-id (/profile/:userId) */}
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="profile/:userId" element={<ProfilePage />} />
 
             {/* 404 within the app shell */}
             <Route path="*" element={<NotFoundPage />} />

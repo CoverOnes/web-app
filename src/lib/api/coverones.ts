@@ -273,6 +273,42 @@ export interface UpdateTaskRequest {
 //     the remainder to the upstream. E.g. /api/user/v1/me → user service receives /v1/me.
 //   - JWKS lives at /jwks (gateway-level public forwarding to user upstream).
 
+// ===== Public profile (P4) =====
+// PII-SAFE public profile returned by GET /v1/users/:userId/profile. The handler
+// projects ONLY these 12 fields — never the full domain.User (no email, legal
+// name, national id, status, companyId, etc.). `verified` is derived server-side
+// from kyc_tier >= 1.
+export interface PublicProfile {
+  id: string;
+  handle: string | null;
+  displayName: string;
+  headline: string | null;
+  bio: string | null;
+  location: string | null;
+  avatarUrl: string | null;
+  coverUrl: string | null;
+  accountType: AccountType;
+  verified: boolean;
+  kycTier: number;
+  joinedAt: string;
+}
+
+// OwnProfile is the authed own view returned by GET /v1/me/profile. Same 12-field
+// shape as PublicProfile (own view). Modelled as the contracted superset.
+export type OwnProfile = PublicProfile;
+
+// Full-replace edit payload for PUT /v1/me/profile. displayName is always sent;
+// the rest are optional/nullable to support clearing a field.
+export interface UpdateProfileRequest {
+  displayName: string;
+  handle?: string | null;
+  headline?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  avatarUrl?: string | null;
+  coverUrl?: string | null;
+}
+
 export const authApi = {
   register: (data: RegisterRequest) =>
     http.post<RegisterResponse>('/v1/auth/register', data).then((r) => r.data),
@@ -320,6 +356,22 @@ export const authApi = {
     http.get<AuthUser>('/api/user/v1/me', {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     }).then((r) => r.data),
+
+  // ── Public profile (P4) ──────────────────────────────────────────────────────
+  // GET /api/user/v1/users/:userId/profile — PUBLIC, no auth; gateway strips
+  // /api/user → user service receives /v1/users/:userId/profile. Returns the
+  // PII-safe PublicProfile projection. 400 INVALID_USER_ID / 404 USER_NOT_FOUND.
+  getPublicProfile: (userId: string) =>
+    http.get<PublicProfile>(`/api/user/v1/users/${userId}/profile`).then((r) => r.data),
+
+  // GET /api/user/v1/me/profile — authed own full editable profile.
+  getMyProfile: () =>
+    http.get<OwnProfile>('/api/user/v1/me/profile').then((r) => r.data),
+
+  // PUT /api/user/v1/me/profile — authed (RequireTier(1)). Full replace of
+  // editable fields. 400 VALIDATION_ERROR / 409 HANDLE_TAKEN. Returns OwnProfile.
+  updateMyProfile: (data: UpdateProfileRequest) =>
+    http.put<OwnProfile>('/api/user/v1/me/profile', data).then((r) => r.data),
 
   // ── OAuth ──────────────────────────────────────────────────────────────────
   // Exchange a one-time authorisation code (from the OAuth callback) for tokens.
