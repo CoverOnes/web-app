@@ -1,5 +1,5 @@
 import http from './http';
-import type { Room, Message, Member } from '../../types';
+import type { Room, Message, Member, MessageAttachment } from '../../types';
 import { validateMessage, validateRoomName, validateUserId, validateRoomId } from '../utils/validation';
 
 // ── ChatRoomsResult ──────────────────────────────────────────────────────────
@@ -62,6 +62,7 @@ export const chatApi = {
 
   /**
    * 獲取聊天室訊息
+   * The backend may return attachment metadata on file/image messages.
    */
   async getMessages(
     roomId: string,
@@ -78,17 +79,26 @@ export const chatApi = {
   },
 
   /**
-   * 發送訊息
+   * 發送訊息（文字或附件）
+   *
+   * For file/image messages, pass type:'file'|'image' and attachment.
+   * For plain text, type:'text' and no attachment.
+   * content is still required by the API even for file messages (may be empty
+   * string or a fallback display label — the caller decides).
    */
   async sendMessage(data: {
     room_id: string;
     sender_id: string;
     content: string;
-    type: 'text' | 'system';
+    type: 'text' | 'system' | 'file' | 'image';
+    attachment?: MessageAttachment;
   }): Promise<Message> {
     validateRoomId(data.room_id);
     validateUserId(data.sender_id);
-    validateMessage(data.content);
+    // Only validate content length for text messages; file messages may have empty content.
+    if (data.type === 'text' || data.type === 'system') {
+      validateMessage(data.content);
+    }
     return http.post<Message>('/api/chat/v1/messages', data).then((r) => r.data);
   },
 
@@ -125,4 +135,3 @@ export const chatApi = {
 };
 
 export default chatApi;
-

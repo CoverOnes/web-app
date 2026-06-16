@@ -10,6 +10,7 @@ import MembersPanel from './MembersPanel';
 import RoomSettingsModal from './RoomSettingsModal';
 import { getDisplayName } from '../../utils/formatters';
 import { useState } from 'react';
+import type { MessageAttachment } from '../../types';
 
 const ChatRoom = () => {
   // Identity comes from authStore (logged-in user), not chatStore.currentUser.
@@ -57,7 +58,11 @@ const ChatRoom = () => {
     return currentRoom.name || '未知聊天室';
   }, [currentRoom, userId]);
 
-  const handleSendMessage = useCallback(async (content: string) => {
+  const handleSendMessage = useCallback(async (
+    content: string,
+    attachment?: MessageAttachment,
+    attachmentType?: 'file' | 'image',
+  ) => {
     if (!currentRoom) return;
     try {
       let roomId = currentRoom.id;
@@ -79,19 +84,28 @@ const ChatRoom = () => {
         setCurrentRoom(actualRoom);
       }
 
+      const msgType = attachment ? (attachmentType ?? 'file') : 'text';
+
       const tempMessage = {
         id: `temp_${Date.now()}`,
         room_id: roomId,
         sender_id: userId,
         content,
-        type: 'text' as const,
+        type: msgType as 'text' | 'file' | 'image',
         created_at: Math.floor(Date.now() / 1000),
         read_by: [userId],
+        attachment,
       };
 
       addMessage(roomId, tempMessage);
 
-      const sentMsg = await chatApi.sendMessage({ room_id: roomId, sender_id: userId, content, type: 'text' });
+      const sentMsg = await chatApi.sendMessage({
+        room_id: roomId,
+        sender_id: userId,
+        content,
+        type: msgType as 'text' | 'file' | 'image',
+        attachment,
+      });
 
       const msgs = messageHistory[roomId] || [];
       const withoutTemp = msgs.filter(m => m.id !== tempMessage.id);
