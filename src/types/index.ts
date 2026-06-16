@@ -40,17 +40,26 @@ export interface Room {
 // Message status type
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read';
 
+// Attachment metadata carried in a message
+export interface MessageAttachment {
+  file_id: string;
+  file_name: string;
+  file_size: number;
+  file_type: string;
+}
+
 // 消息類型
 export interface Message {
   id: string;
   room_id: string;
   sender_id: string;
   content: string;
-  type: 'text' | 'system';
+  type: 'text' | 'system' | 'file' | 'image';
   created_at: number;
   updated_at?: number;
   read_by?: string[];
   status?: MessageStatus;
+  attachment?: MessageAttachment;
 }
 
 // API 回應類型
