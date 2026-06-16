@@ -15,6 +15,23 @@ function formatBytes(bytes: number): string {
 }
 
 /**
+ * Sanitize the server-supplied filename before using it as the `download` hint.
+ * Drops path separators and control characters (including null bytes) so a
+ * crafted original_filename (e.g. "../../x") cannot influence the save path on
+ * browsers that honour path segments in the download attribute (CWE-22). Leading
+ * dots are stripped and the result is capped to the 255-char filesystem limit.
+ */
+function sanitizeDownloadFilename(name: string): string {
+  let out = '';
+  for (const ch of name) {
+    // Drop path separators and any control char (code < 0x20 covers the null byte).
+    if (ch === '/' || ch === '\\' || ch.charCodeAt(0) < 0x20) continue;
+    out += ch;
+  }
+  return out.replace(/^\.+/, '').slice(0, 255) || 'download';
+}
+
+/**
  * Download-tile for file and image attachments.
  *
  * v1 decision (locked): download-only tile, NO inline image preview.
@@ -55,7 +72,7 @@ const Attachment = ({ messageId, attachment }: AttachmentProps) => {
       // Trigger browser download without navigating away.
       const a = document.createElement('a');
       a.href = url;
-      a.download = attachment.file_name;
+      a.download = sanitizeDownloadFilename(attachment.file_name);
       a.rel = 'noopener noreferrer';
       document.body.appendChild(a);
       a.click();

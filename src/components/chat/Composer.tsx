@@ -142,9 +142,13 @@ const Composer = ({ onSend, roomTitle, disabled = false }: ComposerProps) => {
           file_size: pending.fileSize,
           file_type: pending.fileType,
         };
-        // Sanitize the optional caption the same way text messages are sanitized.
-        // Fall back to file name if no caption was typed.
-        const caption = trimmed ? sanitizeInput(trimmed) : pending.fileName;
+        // Sanitize the optional caption the same way text messages are sanitized,
+        // falling back to the file name when no (or empty-after-sanitize) caption
+        // was typed. Enforce the same 10 000-char / null-byte cap as text messages
+        // so an oversized caption (or a hostile server filename) can't be relayed
+        // unbounded to all room members.
+        const caption = (trimmed && sanitizeInput(trimmed)) || pending.fileName;
+        validateMessage(caption);
         onSend(caption, attachment, pending.messageType);
         setPending(null);
         setVal('');

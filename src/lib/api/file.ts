@@ -28,13 +28,25 @@ export async function uploadFile(file: File): Promise<UploadedFile> {
   return res.data;
 }
 
+// Chat message IDs are server-generated UUIDs (chat-gateway message_store: uuid.New()).
+// Optimistic messages use a `temp_…` id that is not downloadable until the server
+// confirms it, so they are correctly rejected here too.
+const MESSAGE_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * GET /api/chat/v1/messages/:messageId/attachment/download-url
  * Returns a short-lived pre-signed download URL for the attachment.
+ *
+ * `messageId` is validated against the UUID format and percent-encoded before
+ * being interpolated into the path, so a crafted id (e.g. "../../x" from a
+ * compromised backend / SSE payload) cannot inject into the URL path (CWE-22).
  */
 export async function getAttachmentDownloadUrl(messageId: string): Promise<AttachmentDownloadUrl> {
+  if (!MESSAGE_ID_RE.test(messageId)) {
+    throw new Error('invalid messageId');
+  }
   const res = await http.get<AttachmentDownloadUrl>(
-    `/api/chat/v1/messages/${messageId}/attachment/download-url`
+    `/api/chat/v1/messages/${encodeURIComponent(messageId)}/attachment/download-url`
   );
   return res.data;
 }
