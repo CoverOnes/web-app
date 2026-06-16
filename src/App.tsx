@@ -28,6 +28,8 @@ import DiscoverPage from './pages/DiscoverPage';
 import NetworkPage from './pages/NetworkPage';
 import MyCompanyPage from './pages/MyCompanyPage';
 import CompanyProfilePage from './pages/CompanyProfilePage';
+import ReportsPage from './pages/ReportsPage';
+import InsightsPage from './pages/InsightsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import WaitlistPage from './pages/WaitlistPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -111,6 +113,11 @@ function App() {
             {/* Company (P4) — own (/company, owner edit) + public-by-id (/companies/:companyId) */}
             <Route path="company" element={<MyCompanyPage />} />
             <Route path="companies/:companyId" element={<CompanyProfilePage />} />
+
+            {/* Reports + Insights (P4) — frontend-only; real KPIs (KYC tier /
+             * connection counts) + honest empty-states. No reports/analytics backend. */}
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="insights" element={<InsightsPage />} />
 
             {/* Search — full-site search over real listings; company/people tabs show empty-state */}
             <Route path="search" element={<SearchPage />} />

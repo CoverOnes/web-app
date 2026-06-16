@@ -178,6 +178,12 @@ const CoverOnesSidebar = () => {
     // 我的公司: Icon.Building does not exist in the Icon set; Icon.Briefcase is the
     // closest existing semantic match (a building/case glyph) per house convention.
     { path: '/company',        label: '我的公司',  icon: (s) => <Icon.Briefcase size={s} /> },
+    // 產業報告 / 數據洞察 (P4): Icon.BarChart does not exist in the Icon set.
+    // 產業報告 → Icon.FileText (document/report glyph). 數據洞察 → Icon.Star
+    // (highlights/insights) as the nearest available semantic match per the
+    // sidebar's existing fallback convention (see Icon.Building note above).
+    { path: '/reports',        label: '產業報告',  icon: (s) => <Icon.FileText size={s} /> },
+    { path: '/insights',       label: '數據洞察',  icon: (s) => <Icon.Star size={s} /> },
     { path: '/search',         label: '搜尋',      icon: (s) => <Icon.Search size={s} /> },
     { path: '/notifications',  label: '通知',      icon: (s) => <Icon.Bell size={s} />, badge: unreadCount },
   ];
