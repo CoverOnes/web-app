@@ -1,0 +1,415 @@
+/* ===== MyCompanyPage — CoverOnes design system (ported from Company.html) =====
+ * Tokens only — every color is a var(--co-*); no raw hex (gradients use token
+ * endpoints). Pixel-mirrors design-reference/chat/project/Company.html (我的公司).
+ * RWD: 1fr 360px at desktop; single column (.mc-col-side under .mc-col-main) ≤767px.
+ */
+
+.mc-page {
+  width: 100%;
+  min-height: 100%;
+  background: var(--co-bg);
+  color: var(--co-text);
+  overflow-y: auto;
+}
+
+/* §1 Cover */
+.mc-cover {
+  height: 200px;
+  background: linear-gradient(135deg, var(--co-cover-from) 0%, var(--co-accent) 45%, var(--co-cyan) 100%);
+  position: relative;
+  overflow: hidden;
+}
+.mc-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.45), transparent 45%),
+    radial-gradient(circle at 80% 60%, rgba(34, 211, 238, 0.35), transparent 40%);
+  pointer-events: none;
+}
+.mc-cover-edit {
+  position: absolute;
+  right: 18px;
+  top: 16px;
+  z-index: 1;
+  padding: 7px 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--co-btn-r);
+  color: var(--co-text-on-accent);
+  font-size: 12px;
+  min-height: 34px;
+  cursor: pointer;
+}
+.mc-cover-edit:hover {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* §2–6 Head */
+.mc-head {
+  padding: 0 28px;
+  margin-top: -54px;
+  position: relative;
+  z-index: 2;
+}
+.mc-head-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+/* §2 Company logo (110px gradient square — amber→red per design) */
+.mc-logo {
+  width: 110px;
+  height: 110px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--co-amber), var(--co-red));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  font-weight: 800;
+  color: var(--co-text-on-accent);
+  border: 4px solid var(--co-bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.mc-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mc-head-info {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 12px;
+}
+.mc-name {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mc-handle {
+  color: var(--co-text-muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+.mc-meta {
+  font-size: 13px;
+  color: var(--co-text-dim);
+  margin-top: 8px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.mc-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mc-head-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+
+/* Buttons */
+.mc-btn {
+  padding: 8px 14px;
+  border-radius: var(--co-btn-r);
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms, opacity 150ms;
+}
+.mc-btn-primary {
+  background: linear-gradient(135deg, var(--co-btn-primary-from), var(--co-btn-primary-to));
+  color: var(--co-text-on-accent);
+  border: none;
+  box-shadow: 0 4px 12px var(--co-suggest-shadow);
+}
+.mc-btn-secondary {
+  background: var(--co-bg-3);
+  border: 1px solid var(--co-line-strong);
+  color: var(--co-text);
+}
+.mc-btn-secondary:hover:not(:disabled) {
+  background: var(--co-bg-card-2);
+}
+.mc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* §7 Tabs */
+.mc-tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--co-line);
+  overflow-x: auto;
+}
+.mc-tab {
+  padding: 12px 0;
+  font-size: 13px;
+  color: var(--co-text-dim);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  min-height: 44px;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+}
+.mc-tab--on {
+  color: var(--co-bdg-dev-text);
+  border-bottom-color: var(--co-accent);
+  font-weight: 600;
+}
+
+/* Layout */
+.mc-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 18px;
+  padding: 18px 28px 32px;
+  align-items: start;
+}
+.mc-col-main,
+.mc-col-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Cards */
+.mc-card {
+  background: var(--co-bg-card);
+  border: 1px solid var(--co-line-strong);
+  border-radius: 13px;
+  padding: 20px 22px;
+}
+.mc-card-h {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* §8 About */
+.mc-about-text {
+  font-size: 13.5px;
+  color: var(--co-text-dim);
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Team roster */
+.mc-team-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--co-line);
+}
+.mc-team-row:last-child {
+  border-bottom: none;
+}
+.mc-team-info {
+  flex: 1;
+  min-width: 0;
+}
+.mc-team-name {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  color: var(--co-text);
+}
+.mc-team-handle {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--co-text-dim);
+}
+.mc-team-role {
+  font-size: 11.5px;
+  color: var(--co-text-dim);
+  margin-top: 2px;
+}
+.mc-owner-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  background: var(--co-bdg-dev-bg);
+  color: var(--co-bdg-dev-text);
+  border: 1px solid var(--co-bdg-dev-border);
+}
+
+/* Empty / loading / error */
+.mc-empty {
+  font-size: 12.5px;
+  color: var(--co-text-muted);
+  padding: 14px 0;
+  text-align: center;
+}
+.mc-error-wrap {
+  padding: 40px 28px;
+}
+.mc-error {
+  padding: 14px 18px;
+  border-radius: var(--co-card-r);
+  background: color-mix(in srgb, var(--co-red) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--co-red) 25%, transparent);
+  color: var(--co-red);
+  font-size: 13.5px;
+}
+
+/* Edit form (owner only) */
+.mc-edit {
+  background: var(--co-bg-card);
+  border: 1px solid var(--co-line-strong);
+  border-radius: 13px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mc-edit-error {
+  padding: 8px 12px;
+  border-radius: var(--co-btn-r);
+  background: color-mix(in srgb, var(--co-red) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--co-red) 25%, transparent);
+  color: var(--co-red);
+  font-size: 13px;
+}
+.mc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mc-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--co-text-dim);
+}
+.mc-input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--co-btn-r);
+  background: var(--co-bg-3);
+  border: 1px solid var(--co-line-strong);
+  color: var(--co-text);
+  font-size: 13px;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+.mc-input:focus {
+  border-color: var(--co-accent);
+  outline: none;
+}
+.mc-input::placeholder {
+  color: var(--co-text-muted);
+}
+.mc-textarea {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.6;
+}
+.mc-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.mc-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Loading skeleton */
+.mc-skel-cover {
+  background: var(--co-bg-card-2);
+}
+.mc-skel-logo {
+  width: 110px;
+  height: 110px;
+  border-radius: 18px;
+  background: var(--co-bg-card-2);
+  border: 4px solid var(--co-bg);
+  flex-shrink: 0;
+}
+.mc-skel-line {
+  height: 14px;
+  width: 60%;
+  border-radius: 6px;
+  background: var(--co-bg-card-2);
+  margin-bottom: 10px;
+}
+.mc-skel-line--lg {
+  height: 24px;
+  width: 40%;
+}
+
+/* ===== RWD ===== */
+@media (max-width: 1100px) {
+  .mc-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+
+@media (max-width: 767px) {
+  .mc-head {
+    padding: 0 16px;
+  }
+  .mc-head-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .mc-head-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    padding-bottom: 0;
+  }
+  .mc-layout {
+    grid-template-columns: 1fr;
+    padding: 16px 16px 24px;
+  }
+  .mc-name {
+    font-size: 22px;
+  }
+  .mc-field-grid {
+    grid-template-columns: 1fr;
+  }
+}

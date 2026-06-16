@@ -7,10 +7,12 @@ import {
   notificationApi,
   waitlistApi,
   connectionApi,
+  companyApi,
   type ContractStatus,
   type KycSubmitRequest,
   type ResetPasswordRequest,
   type WaitlistJoinRequest,
+  type UpdateCompanyRequest,
 } from './api/coverones';
 import { useAuthStore } from '../store/authStore';
 
@@ -433,6 +435,59 @@ export function useDeclineInvite() {
     },
     onError: (err) => {
       console.error('[useDeclineInvite]', err);
+    },
+  });
+}
+
+// ===== Company hooks (P4) =====
+// Public queries gate on !!id (no auth needed); useMyCompany gates on
+// useAuthReady() (avoids the hydration 401 race). The mutation uses retry:false
+// (deterministic 4xx must surface inline) + invalidate ['company','my']. Error
+// codes (HANDLE_TAKEN / VALIDATION_ERROR / NOT_COMPANY_OWNER) are surfaced via
+// the mutation result; the page maps them via getApiErrorCode for inline text.
+
+// useMyCompany — authed owner view (['company','my']). Resolves the caller's
+// company server-side via /v1/me/company.
+export function useMyCompany() {
+  const authReady = useAuthReady();
+  return useQuery({
+    queryKey: ['company', 'my'],
+    queryFn: () => companyApi.getMyCompany(),
+    enabled: authReady,
+  });
+}
+
+// usePublicCompany — public company profile by id (['company', id]).
+export function usePublicCompany(companyId: string | undefined) {
+  return useQuery({
+    queryKey: ['company', companyId],
+    queryFn: () => companyApi.getPublicCompany(companyId!),
+    enabled: !!companyId,
+  });
+}
+
+// useCompanyMembers — public member roster by id (['company', id, 'members']).
+export function useCompanyMembers(companyId: string | undefined) {
+  return useQuery({
+    queryKey: ['company', companyId, 'members'],
+    queryFn: () => companyApi.getCompanyMembers(companyId!),
+    enabled: !!companyId,
+  });
+}
+
+// useUpdateMyCompany — owner full-replace update; invalidate ['company','my'].
+// retry:false so deterministic 4xx (HANDLE_TAKEN / VALIDATION_ERROR /
+// NOT_COMPANY_OWNER) surface inline instead of being auto-retried.
+export function useUpdateMyCompany() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateCompanyRequest) => companyApi.updateMyCompany(data),
+    retry: false,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['company', 'my'] });
+    },
+    onError: (err) => {
+      console.error('[useUpdateMyCompany]', err);
     },
   });
 }

@@ -375,6 +375,94 @@ export const connectionApi = {
       .then((r) => r.data),
 };
 
+// ===== Company (P4) =====
+// PII-SAFE public company profile returned by GET /v1/companies/:companyId. The
+// handler EXCLUDES owner_user_id + registration_no — never the private columns.
+// Matches the frozen api-contract §1.
+export interface CompanyProfile {
+  id: string;
+  handle: string | null;
+  name: string;
+  tagline: string | null;
+  about: string | null;
+  location: string | null;
+  website: string | null;
+  industry: string | null;
+  companySize: string | null;
+  foundedYear: number | null;
+  logoUrl: string | null;
+  coverUrl: string | null;
+  status: string;
+  createdAt: string;
+}
+
+// MyCompany — authed OWNER view returned by GET /v1/me/company. Same public
+// shape PLUS registrationNo (統一編號), which is exposed ONLY to the owner and is
+// EXCLUDED from the public profile + members projections (api-contract §2/§3).
+export type MyCompany = CompanyProfile & { registrationNo: string | null };
+
+// PII-SAFE projection of a company member. Reuses the connectionUserColumns set
+// (id, display_name, handle, headline, avatar_url) only — NEVER email /
+// national_id / kyc_tier / status. isOwner = user.id === company.owner_user_id.
+export interface CompanyMember {
+  userId: string;
+  displayName: string;
+  handle: string | null;
+  headline: string | null;
+  avatarUrl: string | null;
+  isOwner: boolean;
+}
+
+export interface CompanyMembersResponse {
+  members: CompanyMember[];
+}
+
+// Full-replace edit payload for PUT /v1/me/company. name is always required;
+// the rest are optional/nullable to support clearing a field (full-replace
+// semantics per the api-contract §4).
+export interface UpdateCompanyRequest {
+  name: string;
+  handle?: string | null;
+  tagline?: string | null;
+  about?: string | null;
+  location?: string | null;
+  website?: string | null;
+  industry?: string | null;
+  companySize?: string | null;
+  foundedYear?: number | null;
+  logoUrl?: string | null;
+  coverUrl?: string | null;
+}
+
+// companyApi — public GETs (no auth) + authed owner read/update.
+// Gateway routes: /api/user/v1/* → user service /v1/*.
+export const companyApi = {
+  // GET /api/user/v1/companies/:companyId — PUBLIC, no auth. Returns the PII-safe
+  // CompanyProfile projection (no owner_user_id / registration_no).
+  // 400 INVALID_COMPANY_ID / 404 COMPANY_NOT_FOUND.
+  getPublicCompany: (companyId: string) =>
+    http.get<CompanyProfile>(`/api/user/v1/companies/${companyId}`).then((r) => r.data),
+
+  // GET /api/user/v1/companies/:companyId/members — PUBLIC. Members ordered by
+  // created_at ASC; empty → { members: [] }.
+  getCompanyMembers: (companyId: string) =>
+    http
+      .get<CompanyMembersResponse>(`/api/user/v1/companies/${companyId}/members`)
+      .then((r) => r.data),
+
+  // GET /api/user/v1/me/company — authed. Resolves caller user.company_id →
+  // company (owner view incl. registrationNo). 404 COMPANY_NOT_FOUND when the
+  // caller has no company.
+  getMyCompany: () =>
+    http.get<MyCompany>('/api/user/v1/me/company').then((r) => r.data),
+
+  // PUT /api/user/v1/me/company — authed + RequireTier(1), OWNER-GATED. Full
+  // replace of editable fields (name required). 400 VALIDATION_ERROR /
+  // 409 HANDLE_TAKEN / 403 NOT_COMPANY_OWNER / 404 COMPANY_NOT_FOUND.
+  updateMyCompany: (data: UpdateCompanyRequest) =>
+    http.put<CompanyProfile>('/api/user/v1/me/company', data).then((r) => r.data),
+};
+
 // Full-replace edit payload for PUT /v1/me/profile. displayName is always sent;
 // the rest are optional/nullable to support clearing a field.
 export interface UpdateProfileRequest {
