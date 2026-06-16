@@ -8,11 +8,17 @@ import {
   waitlistApi,
   connectionApi,
   companyApi,
+  savedApi,
   type ContractStatus,
   type KycSubmitRequest,
   type ResetPasswordRequest,
   type WaitlistJoinRequest,
   type UpdateCompanyRequest,
+  type SavedItemType,
+  type ListSavedJobsResponse,
+  type ListSavedCompaniesResponse,
+  type SaveResponse,
+  type UnsaveResponse,
 } from './api/coverones';
 import { useAuthStore } from '../store/authStore';
 
@@ -488,6 +494,90 @@ export function useUpdateMyCompany() {
     },
     onError: (err) => {
       console.error('[useUpdateMyCompany]', err);
+    },
+  });
+}
+
+// ===== Saved items / Bookmarks (P4) =====
+// Server state lives in TanStack Query (NEVER Zustand). Both list queries gate on
+// useAuthReady() (avoids the hydration 401 race). The toggle mutation is OPTIMISTIC
+// with revert-on-error: onMutate snapshots + applies the change, onError rolls back
+// to the snapshot, onSettled invalidates to reconcile with the server.
+
+// useSavedJobs — the user's saved JOB references (['saved','job']). Each ref is
+// hydrated to a Listing card by <SavedJobCard> via useListing(itemId).
+export function useSavedJobs() {
+  const authReady = useAuthReady();
+  return useQuery({
+    queryKey: ['saved', 'job'],
+    queryFn: () => savedApi.listJobs(),
+    enabled: authReady,
+  });
+}
+
+// useSavedCompanies — the user's followed companies (['saved','company']) with the
+// PII-safe company projection joined in-service (rendered directly, no hydration).
+export function useSavedCompanies() {
+  const authReady = useAuthReady();
+  return useQuery({
+    queryKey: ['saved', 'company'],
+    queryFn: () => savedApi.listCompanies(),
+    enabled: authReady,
+  });
+}
+
+// Common shape of both saved-list caches for the optimistic updater. Both
+// ListSavedJobsResponse and ListSavedCompaniesResponse have `items` whose entries
+// carry an `itemId`, which is all the optimistic remove needs.
+type SavedListCache = ListSavedJobsResponse | ListSavedCompaniesResponse;
+
+// useToggleSaved — optimistic bookmark toggle for one item type, with
+// revert-on-error (HARD requirement). On the SavedPage the star is always
+// "currently saved" (you are viewing your saved list), so a toggle = unsave →
+// the card is removed optimistically; a rejected request restores it via onError.
+//
+//   onMutate:  cancel in-flight refetches, snapshot the list, optimistically drop
+//              the toggled item (when unsaving) so the UI updates immediately.
+//   onError:   roll the cache back to the pre-mutation snapshot (REVERT).
+//   onSettled: invalidate so the server's truth reconciles the (possibly stale) cache.
+// retry:false — deterministic 4xx (409/404/400) must surface, not auto-retry.
+export function useToggleSaved(itemType: SavedItemType) {
+  const qc = useQueryClient();
+  const key = ['saved', itemType] as const;
+  return useMutation({
+    // The result type is the union of save/unsave responses; we never read it
+    // (the cache is updated optimistically), so the explicit annotation just
+    // keeps both branches assignable to the same MutationFunction.
+    mutationFn: ({
+      itemId,
+      currentlySaved,
+    }: {
+      itemId: string;
+      currentlySaved: boolean;
+    }): Promise<SaveResponse | UnsaveResponse> =>
+      currentlySaved ? savedApi.unsave(itemType, itemId) : savedApi.save(itemType, itemId),
+    retry: false,
+    onMutate: async ({ itemId, currentlySaved }: { itemId: string; currentlySaved: boolean }) => {
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData<SavedListCache>(key);
+      // Optimistic removal only applies when unsaving (the SavedPage case). A
+      // save-from-elsewhere would add a row, but that flow lives on other pages.
+      if (currentlySaved && prev) {
+        qc.setQueryData<SavedListCache>(key, {
+          // The cast narrows the union to a homogeneous list — both variants share
+          // the `itemId` field used for the filter, so the filtered result keeps
+          // each variant's element type intact.
+          items: (prev.items as Array<{ itemId: string }>).filter((i) => i.itemId !== itemId),
+        } as SavedListCache);
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      // REVERT to the snapshot taken in onMutate.
+      if (ctx?.prev) qc.setQueryData<SavedListCache>(key, ctx.prev);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: key });
     },
   });
 }

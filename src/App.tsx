@@ -30,6 +30,7 @@ import MyCompanyPage from './pages/MyCompanyPage';
 import CompanyProfilePage from './pages/CompanyProfilePage';
 import ReportsPage from './pages/ReportsPage';
 import InsightsPage from './pages/InsightsPage';
+import SavedPage from './pages/SavedPage';
 import NotFoundPage from './pages/NotFoundPage';
 import WaitlistPage from './pages/WaitlistPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -118,6 +119,10 @@ function App() {
              * connection counts) + honest empty-states. No reports/analytics backend. */}
             <Route path="reports" element={<ReportsPage />} />
             <Route path="insights" element={<InsightsPage />} />
+
+            {/* Saved (P4) — saved jobs (hydrated via marketplace getListing) +
+             * followed companies (in-service join), wired to /api/user/v1/me/saved. */}
+            <Route path="saved" element={<SavedPage />} />
 
             {/* Search — full-site search over real listings; company/people tabs show empty-state */}
             <Route path="search" element={<SearchPage />} />

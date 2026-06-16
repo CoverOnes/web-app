@@ -463,6 +463,101 @@ export const companyApi = {
     http.put<CompanyProfile>('/api/user/v1/me/company', data).then((r) => r.data),
 };
 
+// ===== Saved items / Bookmarks (P4) =====
+// Generic per-user bookmark over heterogeneous targets (jobs / companies).
+// Routes on the authed /v1/me group → gateway /api/user/v1/me/saved.
+//   - type=job    → backend returns BARE references only (it never cross-calls the
+//                   delegated marketplace). The FE hydrates each via useListing(itemId).
+//   - type=company → backend joins to user.companies in-service and returns a
+//                   PII-safe projection (no owner_user_id / registration_no / status).
+// Unsave is idempotent (200 { removed:false } on a missing bookmark — toggle UX
+// must survive a double-unsave race). Save existence-check is asymmetric: company
+// is verified server-side (404 SAVED_TARGET_NOT_FOUND), job is not (delegated DB).
+export type SavedItemType = 'job' | 'company';
+
+// Saved JOB = bare reference. FE hydrates display via marketplaceApi.getListing(itemId).
+export interface SavedJobRef {
+  savedId: string; // saved_items.id (used for unsave & React key)
+  itemType: 'job';
+  itemId: string; // marketplace Listing id
+  savedAt: string; // ISO created_at
+}
+
+// PII-safe company card — a subset of the public CompanyProfile projection.
+export interface SavedCompanyCard {
+  id: string;
+  handle: string | null;
+  name: string;
+  tagline: string | null;
+  location: string | null;
+  industry: string | null;
+  companySize: string | null;
+  logoUrl: string | null;
+}
+
+// Saved COMPANY = reference + in-service PII-safe company projection.
+// `company` is null-skipped server-side if the company row is gone (resolve-on-read).
+export interface SavedCompany {
+  savedId: string;
+  itemType: 'company';
+  itemId: string; // companies.id (== company.id)
+  savedAt: string;
+  company: SavedCompanyCard;
+}
+
+export interface ListSavedJobsResponse {
+  items: SavedJobRef[];
+}
+
+export interface ListSavedCompaniesResponse {
+  items: SavedCompany[];
+}
+
+// Save response — the freshly-created bookmark reference.
+export interface SaveResponse {
+  savedId: string;
+  itemType: SavedItemType;
+  itemId: string;
+  savedAt: string;
+}
+
+// Unsave response — idempotent; removed=false when no live bookmark existed.
+export interface UnsaveResponse {
+  itemType: SavedItemType;
+  itemId: string;
+  removed: boolean;
+}
+
+// savedApi — all routes on the /v1/me group (gateway /api/user/v1/me/saved),
+// authed, identity = claims.Subject (server-side; we NEVER send our own id).
+export const savedApi = {
+  // GET /api/user/v1/me/saved?type=job → { items: [ bare job refs ] } (newest first).
+  listJobs: () =>
+    http
+      .get<ListSavedJobsResponse>('/api/user/v1/me/saved', { params: { type: 'job' } })
+      .then((r) => r.data),
+
+  // GET /api/user/v1/me/saved?type=company → { items: [ ref + PII-safe company ] }.
+  listCompanies: () =>
+    http
+      .get<ListSavedCompaniesResponse>('/api/user/v1/me/saved', { params: { type: 'company' } })
+      .then((r) => r.data),
+
+  // POST /api/user/v1/me/saved { itemType, itemId } → 201 SaveResponse.
+  // 400 VALIDATION_ERROR / 404 SAVED_TARGET_NOT_FOUND (company) / 409 SAVED_ITEM_EXISTS.
+  save: (itemType: SavedItemType, itemId: string) =>
+    http
+      .post<SaveResponse>('/api/user/v1/me/saved', { itemType, itemId })
+      .then((r) => r.data),
+
+  // DELETE /api/user/v1/me/saved?type=&itemId= → 200 { itemType, itemId, removed }.
+  // Idempotent: removed=false when no live bookmark existed (no 404).
+  unsave: (itemType: SavedItemType, itemId: string) =>
+    http
+      .delete<UnsaveResponse>('/api/user/v1/me/saved', { params: { type: itemType, itemId } })
+      .then((r) => r.data),
+};
+
 // Full-replace edit payload for PUT /v1/me/profile. displayName is always sent;
 // the rest are optional/nullable to support clearing a field.
 export interface UpdateProfileRequest {
