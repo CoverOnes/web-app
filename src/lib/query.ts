@@ -6,6 +6,7 @@ import {
   workspaceApi,
   notificationApi,
   waitlistApi,
+  connectionApi,
   type ContractStatus,
   type KycSubmitRequest,
   type ResetPasswordRequest,
@@ -359,5 +360,79 @@ export function useJoinWaitlist() {
   return useMutation({
     mutationFn: (data: WaitlistJoinRequest) => waitlistApi.join(data),
     retry: false,
+  });
+}
+
+// ===== Connections / Network hooks (P4) =====
+// Both queries gate on useAuthReady() (avoids the hydration 401 race). Mutations
+// use retry:false (deterministic 4xx must surface inline) + invalidateQueries
+// (not optimistic). Errors are surfaced via the mutation result; callers map the
+// code via getApiErrorCode/Message for inline messages.
+
+// useConnections — accepted-connections list (['connections']).
+export function useConnections() {
+  const authReady = useAuthReady();
+  return useQuery({
+    queryKey: ['connections'],
+    queryFn: () => connectionApi.list(),
+    enabled: authReady,
+  });
+}
+
+// usePendingInvites — incoming + outgoing pending invites (['connections','pending']).
+export function usePendingInvites() {
+  const authReady = useAuthReady();
+  return useQuery({
+    queryKey: ['connections', 'pending'],
+    queryFn: () => connectionApi.listPending(),
+    enabled: authReady,
+  });
+}
+
+// useSendInvite — send a connection invite by addressee userId.
+// Invalidate pending (the new edge appears under outgoing). 4xx surfaces inline.
+export function useSendInvite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (addresseeUserId: string) => connectionApi.send(addresseeUserId),
+    retry: false,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['connections', 'pending'] });
+    },
+    onError: (err) => {
+      console.error('[useSendInvite]', err);
+    },
+  });
+}
+
+// useAcceptInvite — accept a pending invite; invalidate both lists (it leaves
+// pending and joins accepted).
+export function useAcceptInvite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => connectionApi.accept(id),
+    retry: false,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['connections', 'pending'] });
+      qc.invalidateQueries({ queryKey: ['connections'] });
+    },
+    onError: (err) => {
+      console.error('[useAcceptInvite]', err);
+    },
+  });
+}
+
+// useDeclineInvite — decline (ignore) a pending invite; invalidate pending.
+export function useDeclineInvite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => connectionApi.decline(id),
+    retry: false,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['connections', 'pending'] });
+    },
+    onError: (err) => {
+      console.error('[useDeclineInvite]', err);
+    },
   });
 }

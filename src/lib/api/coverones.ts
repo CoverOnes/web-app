@@ -297,6 +297,84 @@ export interface PublicProfile {
 // shape as PublicProfile (own view). Modelled as the contracted superset.
 export type OwnProfile = PublicProfile;
 
+// ===== Connections / Network (P4) =====
+// PII-SAFE projection of the OTHER party in a connection edge. Reuses the
+// post-000009 public columns only — NEVER email / national_id / kyc_tier / status.
+// `userId` is the other user's id (never the caller's). Matches the frozen
+// api-contract for GET /v1/me/connections and /pending.
+export interface ConnectionUser {
+  // The OTHER user's id.
+  userId: string;
+  displayName: string;
+  handle: string | null;
+  headline: string | null;
+  avatarUrl: string | null;
+  accountType: AccountType;
+}
+
+// An accepted (status='accepted') connection edge. `connectedAt` is the edge's
+// updated_at (ISO). degree is always 1 (1st-degree); 2nd-degree is DEFERRED.
+export interface Connection {
+  id: string;
+  user: ConnectionUser;
+  connectedAt: string;
+  degree: 1;
+}
+
+// A pending invite edge. createdAt is the edge's created_at (ISO).
+export interface PendingInvite {
+  id: string;
+  user: ConnectionUser;
+  createdAt: string;
+}
+
+export interface ListConnectionsResponse {
+  connections: Connection[];
+}
+
+export interface PendingInvitesResponse {
+  // incoming = addressee==me & pending; outgoing = requester==me & pending.
+  incoming: PendingInvite[];
+  outgoing: PendingInvite[];
+}
+
+// connectionApi — all routes on the /v1/me group (gateway /api/user/v1/me/...),
+// authed, identity = claims.Subject (server-side; we NEVER send our own id).
+export const connectionApi = {
+  // GET accepted connections → { connections: [] } (empty when none).
+  list: () =>
+    http.get<ListConnectionsResponse>('/api/user/v1/me/connections').then((r) => r.data),
+
+  // GET pending invites → { incoming: [], outgoing: [] }.
+  listPending: () =>
+    http
+      .get<PendingInvitesResponse>('/api/user/v1/me/connections/pending')
+      .then((r) => r.data),
+
+  // POST send invite by addressee userId → 201 { id, status:'pending', addresseeUserId }.
+  // 400 VALIDATION_ERROR (self-invite) / 404 USER_NOT_FOUND / 409 CONNECTION_EXISTS.
+  send: (addresseeUserId: string) =>
+    http
+      .post<{ id: string; status: 'pending'; addresseeUserId: string }>(
+        '/api/user/v1/me/connections',
+        { addresseeUserId }
+      )
+      .then((r) => r.data),
+
+  // POST accept a pending invite addressed to me → 200 { id, status:'accepted' }.
+  // 404 CONNECTION_NOT_FOUND (IDOR-safe) / 409 CONNECTION_NOT_PENDING.
+  accept: (id: string) =>
+    http
+      .post<{ id: string; status: 'accepted' }>(`/api/user/v1/me/connections/${id}/accept`)
+      .then((r) => r.data),
+
+  // PATCH decline a pending invite addressed to me → 200 { id, status:'declined' }.
+  decline: (id: string) =>
+    http
+      .patch<{ id: string; status: 'declined' }>(`/api/user/v1/me/connections/${id}/decline`)
+      .then((r) => r.data),
+};
+
 // Full-replace edit payload for PUT /v1/me/profile. displayName is always sent;
 // the rest are optional/nullable to support clearing a field.
 export interface UpdateProfileRequest {
