@@ -46,7 +46,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       .then((user) => {
         setUser(user);
         // Ensure isAuthenticated=true — login() sets it, setUser doesn't.
-        useAuthStore.setState({ isAuthenticated: true, isHydrating: false });
+        useAuthStore.setState({ isHydrating: false });
       })
       .catch(() => {
         // Stale/invalid token: wipe it and bail out of hydrating.

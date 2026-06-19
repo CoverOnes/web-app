@@ -1,11 +1,12 @@
 import { create } from 'zustand';
+import type { AccountType } from '../lib/api/coverones';
 
 export interface AuthUser {
   id: string;
   email: string;
   displayName: string;
   avatarUrl: string | null;
-  accountType: string;
+  accountType: AccountType;
   kycTier: number;
   status: string;
   // auth Increment 1: backend's /me + the access-token JWT now carry an

@@ -576,7 +576,7 @@ const ContractDetailPage = () => {
               {([
                 {
                   label: '合約金額',
-                  value: `${contract.currency} ${Number(contract.amount).toLocaleString('zh-TW')}`,
+                  value: (() => { const amt = parseFloat(contract.amount); return `${contract.currency} ${Number.isNaN(amt) ? '—' : amt.toLocaleString('zh-TW')}`; })(),
                   accent: 'var(--co-green)',
                 },
                 {

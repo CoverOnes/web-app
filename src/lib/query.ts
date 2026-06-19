@@ -169,6 +169,7 @@ export function useCreateBid(listingId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['listing-bids', listingId] });
       qc.invalidateQueries({ queryKey: ['my-bids'] });
+      qc.invalidateQueries({ queryKey: ['listing', listingId] });
     },
   });
 }
@@ -181,9 +182,8 @@ export function useAcceptBid(listingId: string) {
       qc.invalidateQueries({ queryKey: ['listing-bids', listingId] });
       qc.invalidateQueries({ queryKey: ['listing', listingId] });
       qc.invalidateQueries({ queryKey: ['contracts'] });
+      qc.invalidateQueries({ queryKey: ['listings'] });
     },
-    // WA-m2: surface errors so UI can react; callers inspect mutation.error
-    onError: (err) => { console.error('[useAcceptBid]', err); },
   });
 }
 
@@ -191,18 +191,30 @@ export function useRejectBid(listingId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: marketplaceApi.rejectBid,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['listing-bids', listingId] }),
-    // WA-m2: also invalidate listings so awarded/closed state refreshes
-    onError: (err) => { console.error('[useRejectBid]', err); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['listing-bids', listingId] });
+      qc.invalidateQueries({ queryKey: ['listing', listingId] });
+      qc.invalidateQueries({ queryKey: ['listings'] });
+    },
   });
 }
 
 export function useWithdrawBid() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: marketplaceApi.withdrawBid,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-bids'] }),
-    onError: (err) => { console.error('[useWithdrawBid]', err); },
+    // Accept either a plain bidId string (legacy callers) or
+    // {bidId, listingId} so the caller can pass listingId for cache invalidation.
+    mutationFn: (arg: string | { bidId: string; listingId?: string }) => {
+      const bidId = typeof arg === 'string' ? arg : arg.bidId;
+      return marketplaceApi.withdrawBid(bidId);
+    },
+    onSuccess: (_data, arg) => {
+      qc.invalidateQueries({ queryKey: ['my-bids'] });
+      const listingId = typeof arg === 'string' ? undefined : arg.listingId;
+      if (listingId) {
+        qc.invalidateQueries({ queryKey: ['listing-bids', listingId] });
+      }
+    },
   });
 }
 
@@ -210,7 +222,7 @@ export function useWithdrawBid() {
 
 export function useContracts(status?: ContractStatus) {
   return useQuery({
-    queryKey: ['contracts', status],
+    queryKey: status ? ['contracts', status] : ['contracts'],
     queryFn: () => workspaceApi.listContracts(status ? { status } : undefined),
   });
 }
@@ -250,7 +262,6 @@ export function useSignContract(contractId: string) {
       // WA-m2: also refresh contracts list so status chip updates everywhere
       qc.invalidateQueries({ queryKey: ['contracts'] });
     },
-    onError: (err) => { console.error('[useSignContract]', err); },
   });
 }
 
@@ -264,7 +275,6 @@ export function useSubmitForSignature(contractId: string) {
       qc.invalidateQueries({ queryKey: ['contract', contractId] });
       qc.invalidateQueries({ queryKey: ['contracts'] });
     },
-    onError: (err) => { console.error('[useSubmitForSignature]', err); },
   });
 }
 
@@ -276,7 +286,6 @@ export function useCancelContract(contractId: string) {
       qc.invalidateQueries({ queryKey: ['contract', contractId] });
       qc.invalidateQueries({ queryKey: ['contracts'] });
     },
-    onError: (err) => { console.error('[useCancelContract]', err); },
   });
 }
 
@@ -286,7 +295,6 @@ export function useCreateTask(contractId: string) {
     mutationFn: (data: Parameters<typeof workspaceApi.createTask>[1]) =>
       workspaceApi.createTask(contractId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', contractId] }),
-    onError: (err) => { console.error('[useCreateTask]', err); },
   });
 }
 
@@ -296,7 +304,6 @@ export function useUpdateTask(contractId: string) {
     mutationFn: ({ taskId, data }: { taskId: string; data: Parameters<typeof workspaceApi.updateTask>[2] }) =>
       workspaceApi.updateTask(contractId, taskId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', contractId] }),
-    onError: (err) => { console.error('[useUpdateTask]', err); },
   });
 }
 
@@ -407,9 +414,6 @@ export function useSendInvite() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['connections', 'pending'] });
     },
-    onError: (err) => {
-      console.error('[useSendInvite]', err);
-    },
   });
 }
 
@@ -424,9 +428,6 @@ export function useAcceptInvite() {
       qc.invalidateQueries({ queryKey: ['connections', 'pending'] });
       qc.invalidateQueries({ queryKey: ['connections'] });
     },
-    onError: (err) => {
-      console.error('[useAcceptInvite]', err);
-    },
   });
 }
 
@@ -438,9 +439,6 @@ export function useDeclineInvite() {
     retry: false,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['connections', 'pending'] });
-    },
-    onError: (err) => {
-      console.error('[useDeclineInvite]', err);
     },
   });
 }
@@ -491,9 +489,6 @@ export function useUpdateMyCompany() {
     retry: false,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['company', 'my'] });
-    },
-    onError: (err) => {
-      console.error('[useUpdateMyCompany]', err);
     },
   });
 }
