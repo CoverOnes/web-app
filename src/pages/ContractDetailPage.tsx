@@ -585,11 +585,11 @@ const ContractDetailPage = () => {
                 },
                 {
                   label: '甲方 (客戶)',
-                  value: contract.clientUserId.slice(0, 12) + '…',
+                  value: contract.clientUserId.slice(0, 12) + '…' + (user?.id === contract.clientUserId ? '（您）' : ''),
                 },
                 {
                   label: '乙方 (接案者)',
-                  value: contract.freelancerUserId.slice(0, 12) + '…',
+                  value: contract.freelancerUserId.slice(0, 12) + '…' + (user?.id === contract.freelancerUserId ? '（您）' : ''),
                 },
               ] as const).map((row) => (
                 <div

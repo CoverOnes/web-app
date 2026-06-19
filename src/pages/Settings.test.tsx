@@ -104,7 +104,7 @@ describe('Settings — render', () => {
     render(<Settings />, { wrapper: Wrapper });
     // Both desktop and mobile sections render (CSS hides one at runtime; jsdom shows both)
     await waitFor(() => {
-      expect(screen.getAllByText('test@example.com').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('t***@example.com').length).toBeGreaterThanOrEqual(1);
     });
     expect(screen.getAllByText('公司帳號').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('測試公司').length).toBeGreaterThanOrEqual(1);
@@ -129,7 +129,7 @@ describe('Settings — section nav', () => {
     render(<Settings />, { wrapper: Wrapper });
     // Default section is 公司資訊 — profile fields loaded (desktop + mobile both render)
     await waitFor(() => {
-      expect(screen.getAllByText('test@example.com').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('t***@example.com').length).toBeGreaterThanOrEqual(1);
     });
   });
 

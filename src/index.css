@@ -234,6 +234,9 @@
   /* Indigo family: SIGNED, COMPLETED */
   --co-status-indigo-bg:   rgba(99,102,241,0.15);
   --co-status-indigo-text: #A5B4FC;
+  /* Cyan family: SIGNED contract chip, active-count stat card */
+  --co-status-cyan-bg:   rgba(34,211,238,0.15);
+  --co-status-cyan-text: #67E8F9;
 }
 
 /* CoverOnes v2 base */

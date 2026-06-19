@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContracts } from '../lib/query';
+import { useAuthStore } from '../store/authStore';
 import { LogoSquare } from '../components/ui/LogoSquare';
 import { PageHead } from '../components/layout/PageHead';
 import { LoadingSkeleton } from '../components/ui/LoadingSkeleton';
@@ -31,24 +32,24 @@ function statusChipStyle(status: ContractStatus): { bg: string; color: string; b
   switch (status) {
     case 'ACTIVE':
       return {
-        bg: 'rgba(16,185,129,.15)',
-        color: '#6EE7B7',
+        bg: 'var(--co-status-green-bg)',
+        color: 'var(--co-status-green-text)',
         border: '1px solid rgba(16,185,129,.3)',
-        dotBg: '#6EE7B7',
+        dotBg: 'var(--co-status-green-text)',
       };
     case 'PENDING_SIGNATURE':
       return {
-        bg: 'rgba(245,158,11,.15)',
-        color: '#FCD34D',
+        bg: 'var(--co-status-amber-bg)',
+        color: 'var(--co-status-amber-text)',
         border: '1px solid rgba(245,158,11,.3)',
-        dotBg: '#FCD34D',
+        dotBg: 'var(--co-status-amber-text)',
       };
     case 'SIGNED':
       return {
-        bg: 'rgba(34,211,238,.15)',
-        color: '#67E8F9',
+        bg: 'var(--co-status-cyan-bg)',
+        color: 'var(--co-status-cyan-text)',
         border: '1px solid rgba(34,211,238,.3)',
-        dotBg: '#67E8F9',
+        dotBg: 'var(--co-status-cyan-text)',
       };
     case 'COMPLETED':
       return {
@@ -59,10 +60,10 @@ function statusChipStyle(status: ContractStatus): { bg: string; color: string; b
       };
     case 'CANCELLED':
       return {
-        bg: 'rgba(239,68,68,.15)',
-        color: '#FCA5A5',
+        bg: 'var(--co-status-red-bg)',
+        color: 'var(--co-status-red-text)',
         border: '1px solid rgba(239,68,68,.3)',
-        dotBg: '#FCA5A5',
+        dotBg: 'var(--co-status-red-text)',
       };
     case 'DRAFT':
     default:
@@ -123,22 +124,21 @@ function StatusChip({ status, progress }: StatusChipProps) {
 interface ContractTableRowProps {
   contract: Contract;
   onClick: () => void;
+  currentUserId?: string;
 }
 
-function deriveProgress(contract: Contract): number | undefined {
-  // Only ACTIVE and SIGNED contracts show a progress bar; we derive from status
-  // transitions since the API has no progress field. Tasks-based progress is
-  // only available on the detail page (requires per-contract fetch).
-  switch (contract.status) {
-    case 'ACTIVE':   return 50;  // indicative — real progress from tasks on detail
-    case 'SIGNED':   return 25;
-    default:         return undefined;
-  }
-}
-
-function ContractTableRow({ contract, onClick }: ContractTableRowProps) {
+function ContractTableRow({ contract, onClick, currentUserId }: ContractTableRowProps) {
   const letter = contract.title.charAt(0).toUpperCase();
-  const progress = deriveProgress(contract);
+  // Progress is only available on the detail page (requires per-contract tasks fetch).
+  // The list endpoint has no task-count fields; always undefined here.
+  const progress: number | undefined = undefined;
+
+  // Determine which party is the counterparty:
+  // If current user is the client, counterparty is the freelancer, and vice versa.
+  const counterpartyId = currentUserId === contract.clientUserId
+    ? contract.freelancerUserId
+    : contract.clientUserId;
+  const counterpartyRole = currentUserId === contract.clientUserId ? '對方' : '您的客戶';
 
   const formattedDate = (() => {
     try {
@@ -231,9 +231,9 @@ function ContractTableRow({ contract, onClick }: ContractTableRowProps) {
         —
       </div>
 
-      {/* Counterparty — only short ID available */}
-      <div style={{ fontSize: 12, color: 'var(--co-text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {contract.freelancerUserId.slice(0, 8)}…
+      {/* Counterparty — show correct side based on current user role */}
+      <div style={{ fontSize: 12, color: 'var(--co-text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={counterpartyRole}>
+        {counterpartyId.slice(0, 8)}…
       </div>
 
       {/* Actions */}
@@ -276,6 +276,7 @@ const FILTER_TABS: { id: FilterOption; label: string }[] = [
 
 const MyContractsPage = () => {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
   const [activeFilter, setActiveFilter] = useState<FilterOption>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -346,7 +347,7 @@ const MyContractsPage = () => {
             <div style={{ fontSize: 11, color: 'var(--co-text-dim)', textTransform: 'uppercase', letterSpacing: '.05em', fontWeight: 600 }}>
               進行中合約
             </div>
-            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em', marginTop: 4, color: '#67E8F9', fontFeatureSettings: '"tnum"' }}>
+            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em', marginTop: 4, color: 'var(--co-status-cyan-text)', fontFeatureSettings: '"tnum"' }}>
               {allLoading ? '—' : activeCount}
             </div>
             <div style={{ fontSize: 11, color: 'var(--co-text-dim)', marginTop: 2 }}>
@@ -534,30 +535,32 @@ const MyContractsPage = () => {
                     overflow: 'hidden',
                   }}
                 >
-                  {/* Table header */}
-                  <div
-                    role="row"
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '60px 1fr 130px 120px 110px 90px 36px',
-                      gap: 14,
-                      padding: '9px 16px',
-                      background: 'rgba(15,23,42,.6)',
-                      fontSize: 10.5,
-                      color: 'var(--co-text-muted)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '.06em',
-                      fontWeight: 700,
-                      borderBottom: '1px solid var(--co-line)',
-                    }}
-                  >
-                    <div />
-                    <div>合約 / 專案</div>
-                    <div>狀態 / 進度</div>
-                    <div style={{ textAlign: 'right' }}>金額</div>
-                    <div>下個里程碑</div>
-                    <div>對方</div>
-                    <div />
+                  {/* Table header — ARIA: role="rowgroup" wrapping role="row" with role="columnheader" cells */}
+                  <div role="rowgroup">
+                    <div
+                      role="row"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '60px 1fr 130px 120px 110px 90px 36px',
+                        gap: 14,
+                        padding: '9px 16px',
+                        background: 'rgba(15,23,42,.6)',
+                        fontSize: 10.5,
+                        color: 'var(--co-text-muted)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '.06em',
+                        fontWeight: 700,
+                        borderBottom: '1px solid var(--co-line)',
+                      }}
+                    >
+                      <div role="columnheader" aria-label="合約圖示" />
+                      <div role="columnheader">合約 / 專案</div>
+                      <div role="columnheader">狀態 / 進度</div>
+                      <div role="columnheader" style={{ textAlign: 'right' }}>金額</div>
+                      <div role="columnheader">下個里程碑</div>
+                      <div role="columnheader">對方</div>
+                      <div role="columnheader" aria-label="操作" />
+                    </div>
                   </div>
 
                   {/* Rows */}
@@ -566,6 +569,7 @@ const MyContractsPage = () => {
                       <ContractTableRow
                         key={contract.id}
                         contract={contract}
+                        currentUserId={user?.id}
                         onClick={() => navigate(`/contracts/${contract.id}`)}
                       />
                     ))}
