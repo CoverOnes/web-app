@@ -49,6 +49,7 @@ const MaintenancePage = lazy(() => import('./pages/MaintenancePage'));
 const LiveDirectoryPage = lazy(() => import('./pages/LiveDirectoryPage'));
 const LiveViewerPage = lazy(() => import('./pages/LiveViewerPage'));
 const LiveHostPage = lazy(() => import('./pages/LiveHostPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
 
 // ---------------------------------------------------------------------------
 // Shimmer skeleton fallback — dark bg + animated shimmer bar.
@@ -175,6 +176,9 @@ function App() {
 
               {/* Discover — company explorer */}
               <Route path="discover" element={<DiscoverPage />} />
+
+              {/* Pricing — subscription plans comparison; no billing API (payments flag=false) */}
+              <Route path="pricing" element={<PricingPage />} />
 
               {/* Network (P4) */}
               <Route path="network" element={<NetworkPage />} />
