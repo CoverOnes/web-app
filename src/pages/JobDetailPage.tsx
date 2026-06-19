@@ -205,10 +205,13 @@ const JobDetailPage = () => {
         queryFn: () => workspaceApi.listContracts(),
         staleTime: 0,
       });
-      const found = fresh.find(
-        (c) =>
-          c.listingId === listing.id &&
-          (c.acceptedBidId == null || c.acceptedBidId === bid.id)
+      // Prefer exact acceptedBidId match; only fall back to null-acceptedBidId
+      // if no exact match exists (avoids matching wrong contracts sharing the listing).
+      const exact = fresh.find(
+        (c) => c.listingId === listing.id && c.acceptedBidId === bid.id
+      );
+      const found = exact ?? fresh.find(
+        (c) => c.listingId === listing.id && c.acceptedBidId == null
       );
       return found?.id ?? null;
     };
@@ -391,7 +394,7 @@ const JobDetailPage = () => {
               {[
                 { label: '預算',   value: budgetLabel || 'TBD', color: 'var(--co-green)' },
                 { label: '截標日', value: '開放中',              color: 'var(--co-amber)' },
-                { label: '投標數', value: String(bids.length),   color: 'var(--co-text)' },
+                { label: '投標數', value: isOwnerComputed ? String(bids.length) : '—', color: 'var(--co-text)' },
               ].map(({ label, value, color }) => (
                 <div
                   key={label}
