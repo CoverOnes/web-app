@@ -120,11 +120,11 @@ interface WithdrawButtonProps {
 function WithdrawButton({ bidId, isWithdrawing, onConfirm, size = 'md', withdrawError }: WithdrawButtonProps) {
   const [confirming, setConfirming] = useState(false);
 
-  // Auto-dismiss the confirm state after 6 s to prevent "確定撤回?" buttons
+  // Auto-dismiss the confirm state after 8 s to prevent "確定撤回?" buttons
   // persisting forever after an accidental first click.
   useEffect(() => {
     if (!confirming) return;
-    const tid = setTimeout(() => setConfirming(false), 6_000);
+    const tid = setTimeout(() => setConfirming(false), 8_000);
     return () => clearTimeout(tid);
   }, [confirming]);
 
