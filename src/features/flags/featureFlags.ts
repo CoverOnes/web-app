@@ -28,7 +28,9 @@ export type FeatureKey =
   | 'contacts'
   | 'payments'
   | 'avatarSettings'
-  | 'admin';
+  | 'admin'
+  // Scaffold — navigable now; LiveKit + directory backend out of scope for this sprint
+  | 'avatarLive';
 
 const DEFAULTS: Record<FeatureKey, boolean> = {
   // ----- KEEP -----
@@ -51,6 +53,8 @@ const DEFAULTS: Record<FeatureKey, boolean> = {
   // (社群帳號綁定). The binding section calls live /v1/me/identities endpoints.
   avatarSettings: true,
   admin: false,
+  // Scaffold is testable now; flip to false when a LiveKit production key is required
+  avatarLive: true,
 };
 
 // Map a feature key to its VITE env override name, e.g. chat → VITE_FF_CHAT.

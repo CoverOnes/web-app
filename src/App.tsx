@@ -33,6 +33,9 @@ import InsightsPage from './pages/InsightsPage';
 import SavedPage from './pages/SavedPage';
 import NotFoundPage from './pages/NotFoundPage';
 import WaitlistPage from './pages/WaitlistPage';
+import LiveDirectoryPage from './pages/LiveDirectoryPage';
+import LiveViewerPage from './pages/LiveViewerPage';
+import LiveHostPage from './pages/LiveHostPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { FeatureRoute } from './features/flags/FeatureRoute';
 import { useTheme } from './hooks/useTheme';
@@ -126,6 +129,37 @@ function App() {
 
             {/* Search — full-site search over real listings; company/people tabs show empty-state */}
             <Route path="search" element={<SearchPage />} />
+
+            {/*
+             * Avatar Livestream scaffold (issue #50) — /live, /live/host, /live/:roomId
+             * Scaffold-only: no LiveKit deps, no directory backend. getLiveStreams() returns []
+             * rendering the correct empty-state. avatarLive flag = true so routes are reachable.
+             * IMPORTANT: /live/host MUST come before /live/:roomId so the router matches it first.
+             */}
+            <Route
+              path="live"
+              element={
+                <FeatureRoute flag="avatarLive" feature="替身直播" description="替身直播台功能正在開發中，敬請期待。">
+                  <LiveDirectoryPage />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="live/host"
+              element={
+                <FeatureRoute flag="avatarLive" feature="替身直播" description="替身直播台功能正在開發中，敬請期待。">
+                  <LiveHostPage />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="live/:roomId"
+              element={
+                <FeatureRoute flag="avatarLive" feature="替身直播" description="替身直播台功能正在開發中，敬請期待。">
+                  <LiveViewerPage />
+                </FeatureRoute>
+              }
+            />
 
             {/* Settings — ungated: accessible to all authenticated users */}
             <Route path="settings" element={<Settings />} />
