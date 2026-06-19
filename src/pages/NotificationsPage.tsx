@@ -53,7 +53,7 @@ function filterItems(items: Notification[], tab: Tab): Notification[] {
     case '全部':
       return items;
     case '未讀':
-      return items.filter((n) => n.readAt === null);
+      return items.filter((n) => !n.readAt);
     case '系統':
       return items.filter((n) => typeToTab(n.type) === '系統');
     case '案件':
@@ -219,7 +219,7 @@ interface NotificationRowProps {
 }
 
 function NotificationRow({ notification, onMarkRead, isMarkingRead }: NotificationRowProps) {
-  const isUnread = notification.readAt === null;
+  const isUnread = !notification.readAt;
 
   return (
     <div
@@ -510,7 +510,7 @@ export default function NotificationsPage() {
 
   const tabCounts = useMemo<Record<Tab, number>>(() => ({
     全部:   allItems.length,
-    未讀:   allItems.filter((n) => n.readAt === null).length,
+    未讀:   allItems.filter((n) => !n.readAt).length,
     系統:   allItems.filter((n) => typeToTab(n.type) === '系統').length,
     案件:   allItems.filter((n) => typeToTab(n.type) === '案件').length,
     合約:   allItems.filter((n) => typeToTab(n.type) === '合約').length,

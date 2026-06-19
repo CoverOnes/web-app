@@ -374,7 +374,7 @@ const ProfilePage = () => {
             {/* §5 Meta — only location is LIVE; rest omitted (no fabrication) */}
             {profile.location && (
               <div className="profile-meta">
-                <span>📍 {profile.location}</span>
+                <span><span aria-hidden="true">📍</span> {profile.location}</span>
               </div>
             )}
           </div>
@@ -392,13 +392,13 @@ const ProfilePage = () => {
             ) : (
               <>
                 <button type="button" className="profile-btn profile-btn-secondary" disabled aria-label="發送訊息（尚未開放）" title="尚未開放">
-                  📩 發送訊息
+                  <span aria-hidden="true">📩</span> 發送訊息
                 </button>
                 <button type="button" className="profile-btn profile-btn-secondary" disabled aria-label="安排會議（尚未開放）" title="尚未開放">
-                  📅 安排會議
+                  <span aria-hidden="true">📅</span> 安排會議
                 </button>
                 <button type="button" className="profile-btn profile-btn-primary" disabled aria-label="加入人脈（尚未開放）" title="尚未開放">
-                  ＋ 加入人脈
+                  <span aria-hidden="true">＋</span> 加入人脈
                 </button>
               </>
             )}
