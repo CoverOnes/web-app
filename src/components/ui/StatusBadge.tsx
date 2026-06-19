@@ -21,27 +21,30 @@ interface StatusBadgeProps {
   className?: string;
 }
 
+// bg/text values reference CSS tokens defined in src/index.css (--co-status-*).
+// All tokens use dark-appropriate values: translucent bg + bright readable text
+// matching the app's #060A14 dark canvas.
 const variantMap: Record<StatusVariant, { bg: string; text: string; label: string }> = {
-  OPEN:              { bg: '#dcfce7', text: '#16a34a', label: 'Open' },
-  AWARDED:           { bg: '#fef3c7', text: '#d97706', label: 'Awarded' },
-  CLOSED:            { bg: '#f1f5f9', text: '#64748b', label: 'Closed' },
-  PENDING:           { bg: '#fef3c7', text: '#d97706', label: 'Pending' },
-  ACCEPTED:          { bg: '#dcfce7', text: '#16a34a', label: 'Accepted' },
-  REJECTED:          { bg: '#fee2e2', text: '#dc2626', label: 'Rejected' },
-  WITHDRAWN:         { bg: '#f1f5f9', text: '#64748b', label: 'Withdrawn' },
-  ACTIVE:            { bg: '#dcfce7', text: '#16a34a', label: 'Active' },
-  PENDING_SIGNATURE: { bg: '#fef3c7', text: '#d97706', label: 'Pending Signature' },
-  SIGNED:            { bg: '#eff6ff', text: '#4f46e5', label: 'Signed' },
-  COMPLETED:         { bg: '#eff6ff', text: '#2563eb', label: 'Completed' },
-  CANCELLED:         { bg: '#fee2e2', text: '#dc2626', label: 'Cancelled' }, // WA-M1: double L
-  DRAFT:             { bg: '#f1f5f9', text: '#64748b', label: 'Draft' },
-  TODO:              { bg: '#f1f5f9', text: '#64748b', label: 'To Do' },
-  DOING:             { bg: '#fef3c7', text: '#d97706', label: 'In Progress' }, // WA-M2: DOING maps to friendly label
-  DONE:              { bg: '#dcfce7', text: '#16a34a', label: 'Done' },
+  OPEN:              { bg: 'var(--co-status-green-bg)',   text: 'var(--co-status-green-text)',   label: 'Open' },
+  AWARDED:           { bg: 'var(--co-status-amber-bg)',   text: 'var(--co-status-amber-text)',   label: 'Awarded' },
+  CLOSED:            { bg: 'var(--co-status-neutral-bg)', text: 'var(--co-status-neutral-text)', label: 'Closed' },
+  PENDING:           { bg: 'var(--co-status-amber-bg)',   text: 'var(--co-status-amber-text)',   label: 'Pending' },
+  ACCEPTED:          { bg: 'var(--co-status-green-bg)',   text: 'var(--co-status-green-text)',   label: 'Accepted' },
+  REJECTED:          { bg: 'var(--co-status-red-bg)',     text: 'var(--co-status-red-text)',     label: 'Rejected' },
+  WITHDRAWN:         { bg: 'var(--co-status-neutral-bg)', text: 'var(--co-status-neutral-text)', label: 'Withdrawn' },
+  ACTIVE:            { bg: 'var(--co-status-green-bg)',   text: 'var(--co-status-green-text)',   label: 'Active' },
+  PENDING_SIGNATURE: { bg: 'var(--co-status-amber-bg)',   text: 'var(--co-status-amber-text)',   label: 'Pending Signature' },
+  SIGNED:            { bg: 'var(--co-status-indigo-bg)',  text: 'var(--co-status-indigo-text)',  label: 'Signed' },
+  COMPLETED:         { bg: 'var(--co-status-indigo-bg)',  text: 'var(--co-status-indigo-text)',  label: 'Completed' },
+  CANCELLED:         { bg: 'var(--co-status-red-bg)',     text: 'var(--co-status-red-text)',     label: 'Cancelled' }, // WA-M1: double L
+  DRAFT:             { bg: 'var(--co-status-neutral-bg)', text: 'var(--co-status-neutral-text)', label: 'Draft' },
+  TODO:              { bg: 'var(--co-status-neutral-bg)', text: 'var(--co-status-neutral-text)', label: 'To Do' },
+  DOING:             { bg: 'var(--co-status-amber-bg)',   text: 'var(--co-status-amber-text)',   label: 'In Progress' }, // WA-M2: DOING maps to friendly label
+  DONE:              { bg: 'var(--co-status-green-bg)',   text: 'var(--co-status-green-text)',   label: 'Done' },
 };
 
 export function StatusBadge({ status, className = '' }: StatusBadgeProps) {
-  const v = variantMap[status] ?? { bg: '#f1f5f9', text: '#64748b', label: status };
+  const v = variantMap[status] ?? { bg: 'var(--co-status-neutral-bg)', text: 'var(--co-status-neutral-text)', label: status };
   return (
     <span
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${className}`}
