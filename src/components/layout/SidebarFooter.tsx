@@ -45,6 +45,7 @@ const SidebarFooter = ({ currentUser, onOpenSettings }: SidebarFooterProps) => {
         </div>
       </div>
       <button
+        type="button"
         onClick={onOpenSettings}
         onMouseEnter={() => setSettingsHover(true)}
         onMouseLeave={() => setSettingsHover(false)}

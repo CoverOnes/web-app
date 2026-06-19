@@ -203,6 +203,37 @@
   --co-suggest-bg-to:     rgba(139,92,246,0.06);
   --co-suggest-border:    rgba(99,102,241,0.3);
   --co-suggest-shadow:    rgba(99,102,241,0.25);
+
+  /* --- Tabs badge tokens (replaces hardcoded rgba in Tabs.tsx) --- */
+  --co-tab-badge-active-bg:   rgba(99,102,241,0.2);
+  --co-tab-badge-inactive-bg: rgba(148,163,184,0.12);
+
+  /* --- Extended palette aliases (palette ref for downstream components) --- */
+  /* indigo-200 (active chip text, Tabs active count) */
+  --co-indigo-200:  #C7D2FE;
+  /* red-300 (error states, destructive badges) */
+  --co-red-300:     #FCA5A5;
+  /* green-400 (success states, positive indicators) */
+  --co-green-400:   #4ADE80;
+  /* emerald-600 (dark green gradient end, fintech indicators) */
+  --co-emerald-600: #059669;
+
+  /* --- StatusBadge semantic tokens (dark-appropriate: translucent bg + bright readable text) --- */
+  /* Green family: OPEN, ACCEPTED, ACTIVE, DONE */
+  --co-status-green-bg:   rgba(16,185,129,0.15);
+  --co-status-green-text: #6EE7B7;
+  /* Amber family: AWARDED, PENDING, PENDING_SIGNATURE, DOING */
+  --co-status-amber-bg:   rgba(245,158,11,0.15);
+  --co-status-amber-text: #FCD34D;
+  /* Neutral family: CLOSED, WITHDRAWN, DRAFT, TODO */
+  --co-status-neutral-bg:   rgba(148,163,184,0.10);
+  --co-status-neutral-text: #94A3B8;
+  /* Red family: REJECTED, CANCELLED */
+  --co-status-red-bg:   rgba(239,68,68,0.15);
+  --co-status-red-text: #FCA5A5;
+  /* Indigo family: SIGNED, COMPLETED */
+  --co-status-indigo-bg:   rgba(99,102,241,0.15);
+  --co-status-indigo-text: #A5B4FC;
 }
 
 /* CoverOnes v2 base */

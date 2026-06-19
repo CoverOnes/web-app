@@ -218,12 +218,18 @@ export default function NetworkPage() {
   };
 
   // Accept / decline error surfacing (mutation-level; shown inline on the rail).
-  const acceptDeclinePending = acceptInvite.isPending || declineInvite.isPending;
+  // Track the in-flight invite id so only that row's buttons are disabled (NIT-2).
+  const acceptDeclineInflightId: string | undefined =
+    acceptInvite.isPending
+      ? (acceptInvite.variables as string | undefined)
+      : declineInvite.isPending
+        ? (declineInvite.variables as string | undefined)
+        : undefined;
   const acceptDeclineError =
     acceptInvite.isError || declineInvite.isError ? '操作失敗，請稍後再試。' : null;
 
   const isLoading = connectionsQuery.isLoading || pendingQuery.isLoading;
-  const isError = connectionsQuery.isError && pendingQuery.isError;
+  const isError = connectionsQuery.isError || pendingQuery.isError;
 
   return (
     <main aria-label="網路人脈" className="net-page">
@@ -295,27 +301,33 @@ export default function NetworkPage() {
       {/* ── Tabs (LIVE counts) ── */}
       <div className="net-tabs" role="tablist" aria-label="人脈分類">
         <button
+          id="net-tab-accepted"
           type="button"
           role="tab"
           aria-selected={activeTab === 'accepted'}
+          aria-controls="net-panel"
           className={`net-tab${activeTab === 'accepted' ? ' net-tab--on' : ''}`}
           onClick={() => setActiveTab('accepted')}
         >
           已連結 <span className="net-tab-ct">{acceptedCount}</span>
         </button>
         <button
+          id="net-tab-incoming"
           type="button"
           role="tab"
           aria-selected={activeTab === 'incoming'}
+          aria-controls="net-panel"
           className={`net-tab${activeTab === 'incoming' ? ' net-tab--on' : ''}`}
           onClick={() => setActiveTab('incoming')}
         >
           受邀請 <span className="net-tab-ct">{incomingCount}</span>
         </button>
         <button
+          id="net-tab-outgoing"
           type="button"
           role="tab"
           aria-selected={activeTab === 'outgoing'}
+          aria-controls="net-panel"
           className={`net-tab${activeTab === 'outgoing' ? ' net-tab--on' : ''}`}
           onClick={() => setActiveTab('outgoing')}
         >
@@ -354,7 +366,7 @@ export default function NetworkPage() {
               載入中…
             </div>
           ) : (
-            <div className="net-panel" role="tabpanel">
+            <div className="net-panel" id="net-panel" role="tabpanel" aria-labelledby={`net-tab-${activeTab}`}>
               {activeTab === 'accepted' && (
                 <>
                   <div className="net-panel-h">
@@ -387,7 +399,7 @@ export default function NetworkPage() {
                           variant="incoming"
                           onAccept={(id) => acceptInvite.mutate(id)}
                           onDecline={(id) => declineInvite.mutate(id)}
-                          pending={acceptDeclinePending}
+                          pending={acceptDeclineInflightId === inv.id}
                         />
                       </div>
                     ))
@@ -447,7 +459,7 @@ export default function NetworkPage() {
                   variant="incoming"
                   onAccept={(id) => acceptInvite.mutate(id)}
                   onDecline={(id) => declineInvite.mutate(id)}
-                  pending={acceptDeclinePending}
+                  pending={acceptDeclineInflightId === inv.id}
                 />
               ))
             )}

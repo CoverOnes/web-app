@@ -223,7 +223,7 @@ function ContractTableRow({ contract, onClick }: ContractTableRowProps) {
           whiteSpace: 'nowrap',
         }}
       >
-        {contract.currency} {Number(contract.amount).toLocaleString('zh-TW')}
+        {contract.currency} {(() => { const amt = parseFloat(contract.amount); return Number.isNaN(amt) ? '—' : amt.toLocaleString('zh-TW'); })()}
       </div>
 
       {/* Next milestone — no API backing → empty-state cell */}
@@ -279,15 +279,21 @@ const MyContractsPage = () => {
   const [activeFilter, setActiveFilter] = useState<FilterOption>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Status-filtered query — drives the visible table rows only.
   const { data: contracts, isLoading, isError } = useContracts(
     activeFilter !== 'ALL' ? activeFilter : undefined
   );
 
-  // Derived stats from real API data
-  const activeCount = contracts?.filter((c) => c.status === 'ACTIVE').length ?? 0;
-  const pendingCount = contracts?.filter((c) => c.status === 'PENDING_SIGNATURE').length ?? 0;
-  const completedCount = contracts?.filter((c) => c.status === 'COMPLETED').length ?? 0;
-  const totalCount = contracts?.length ?? 0;
+  // Unfiltered query — always fetches ALL contracts so stats/tab-counts are
+  // correct regardless of which tab is active. When the ALL tab is selected
+  // this shares the same cache entry as the filtered query above (status=undefined).
+  const { data: allContracts, isLoading: allLoading } = useContracts(undefined);
+
+  // Derived stats always come from the unfiltered set.
+  const activeCount    = allContracts?.filter((c) => c.status === 'ACTIVE').length ?? 0;
+  const pendingCount   = allContracts?.filter((c) => c.status === 'PENDING_SIGNATURE').length ?? 0;
+  const completedCount = allContracts?.filter((c) => c.status === 'COMPLETED').length ?? 0;
+  const totalCount     = allContracts?.length ?? 0;
 
   // Client-side search filter (by title or id)
   const filteredContracts = useMemo<Contract[]>(() => {
@@ -302,11 +308,12 @@ const MyContractsPage = () => {
     );
   }, [contracts, searchQuery]);
 
-  // Tab count labels
+  // Tab count labels — always derived from the unfiltered set so switching tabs
+  // does not zero out the counts for other statuses.
   const tabCount = (id: FilterOption): number => {
-    if (!contracts) return 0;
-    if (id === 'ALL') return contracts.length;
-    return contracts.filter((c) => c.status === id).length;
+    if (!allContracts) return 0;
+    if (id === 'ALL') return allContracts.length;
+    return allContracts.filter((c) => c.status === id).length;
   };
 
   return (
@@ -340,10 +347,10 @@ const MyContractsPage = () => {
               進行中合約
             </div>
             <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em', marginTop: 4, color: '#67E8F9', fontFeatureSettings: '"tnum"' }}>
-              {isLoading ? '—' : activeCount}
+              {allLoading ? '—' : activeCount}
             </div>
             <div style={{ fontSize: 11, color: 'var(--co-text-dim)', marginTop: 2 }}>
-              {isLoading ? '' : `共 ${totalCount} 份合約`}
+              {allLoading ? '' : `共 ${totalCount} 份合約`}
             </div>
           </div>
 
@@ -380,7 +387,7 @@ const MyContractsPage = () => {
               待簽署
             </div>
             <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em', marginTop: 4, color: 'var(--co-amber)', fontFeatureSettings: '"tnum"' }}>
-              {isLoading ? '—' : pendingCount}
+              {allLoading ? '—' : pendingCount}
             </div>
             <div style={{ fontSize: 11, color: 'var(--co-text-dim)', marginTop: 2 }}>
               {pendingCount > 0 ? '請儘快完成簽署' : '無待處理項目'}
@@ -400,7 +407,7 @@ const MyContractsPage = () => {
               本月結案
             </div>
             <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em', marginTop: 4, color: 'var(--co-text)', fontFeatureSettings: '"tnum"' }}>
-              {isLoading ? '—' : completedCount}
+              {allLoading ? '—' : completedCount}
             </div>
             <div style={{ fontSize: 11, color: 'var(--co-text-dim)', marginTop: 2 }}>
               {totalCount > 0 ? `完成率 ${Math.round((completedCount / totalCount) * 100)}%` : '暫無資料'}

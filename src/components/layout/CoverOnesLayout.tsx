@@ -11,6 +11,7 @@ import MobileDrawer from './MobileDrawer';
 import ChatPopup from '../chat/ChatPopup';
 import { UnverifiedBanner } from '../auth/UnverifiedBanner';
 import MobileFABProvider from './MobileFABProvider';
+import { getApiErrorCode } from '../../lib/api/http';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -72,7 +73,7 @@ const CoverOnesLayout = () => {
         setRoomsLoadError(false);
         hasInitialLoadRef.current = true;
       } catch (err) {
-        console.error('[CoverOnesLayout] loadRooms failed:', err);
+        if (import.meta.env.DEV) console.warn('[CoverOnesLayout] loadRooms failed:', getApiErrorCode(err) ?? 'unknown');
         setRoomsLoadError(true);
         // hasInitialLoadRef.current stays false on error → retries on next userId change.
       } finally {
@@ -112,7 +113,7 @@ const CoverOnesLayout = () => {
             });
           });
         } catch (err) {
-          console.error('[CoverOnesLayout] refreshRooms failed:', err);
+          if (import.meta.env.DEV) console.warn('[CoverOnesLayout] refreshRooms failed:', getApiErrorCode(err) ?? 'unknown');
         } finally {
           loadingRef.current = false;
         }

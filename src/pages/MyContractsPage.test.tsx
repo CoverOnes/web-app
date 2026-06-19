@@ -217,4 +217,44 @@ describe('MyContractsPage', () => {
     const noDataTexts = within(container).getAllByText(/尚無資料/);
     expect(noDataTexts.length).toBeGreaterThan(0);
   });
+
+  // ── render: stats-under-filter regression ────────────────────────────────────
+  // When a filter tab is active, the stat cards must reflect the UNFILTERED total,
+  // not the filtered count. This verifies that useContracts(undefined) drives stats
+  // while the filtered query drives the table.
+
+  it('(render-7) stat cards show ALL-based totals even when a filter tab is active', async () => {
+    const allContracts = [
+      makeContract({ id: 'c1', status: 'ACTIVE' }),
+      makeContract({ id: 'c2', status: 'ACTIVE' }),
+      makeContract({ id: 'c3', status: 'PENDING_SIGNATURE' }),
+    ];
+    const filteredContracts = [makeContract({ id: 'c3', status: 'PENDING_SIGNATURE' })];
+
+    // useContracts is called twice: once with undefined (for stats) and once with
+    // the active filter. We differentiate via the argument.
+    mockUseContracts.mockImplementation((status) => {
+      if (status === undefined) {
+        return makeQueryResult({ data: allContracts });
+      }
+      return makeQueryResult({ data: filteredContracts });
+    });
+
+    const { default: Page } = await import('./MyContractsPage');
+    const user = userEvent.setup();
+    render(<Page />, { wrapper: makeWrapper() });
+
+    // Click the "待簽署" tab to activate a filter
+    const pendingTab = screen.getByRole('tab', { name: /待簽署/ });
+    await user.click(pendingTab);
+
+    // The stat card for "進行中合約" should show 2 (from ALL contracts, ACTIVE count)
+    // not 0 (which would be the PENDING_SIGNATURE filtered count).
+    // Active count = 2 from allContracts
+    const activeCountCells = screen.getAllByText('2');
+    expect(activeCountCells.length).toBeGreaterThan(0);
+
+    // Total count should be 3 (all contracts), not 1 (filtered)
+    expect(screen.getByText(/共 3 份合約/)).toBeInTheDocument();
+  });
 });

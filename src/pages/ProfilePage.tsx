@@ -374,7 +374,7 @@ const ProfilePage = () => {
             {/* §5 Meta — only location is LIVE; rest omitted (no fabrication) */}
             {profile.location && (
               <div className="profile-meta">
-                <span>📍 {profile.location}</span>
+                <span><span aria-hidden="true">📍</span> {profile.location}</span>
               </div>
             )}
           </div>
@@ -392,13 +392,13 @@ const ProfilePage = () => {
             ) : (
               <>
                 <button type="button" className="profile-btn profile-btn-secondary" disabled aria-label="發送訊息（尚未開放）" title="尚未開放">
-                  📩 發送訊息
+                  <span aria-hidden="true">📩</span> 發送訊息
                 </button>
                 <button type="button" className="profile-btn profile-btn-secondary" disabled aria-label="安排會議（尚未開放）" title="尚未開放">
-                  📅 安排會議
+                  <span aria-hidden="true">📅</span> 安排會議
                 </button>
                 <button type="button" className="profile-btn profile-btn-primary" disabled aria-label="加入人脈（尚未開放）" title="尚未開放">
-                  ＋ 加入人脈
+                  <span aria-hidden="true">＋</span> 加入人脈
                 </button>
               </>
             )}
@@ -476,7 +476,7 @@ const ProfilePage = () => {
           {/* Sidebar column */}
           <div className="profile-col-side">
             {/* §13 Platform reputation — only 加入時間 is LIVE; rest "—" */}
-            <Card title="📊 平台聲望">
+            <Card title={<><span aria-hidden="true">📊</span> 平台聲望</>}>
               <div className="profile-stat-row">
                 <span>個人評分</span>
                 <span className="profile-stat-v">—</span>
@@ -504,17 +504,17 @@ const ProfilePage = () => {
             </Card>
 
             {/* §14 Strengths — EMPTY-STATE */}
-            <Card title="🎯 我擅長的">
+            <Card title={<><span aria-hidden="true">🎯</span> 我擅長的</>}>
               <EmptyState />
             </Card>
 
             {/* §15 Endorsements — EMPTY-STATE */}
-            <Card title="🤝 同事推薦語">
+            <Card title={<><span aria-hidden="true">🤝</span> 同事推薦語</>}>
               <EmptyState />
             </Card>
 
             {/* §16 Languages — EMPTY-STATE */}
-            <Card title="🌐 語言">
+            <Card title={<><span aria-hidden="true">🌐</span> 語言</>}>
               <EmptyState />
             </Card>
           </div>

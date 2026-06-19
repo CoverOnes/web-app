@@ -343,7 +343,7 @@ export default function SavedPage() {
                       key={j.savedId}
                       ref_={j}
                       onUnsave={handleUnsaveJob}
-                      togglePending={toggleJob.isPending}
+                      togglePending={toggleJob.isPending && toggleJob.variables?.itemId === j.itemId}
                     />
                   ))}
                 </div>
@@ -363,7 +363,7 @@ export default function SavedPage() {
                       key={c.savedId}
                       saved={c}
                       onUnsave={handleUnsaveCompany}
-                      togglePending={toggleCompany.isPending}
+                      togglePending={toggleCompany.isPending && toggleCompany.variables?.itemId === c.itemId}
                     />
                   ))}
                 </div>

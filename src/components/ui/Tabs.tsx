@@ -69,8 +69,8 @@ export function Tabs({ tabs, activeId, onChange, idPrefix = 'tab' }: TabsProps) 
                   fontSize: 11,
                   padding: '1px 6px',
                   borderRadius: 999,
-                  background: isActive ? 'rgba(99,102,241,0.2)' : 'rgba(148,163,184,0.12)',
-                  color: isActive ? '#C7D2FE' : 'var(--co-text-muted)',
+                  background: isActive ? 'var(--co-tab-badge-active-bg)' : 'var(--co-tab-badge-inactive-bg)',
+                  color: isActive ? 'var(--co-indigo-200)' : 'var(--co-text-muted)',
                   fontWeight: 500,
                 }}
               >

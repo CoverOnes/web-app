@@ -33,9 +33,14 @@ export const useSSE = ({ roomId, userId, onMessage, onError }: UseSSEOptions) =>
     onErrorRef.current = onError;
   }, [onMessage, onError]);
 
+  const accessToken = useAuthStore((s) => s.accessToken ?? '');
+
   useEffect(() => {
     // 不連接臨時聊天室或空 roomId
-    if (!roomId || !userId || roomId.startsWith('temp_')) {
+    // Fix 5: also guard empty accessToken — skip connect until token is present.
+    // accessToken is in the dep array so a token refresh re-establishes the
+    // SSE connection automatically.
+    if (!roomId || !userId || roomId.startsWith('temp_') || accessToken === '') {
       return;
     }
 
@@ -59,7 +64,8 @@ export const useSSE = ({ roomId, userId, onMessage, onError }: UseSSEOptions) =>
       // 建立新的 SSE 連接
       // access_token passed as query param: EventSource cannot send Authorization headers.
       // Gateway validates the token for this route only (decision 5adf4b20).
-      const accessToken = useAuthStore.getState().accessToken ?? '';
+      // accessToken is captured from the effect closure (Zustand selector); using
+      // .getState() here would be stale on reconnect after a token refresh.
       const url = `${API_BASE_URL}/api/chat/v1/messages/stream?room_id=${encodeURIComponent(roomId)}&access_token=${encodeURIComponent(accessToken)}`;
       const eventSource = new EventSource(url);
       eventSourceRef.current = eventSource;
@@ -91,8 +97,8 @@ export const useSSE = ({ roomId, userId, onMessage, onError }: UseSSEOptions) =>
           if (message.room_id === roomId && isMounted) {
             onMessageRef.current?.(message);
           }
-        } catch (error) {
-          console.error('解析 SSE 訊息失敗:', error);
+        } catch {
+          if (import.meta.env.DEV) console.warn('[useSSE] message parse failed: invalid JSON');
         }
       });
 
@@ -136,7 +142,7 @@ export const useSSE = ({ roomId, userId, onMessage, onError }: UseSSEOptions) =>
         retryTimerRef.current = null;
       }
     };
-  }, [roomId, userId]);
+  }, [roomId, userId, accessToken]);
 
   return { isConnected };
 };

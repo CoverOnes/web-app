@@ -196,6 +196,11 @@ const CoverOnesSidebar = () => {
   const accountNav: NavEntry[] = [
     ...(kycTier < 2 ? [{ path: '/kyc', label: '身分認證', icon: (s: number | undefined) => <Icon.Shield size={s} /> }] : []),
     {
+      path: '/profile',
+      label: '個人檔案',
+      icon: (s: number | undefined) => <Icon.Users size={s} />,
+    },
+    {
       path: '/settings',
       label: '設定',
       icon: (s: number | undefined) => <Icon.Settings size={s} />,
@@ -378,8 +383,11 @@ const CoverOnesSidebar = () => {
         ))}
       </nav>
 
-      {/* Footer — shared.css .sb-footer */}
-      <div
+      {/* Footer — shared.css .sb-footer; acts as /profile shortcut */}
+      <button
+        type="button"
+        onClick={() => navigate('/profile')}
+        aria-label="前往個人頁"
         style={{
           marginTop: 'auto',
           padding: 10,
@@ -388,6 +396,18 @@ const CoverOnesSidebar = () => {
           alignItems: 'center',
           gap: 10,
           flexShrink: 0,
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          width: '100%',
+          textAlign: 'left',
+          borderRadius: 0,
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)';
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = 'none';
         }}
       >
         {/* Avatar — shared.css .sb-footer .av */}
@@ -439,7 +459,7 @@ const CoverOnesSidebar = () => {
             線上
           </div>
         </div>
-      </div>
+      </button>
     </aside>
   );
 };
