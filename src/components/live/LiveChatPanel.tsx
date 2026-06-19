@@ -84,6 +84,10 @@ export function LiveChatPanel() {
       {/* Message list */}
       <div
         ref={listRef}
+        role="log"
+        aria-label="直播聊天訊息"
+        aria-live="polite"
+        aria-atomic="false"
         style={{
           flex: 1,
           overflowY: 'auto',
@@ -135,6 +139,7 @@ export function LiveChatPanel() {
           aria-label="聊天訊息輸入"
           placeholder="傳送訊息…"
           value={inputValue}
+          maxLength={500}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           style={{
@@ -169,7 +174,7 @@ export function LiveChatPanel() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#fff',
+            color: 'var(--co-text-on-accent)',
             transition: 'opacity 150ms',
           }}
           onMouseEnter={(e) => {

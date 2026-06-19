@@ -74,7 +74,7 @@ export function ControlBar({ isLive, viewerCount, isPending, onStart, onStop }: 
               borderRadius: 'var(--co-btn-r)',
               cursor: isPending ? 'not-allowed' : 'pointer',
               background: 'linear-gradient(90deg, var(--co-btn-primary-from), var(--co-btn-primary-to))',
-              color: '#fff',
+              color: 'var(--co-text-on-accent)',
               opacity: isPending ? 0.7 : 1,
               transition: 'opacity 150ms',
             }}
@@ -95,7 +95,7 @@ export function ControlBar({ isLive, viewerCount, isPending, onStart, onStop }: 
               borderRadius: 'var(--co-btn-r)',
               cursor: 'pointer',
               background: 'var(--co-red)',
-              color: '#fff',
+              color: 'var(--co-text-on-accent)',
               transition: 'opacity 150ms',
             }}
             onMouseEnter={(e) => {
@@ -109,7 +109,7 @@ export function ControlBar({ isLive, viewerCount, isPending, onStart, onStop }: 
           </button>
         )}
 
-        {/* Mic toggle */}
+        {/* Mic toggle — min 44×44 touch target */}
         <button
           type="button"
           aria-label={micOn ? '靜音麥克風' : '取消靜音麥克風'}
@@ -117,8 +117,8 @@ export function ControlBar({ isLive, viewerCount, isPending, onStart, onStop }: 
           onClick={() => setMicOn((v) => !v)}
           title={micOn ? '靜音麥克風' : '取消靜音'}
           style={{
-            width: 38,
-            height: 38,
+            width: 44,
+            height: 44,
             flexShrink: 0,
             border: '1px solid var(--co-line-strong)',
             borderRadius: 'var(--co-btn-r)',
@@ -134,7 +134,7 @@ export function ControlBar({ isLive, viewerCount, isPending, onStart, onStop }: 
           {micOn ? <Icon.Mic size={16} /> : <Icon.MicOff size={16} />}
         </button>
 
-        {/* Camera toggle */}
+        {/* Camera toggle — min 44×44 touch target */}
         <button
           type="button"
           aria-label={camOn ? '關閉攝影機' : '開啟攝影機'}
@@ -142,8 +142,8 @@ export function ControlBar({ isLive, viewerCount, isPending, onStart, onStop }: 
           onClick={() => setCamOn((v) => !v)}
           title={camOn ? '關閉攝影機' : '開啟攝影機'}
           style={{
-            width: 38,
-            height: 38,
+            width: 44,
+            height: 44,
             flexShrink: 0,
             border: '1px solid var(--co-line-strong)',
             borderRadius: 'var(--co-btn-r)',
@@ -162,8 +162,12 @@ export function ControlBar({ isLive, viewerCount, isPending, onStart, onStop }: 
 
       {/* Status row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: 'var(--co-text-muted)' }}>
-        {/* Status dot */}
-        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        {/* Status dot + label — live-status announced to screen readers */}
+        <span
+          role="status"
+          aria-live="polite"
+          style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+        >
           <span
             aria-hidden="true"
             style={{
@@ -184,8 +188,11 @@ export function ControlBar({ isLive, viewerCount, isPending, onStart, onStop }: 
           {viewerCount.toLocaleString()} 位觀眾
         </span>
 
-        {/* Timer */}
-        <span style={{ marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>
+        {/* Timer — labelled for screen readers */}
+        <span
+          aria-label={`直播時長 ${formatDuration(elapsed)}`}
+          style={{ marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}
+        >
           {formatDuration(elapsed)}
         </span>
       </div>

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useUnreadCount } from '../../lib/query';
 import { Icon } from '../ui/Icon';
+import { isFeatureEnabled } from '../../features/flags/featureFlags';
 
 /* --- Nav item definition --- */
 
@@ -173,8 +174,10 @@ const CoverOnesSidebar = () => {
     { path: '/contracts',      label: '合約管理',  icon: (s) => <Icon.FileText size={s} /> },
     // 訊息: canonical route is /chat; isActive also matches legacy /messages
     { path: '/chat',           label: '訊息',      icon: (s) => <Icon.MessageSquare size={s} /> },
-    // 替身直播: active on any /live path
-    { path: '/live',           label: '替身直播',  icon: (s) => <Icon.Video size={s} /> },
+    // 替身直播: gated behind avatarLive feature flag — matches KYC guard pattern
+    ...(isFeatureEnabled('avatarLive')
+      ? [{ path: '/live', label: '替身直播', icon: (s: number | undefined) => <Icon.Video size={s} /> }]
+      : []),
     { path: '/discover',        label: '探索企業',  icon: (s) => <Icon.Compass size={s} /> },
     { path: '/network',        label: '網路人脈',  icon: (s) => <Icon.Users size={s} /> },
     // 我的公司: Icon.Building does not exist in the Icon set; Icon.Briefcase is the

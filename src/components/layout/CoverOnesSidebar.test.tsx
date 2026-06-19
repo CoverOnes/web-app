@@ -132,4 +132,16 @@ describe('CoverOnesSidebar', () => {
     await user.click(msgBtn);
     // Just verifying it's clickable without throwing
   });
+
+  it('替身直播 nav entry renders when avatarLive flag is enabled', () => {
+    // avatarLive: true in DEFAULTS → entry is rendered
+    renderSidebar('/jobs');
+    expect(screen.getByRole('button', { name: /替身直播/ })).toBeInTheDocument();
+  });
+
+  it('替身直播 nav item is active (aria-current="page") when on /live', () => {
+    renderSidebar('/live');
+    const liveBtn = screen.getByRole('button', { name: /替身直播/ });
+    expect(liveBtn).toHaveAttribute('aria-current', 'page');
+  });
 });

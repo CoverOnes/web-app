@@ -88,7 +88,7 @@ export function StreamInfoBar({
             color: '#fff',
           }}
         >
-          {!channelAvatarUrl && channelName.charAt(0).toUpperCase()}
+          {!channelAvatarUrl && (channelName?.charAt(0) || '?').toUpperCase()}
         </div>
 
         <span style={{ fontSize: 14, color: 'var(--co-text-dim)', fontWeight: 500 }}>

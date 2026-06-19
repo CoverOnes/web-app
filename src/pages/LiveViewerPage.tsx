@@ -79,7 +79,8 @@ export default function LiveViewerPage() {
         >
           {/* Left: video + info */}
           <div style={{ flex: '1 1 0', minWidth: 0 }}>
-            <LiveVideoArea />
+            {/* onRetry is a no-op stub until LiveKit reconnect is implemented */}
+            <LiveVideoArea onRetry={() => { /* TODO: trigger LiveKit reconnect when available */ }} />
             <StreamInfoBar
               title={placeholderTitle}
               channelName={placeholderChannel}

@@ -88,7 +88,7 @@ export default function LiveHostPage() {
         }
       />
 
-      {/* Error banner */}
+      {/* Error banners */}
       {startMutation.isError && (
         <div
           role="alert"
@@ -108,6 +108,27 @@ export default function LiveHostPage() {
         >
           <Icon.AlertCircle size={14} />
           開始直播失敗，請稍後再試。（後端 API 尚未上線）
+        </div>
+      )}
+      {stopMutation.isError && (
+        <div
+          role="alert"
+          style={{
+            margin: '12px 24px 0',
+            padding: '10px 14px',
+            background: 'rgba(239,68,68,0.1)',
+            border: '1px solid rgba(239,68,68,0.3)',
+            borderRadius: 'var(--co-btn-r)',
+            fontSize: 13,
+            color: 'var(--co-red)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            flexShrink: 0,
+          }}
+        >
+          <Icon.AlertCircle size={14} />
+          結束直播失敗，請稍後再試。
         </div>
       )}
 
