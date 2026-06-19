@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Icon } from '../ui/Icon';
+import NotificationBellButton from '../notifications/NotificationBellButton';
 
 interface CoverOnesTopbarProps {
   drawerOpen?: boolean;
@@ -169,31 +170,8 @@ const CoverOnesTopbar = ({ drawerOpen = false, onMenuOpen }: CoverOnesTopbarProp
 
       {/* Right actions — shared.css .top-actions */}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
-        {/* Bell icon-btn — shared.css .icon-btn */}
-        <div style={{ position: 'relative' }}>
-          <button
-            aria-label="通知"
-            onClick={() => navigate('/notifications')}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 9,
-              color: 'var(--co-text-dim)',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              transition: 'background 150ms',
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--co-text)'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--co-text-dim)'; }}
-          >
-            <Icon.Bell size={18} />
-          </button>
-        </div>
+        {/* Bell icon-btn — notification dropdown (replaces navigate to /notifications) */}
+        <NotificationBellButton />
 
         {/* Separator */}
         <div style={{ width: 1, height: 24, background: 'var(--co-line)', margin: '0 4px' }} aria-hidden="true" />
