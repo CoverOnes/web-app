@@ -476,7 +476,7 @@ const ProfilePage = () => {
           {/* Sidebar column */}
           <div className="profile-col-side">
             {/* §13 Platform reputation — only 加入時間 is LIVE; rest "—" */}
-            <Card title="📊 平台聲望">
+            <Card title={<><span aria-hidden="true">📊</span> 平台聲望</>}>
               <div className="profile-stat-row">
                 <span>個人評分</span>
                 <span className="profile-stat-v">—</span>
@@ -504,17 +504,17 @@ const ProfilePage = () => {
             </Card>
 
             {/* §14 Strengths — EMPTY-STATE */}
-            <Card title="🎯 我擅長的">
+            <Card title={<><span aria-hidden="true">🎯</span> 我擅長的</>}>
               <EmptyState />
             </Card>
 
             {/* §15 Endorsements — EMPTY-STATE */}
-            <Card title="🤝 同事推薦語">
+            <Card title={<><span aria-hidden="true">🤝</span> 同事推薦語</>}>
               <EmptyState />
             </Card>
 
             {/* §16 Languages — EMPTY-STATE */}
-            <Card title="🌐 語言">
+            <Card title={<><span aria-hidden="true">🌐</span> 語言</>}>
               <EmptyState />
             </Card>
           </div>

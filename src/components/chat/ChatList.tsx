@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { chatApi } from '../../api/chat';
 import type { Room } from '../../types';
 import RoomItem from './RoomItem';
+import { getApiErrorCode } from '../../lib/api/http';
 
 // Consistent page size used by both the layout prefetch and ChatList pagination.
 const ROOMS_PAGE_SIZE = 50;
@@ -41,7 +42,7 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
       setCursor(nextCursor);
       setHasMore(more);
     } catch (error) {
-      console.error('載入聊天室失敗:', error);
+      if (import.meta.env.DEV) console.warn('[ChatList] loadRooms failed:', getApiErrorCode(error) ?? 'unknown');
     } finally {
       setIsLoading(false);
       loadingRef.current = false;
@@ -72,7 +73,7 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
         setCursor(nextCursor);
         setHasMore(more);
       } catch (error) {
-        console.error('載入聊天室失敗:', error);
+        if (import.meta.env.DEV) console.warn('[ChatList] initialLoad failed:', getApiErrorCode(error) ?? 'unknown');
       } finally {
         setIsLoading(false);
         loadingRef.current = false;
@@ -131,7 +132,9 @@ const ChatList = ({ onSelectRoom }: ChatListProps) => {
           );
           
           // 異步發送已讀請求，不阻塞 UI
-          chatApi.markAsRead(roomId, userId).catch(console.error);
+          chatApi.markAsRead(roomId, userId).catch((err) => {
+            if (import.meta.env.DEV) console.warn('[ChatList] markAsRead failed:', getApiErrorCode(err) ?? 'unknown');
+          });
         });
       });
     }

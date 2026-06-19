@@ -204,6 +204,10 @@
   --co-suggest-border:    rgba(99,102,241,0.3);
   --co-suggest-shadow:    rgba(99,102,241,0.25);
 
+  /* --- Tabs badge tokens (replaces hardcoded rgba in Tabs.tsx) --- */
+  --co-tab-badge-active-bg:   rgba(99,102,241,0.2);
+  --co-tab-badge-inactive-bg: rgba(148,163,184,0.12);
+
   /* --- Extended palette aliases (palette ref for downstream components) --- */
   /* indigo-200 (active chip text, Tabs active count) */
   --co-indigo-200:  #C7D2FE;

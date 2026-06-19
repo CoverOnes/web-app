@@ -117,9 +117,9 @@ export function useMyBids() {
     enabled: authReady,
     retry: (failureCount, error) => {
       const status = (error as { response?: { status?: number } })?.response?.status;
-      // Transient auth gap → retry (token may still be refreshing). Other errors
-      // fall back to the default single retry.
-      if (status === 401 || status === 403) return failureCount < 2;
+      // 401 = transient auth gap → retry (token may still be refreshing).
+      // 403 = policy decision (not transient) → must surface immediately, never retry.
+      if (status === 401) return failureCount < 2;
       return failureCount < 1;
     },
     retryDelay: (attempt) => Math.min(400 * 2 ** attempt, 2000),
@@ -170,6 +170,8 @@ export function useCreateBid(listingId: string) {
       qc.invalidateQueries({ queryKey: ['listing-bids', listingId] });
       qc.invalidateQueries({ queryKey: ['my-bids'] });
       qc.invalidateQueries({ queryKey: ['listing', listingId] });
+      // Refresh listing list so bid count on cards updates immediately
+      qc.invalidateQueries({ queryKey: ['listings'] });
     },
   });
 }

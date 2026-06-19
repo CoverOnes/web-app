@@ -301,6 +301,7 @@ export default function NetworkPage() {
       {/* ── Tabs (LIVE counts) ── */}
       <div className="net-tabs" role="tablist" aria-label="人脈分類">
         <button
+          id="net-tab-accepted"
           type="button"
           role="tab"
           aria-selected={activeTab === 'accepted'}
@@ -311,6 +312,7 @@ export default function NetworkPage() {
           已連結 <span className="net-tab-ct">{acceptedCount}</span>
         </button>
         <button
+          id="net-tab-incoming"
           type="button"
           role="tab"
           aria-selected={activeTab === 'incoming'}
@@ -321,6 +323,7 @@ export default function NetworkPage() {
           受邀請 <span className="net-tab-ct">{incomingCount}</span>
         </button>
         <button
+          id="net-tab-outgoing"
           type="button"
           role="tab"
           aria-selected={activeTab === 'outgoing'}
@@ -363,7 +366,7 @@ export default function NetworkPage() {
               載入中…
             </div>
           ) : (
-            <div className="net-panel" id="net-panel" role="tabpanel">
+            <div className="net-panel" id="net-panel" role="tabpanel" aria-labelledby={`net-tab-${activeTab}`}>
               {activeTab === 'accepted' && (
                 <>
                   <div className="net-panel-h">

@@ -97,8 +97,8 @@ export const useSSE = ({ roomId, userId, onMessage, onError }: UseSSEOptions) =>
           if (message.room_id === roomId && isMounted) {
             onMessageRef.current?.(message);
           }
-        } catch (error) {
-          console.error('解析 SSE 訊息失敗:', error);
+        } catch {
+          if (import.meta.env.DEV) console.warn('[useSSE] message parse failed: invalid JSON');
         }
       });
 

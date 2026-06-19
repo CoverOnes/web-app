@@ -6,6 +6,7 @@ import { useSSE } from '../../hooks/useSSE';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { getDisplayName, getInitials } from '../../utils/formatters';
+import { getApiErrorCode } from '../../lib/api/http';
 import type { Room } from '../../types';
 
 interface ChatPopupProps {
@@ -119,12 +120,14 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
         
         // 自動標記為已讀
         if (!currentRoom.isTemporary) {
-          chatApi.markAsRead(roomIdForMessages, userId).catch(console.error);
+          chatApi.markAsRead(roomIdForMessages, userId).catch((err) => {
+            if (import.meta.env.DEV) console.warn('[ChatPopup] markAsRead failed:', getApiErrorCode(err) ?? 'unknown');
+          });
         }
       }
     },
-    onError: (error) => {
-      console.error('SSE 連接錯誤:', error);
+    onError: () => {
+      if (import.meta.env.DEV) console.warn('[ChatPopup] SSE connection error');
     },
   });
 
@@ -290,8 +293,7 @@ const ChatPopup = ({ room, index }: ChatPopupProps) => {
         setMessages(roomId, updatedMessages);
       }
     } catch (error) {
-      console.warn('[ChatPopup] sendMessage error:', error);
-      console.error('發送訊息失敗:', error);
+      if (import.meta.env.DEV) console.warn('[ChatPopup] sendMessage failed:', getApiErrorCode(error) ?? 'unknown');
       alert('發送訊息失敗，請稍後再試');
     }
   }, [currentRoom, userId, addRoom, addMessage, room.id]);
