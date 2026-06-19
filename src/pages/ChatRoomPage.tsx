@@ -98,17 +98,23 @@ const ChatRoomPage = () => {
   }, [targetRoom, currentRoom, setCurrentRoom]);
 
   // 處理未讀訊息
+  // Fix 4: capture timer id so clearTimeout fires on unmount, preventing
+  // markAsRead from firing after the user navigates away.
   useEffect(() => {
     if (!roomId || !targetRoom || !userId) return;
 
+    let timerId: ReturnType<typeof setTimeout> | undefined;
     if (targetRoom.unread_count && targetRoom.unread_count > 0) {
-      setTimeout(() => {
+      timerId = setTimeout(() => {
         setRooms((prevRooms) =>
           prevRooms.map(r => r.id === roomId ? { ...r, unread_count: 0 } : r)
         );
         chatApi.markAsRead(roomId, userId).catch(console.error);
       }, 2000);
     }
+    return () => {
+      if (timerId !== undefined) clearTimeout(timerId);
+    };
   }, [roomId, targetRoom, setRooms, userId]);
 
   // 清除 router state（使用 react-router navigate 而非 window.history 直接操作）
