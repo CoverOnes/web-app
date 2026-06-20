@@ -193,10 +193,6 @@ function App() {
               {/* Search */}
               <Route path="search" element={<SearchPage />} />
 
-              {/* Help + Maintenance also accessible within app shell */}
-              <Route path="help" element={<HelpPage />} />
-              <Route path="maintenance" element={<MaintenancePage />} />
-
               {/*
                * Avatar Livestream scaffold (issue #50) — /live, /live/host, /live/:roomId
                * IMPORTANT: /live/host MUST come before /live/:roomId so the router matches it first.

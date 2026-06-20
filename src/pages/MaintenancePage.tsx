@@ -227,9 +227,8 @@ const GearSVG = () => (
 export default function MaintenancePage() {
   const countdown = useCountdown(88); // ~1h 28min from page load
 
-  function handleNotify(email: string) {
-    // In production this would call an API endpoint
-    console.info('[MaintenancePage] Notify registered for:', email);
+  function handleNotify() {
+    // No-op: no backend endpoint yet. Form UX handled by NotifyForm submitted state.
   }
 
   return (
