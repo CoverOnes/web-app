@@ -11,6 +11,9 @@ import {
   savedApi,
   type ContractStatus,
   type KycSubmitRequest,
+  type KycEmailStartRequest,
+  type KycPhoneStartRequest,
+  type KycVerifyOtpRequest,
   type ResetPasswordRequest,
   type WaitlistJoinRequest,
   type UpdateCompanyRequest,
@@ -150,6 +153,80 @@ export function useSubmitKyc() {
     // and must surface to the caller for an inline message, not be auto-retried.
     retry: false,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['kyc-status'] }),
+  });
+}
+
+// ===== KYC Wizard hooks (Increment 3: multi-step wizard) =====
+
+// useKycMe — fetches the full KYC record (masked PII + verification state).
+// staleTime:0 so every visit re-checks current state (re-entry support).
+export function useKycMe() {
+  const isHydrating = useAuthStore((s) => s.isHydrating);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
+  const authReady = !isHydrating && (!!accessToken || !!refreshToken);
+
+  return useQuery({
+    queryKey: ['kyc-me'],
+    queryFn: () => kycApi.getMe(),
+    enabled: authReady,
+    staleTime: 0,
+  });
+}
+
+// useKycEmailStart — send OTP to email; rate-limited 3/15min.
+// retry:false — RATE_LIMITED must surface inline.
+export function useKycEmailStart() {
+  return useMutation({
+    mutationFn: (data: KycEmailStartRequest) => kycApi.emailStart(data),
+    retry: false,
+  });
+}
+
+// useKycEmailVerify — submit 6-digit OTP; invalidates kyc cache on success.
+export function useKycEmailVerify() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: KycVerifyOtpRequest) => kycApi.emailVerify(data),
+    retry: false,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['kyc-me'] });
+      qc.invalidateQueries({ queryKey: ['kyc-status'] });
+    },
+  });
+}
+
+// useKycPhoneStart — send OTP to phone; rate-limited 3/15min.
+export function useKycPhoneStart() {
+  return useMutation({
+    mutationFn: (data: KycPhoneStartRequest) => kycApi.phoneStart(data),
+    retry: false,
+  });
+}
+
+// useKycPhoneVerify — submit 6-digit OTP. On promoted=true → tier 0→1 happened.
+export function useKycPhoneVerify() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: KycVerifyOtpRequest) => kycApi.phoneVerify(data),
+    retry: false,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['kyc-me'] });
+      qc.invalidateQueries({ queryKey: ['kyc-status'] });
+    },
+  });
+}
+
+// useKycVerifyId — upload ID card image (PERSONAL accounts, requires Tier 1).
+export function useKycVerifyId() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (formData: FormData) => kycApi.verifyId(formData),
+    retry: false,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['kyc-me'] });
+      qc.invalidateQueries({ queryKey: ['kyc-status'] });
+    },
   });
 }
 
