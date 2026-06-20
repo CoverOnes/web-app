@@ -17,7 +17,7 @@
  * <768px: 1-column stacked; comparison table overflow-x: auto
  */
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -203,12 +203,12 @@ const valueCellStyle = (val: string, isHot: boolean): CSSProperties => {
   };
   if (isHot) {
     base.background = 'rgba(99,102,241,0.06)';
-    base.color = '#A78BFA';
+    base.color = 'var(--co-bdg-dev-text)';
     base.fontWeight = 700;
     return base;
   }
   if (val === '✓') {
-    base.color = '#6EE7B7';
+    base.color = 'var(--co-bdg-green-text)';
     base.fontWeight = 700;
     return base;
   }
@@ -323,7 +323,7 @@ export default function PricingPage() {
               }}
             >
               {mode === 'monthly' ? '月付' : (
-                <>年付 <span style={{ color: '#6EE7B7', fontSize: 10 }}>省 20%</span></>
+                <>年付 <span style={{ color: 'var(--co-bdg-green-text)', fontSize: 10 }}>省 20%</span></>
               )}
             </button>
           ))}
@@ -360,7 +360,7 @@ export default function PricingPage() {
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, marginTop: 18 }}>
             <span style={{ fontSize: 38, fontWeight: 800, letterSpacing: '-0.025em', color: 'var(--co-text)' }}>免費</span>
           </div>
-          <div style={{ fontSize: 11.5, color: '#6EE7B7', marginTop: 4, minHeight: 18 }}>不需信用卡</div>
+          <div style={{ fontSize: 11.5, color: 'var(--co-bdg-green-text)', marginTop: 4, minHeight: 18 }}>不需信用卡</div>
           <Link
             to="/register"
             style={{
@@ -391,7 +391,7 @@ export default function PricingPage() {
               '免費報告 / 月（5 篇）',
             ].map((f) => (
               <li key={f} style={{ padding: '7px 0 7px 22px', position: 'relative', color: 'var(--co-text-dim)', lineHeight: 1.5 }}>
-                <span aria-hidden="true" style={{ position: 'absolute', left: 0, color: '#6EE7B7', fontWeight: 800 }}>✓</span>
+                <span aria-hidden="true" style={{ position: 'absolute', left: 0, color: 'var(--co-bdg-green-text)', fontWeight: 800 }}>✓</span>
                 {f}
               </li>
             ))}
@@ -448,7 +448,7 @@ export default function PricingPage() {
             </span>
             <span style={{ fontSize: 12, color: 'var(--co-text-muted)', marginBottom: 6, marginLeft: 3 }}>/ 月</span>
           </div>
-          <div style={{ fontSize: 11.5, color: '#6EE7B7', marginTop: 4, minHeight: 18 }}>{proSavingMsg}</div>
+          <div style={{ fontSize: 11.5, color: 'var(--co-bdg-green-text)', marginTop: 4, minHeight: 18 }}>{proSavingMsg}</div>
           <DisabledCta
             style={{
               background: 'linear-gradient(90deg, var(--co-accent), var(--co-accent-2))',
@@ -470,7 +470,7 @@ export default function PricingPage() {
               '基礎數據儀表板',
             ].map((f, i) => (
               <li key={i} style={{ padding: '7px 0 7px 22px', position: 'relative', color: 'var(--co-text-dim)', lineHeight: 1.5 }}>
-                <span aria-hidden="true" style={{ position: 'absolute', left: 0, color: '#6EE7B7', fontWeight: 800 }}>✓</span>
+                <span aria-hidden="true" style={{ position: 'absolute', left: 0, color: 'var(--co-bdg-green-text)', fontWeight: 800 }}>✓</span>
                 {f}
               </li>
             ))}
@@ -495,7 +495,7 @@ export default function PricingPage() {
             flexDirection: 'column',
           }}
         >
-          <div style={{ fontSize: 14, color: '#67E8F9', fontWeight: 600 }}>Team</div>
+          <div style={{ fontSize: 14, color: 'var(--co-bdg-design-text)', fontWeight: 600 }}>Team</div>
           <div style={{ fontSize: 12, color: 'var(--co-text-muted)', marginTop: 4, minHeight: 30, lineHeight: 1.5 }}>
             適合成長中企業，多部門協作。
           </div>
@@ -506,10 +506,10 @@ export default function PricingPage() {
             </span>
             <span style={{ fontSize: 12, color: 'var(--co-text-muted)', marginBottom: 6, marginLeft: 3 }}>/ 月</span>
           </div>
-          <div style={{ fontSize: 11.5, color: '#6EE7B7', marginTop: 4, minHeight: 18 }}>{teamSavingMsg}</div>
+          <div style={{ fontSize: 11.5, color: 'var(--co-bdg-green-text)', marginTop: 4, minHeight: 18 }}>{teamSavingMsg}</div>
           <DisabledCta
             style={{
-              background: 'linear-gradient(90deg, var(--co-cyan), #3B82F6)',
+              background: 'linear-gradient(90deg, var(--co-cyan), var(--color-info-500))',
               color: 'var(--co-text-on-accent)',
               marginTop: 18,
             }}
@@ -529,7 +529,7 @@ export default function PricingPage() {
               '履約保證金折讓 50%',
             ].map((f, i) => (
               <li key={i} style={{ padding: '7px 0 7px 22px', position: 'relative', color: 'var(--co-text-dim)', lineHeight: 1.5 }}>
-                <span aria-hidden="true" style={{ position: 'absolute', left: 0, color: '#6EE7B7', fontWeight: 800 }}>✓</span>
+                <span aria-hidden="true" style={{ position: 'absolute', left: 0, color: 'var(--co-bdg-green-text)', fontWeight: 800 }}>✓</span>
                 {f}
               </li>
             ))}
@@ -548,14 +548,14 @@ export default function PricingPage() {
             flexDirection: 'column',
           }}
         >
-          <div style={{ fontSize: 14, color: '#FCD34D', fontWeight: 600 }}>Enterprise</div>
+          <div style={{ fontSize: 14, color: 'var(--co-bdg-mfg-text)', fontWeight: 600 }}>Enterprise</div>
           <div style={{ fontSize: 12, color: 'var(--co-text-muted)', marginTop: 4, minHeight: 30, lineHeight: 1.5 }}>
             適合大型企業集團，量身訂做。
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, marginTop: 18 }}>
             <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.025em', color: 'var(--co-text)' }}>客製報價</span>
           </div>
-          <div style={{ fontSize: 11.5, color: '#6EE7B7', marginTop: 4, minHeight: 18 }}>起價 NT$ 25,000 / 月</div>
+          <div style={{ fontSize: 11.5, color: 'var(--co-bdg-green-text)', marginTop: 4, minHeight: 18 }}>起價 NT$ 25,000 / 月</div>
           <a
             href="mailto:sales@coverones.com"
             style={{
@@ -564,7 +564,7 @@ export default function PricingPage() {
               borderRadius: 9,
               border: '1px solid rgba(245,158,11,0.4)',
               background: 'rgba(245,158,11,0.18)',
-              color: '#FCD34D',
+              color: 'var(--co-bdg-mfg-text)',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',
@@ -590,7 +590,7 @@ export default function PricingPage() {
               '法務 / 合規顧問',
             ].map((f, i) => (
               <li key={i} style={{ padding: '7px 0 7px 22px', position: 'relative', color: 'var(--co-text-dim)', lineHeight: 1.5 }}>
-                <span aria-hidden="true" style={{ position: 'absolute', left: 0, color: '#6EE7B7', fontWeight: 800 }}>✓</span>
+                <span aria-hidden="true" style={{ position: 'absolute', left: 0, color: 'var(--co-bdg-green-text)', fontWeight: 800 }}>✓</span>
                 {f}
               </li>
             ))}
@@ -659,14 +659,14 @@ export default function PricingPage() {
             </thead>
             <tbody>
               {TABLE_SECTIONS.map((section) => (
-                <>
-                  <tr key={`cat-${section.category}`}>
+                <Fragment key={`sec-${section.category}`}>
+                  <tr>
                     <td
                       colSpan={5}
                       style={{
                         fontWeight: 700,
                         background: 'var(--co-bg-3)',
-                        color: '#A78BFA',
+                        color: 'var(--co-bdg-dev-text)',
                         padding: '8px 16px',
                         fontSize: 11,
                         textTransform: 'uppercase',
@@ -701,7 +701,7 @@ export default function PricingPage() {
                       })}
                     </tr>
                   ))}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>
@@ -758,7 +758,7 @@ export default function PricingPage() {
             display: 'inline-block',
             padding: '11px 28px',
             background: 'var(--co-text-on-accent)',
-            color: '#1E1B4B',
+            color: 'var(--co-cover-from)',
             border: 'none',
             borderRadius: 9,
             fontSize: 13.5,
