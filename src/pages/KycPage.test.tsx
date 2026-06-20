@@ -275,10 +275,11 @@ describe('KycPage — error states', () => {
   });
 
   it('shows rate-limit error when emailStart fails with 429', async () => {
+    // Real backend envelope: { error: { code, message } }
     mockEmailStart.mockRejectedValue(
       Object.assign(new Error('rate limited'), {
         isAxiosError: true,
-        response: { status: 429, data: { code: 'RATE_LIMITED' } },
+        response: { status: 429, data: { error: { code: 'RATE_LIMITED', message: 'rate limited' } } },
       })
     );
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { AxiosError } from 'axios';
 import { useKycPhoneStart, useKycPhoneVerify } from '../../lib/query';
+import { getApiErrorCode, getApiErrorMessage } from '../../lib/api/http';
 import { KycOtpInput } from './KycOtpInput';
 import { Button } from '../ui/Button';
 
@@ -9,10 +9,21 @@ interface KycStep3PhoneOtpProps {
   onVerified: (promoted: boolean, currentTier: number) => void;
 }
 
+/**
+ * Masks a phone number for PII-safe display.
+ * Preserves country code prefix and last 4 digits.
+ * e.g. "+886912345678" → "+886****5678"
+ */
+function maskPhone(phone: string): string {
+  if (phone.length <= 8) return '****';
+  const prefix = phone.startsWith('+') ? phone.slice(0, 4) : phone.slice(0, 3);
+  const last4 = phone.slice(-4);
+  return prefix + '****' + last4;
+}
+
 function mapPhoneOtpError(err: unknown, attempt: number): string {
-  const axErr = err as AxiosError<{ code?: string; message?: string }>;
-  const code = axErr?.response?.data?.code;
-  const status = axErr?.response?.status;
+  const code = getApiErrorCode(err);
+  const status = (err as { response?: { status?: number } })?.response?.status;
 
   if (code === 'CHALLENGE_EXPIRED') return '驗證碼已過期，請重新發送';
   if (code === 'CODE_MISMATCH') {
@@ -22,7 +33,7 @@ function mapPhoneOtpError(err: unknown, attempt: number): string {
   if (code === 'MAX_ATTEMPTS') return '嘗試次數過多，請重新發送驗證碼';
   if (code === 'CHALLENGE_NOT_FOUND') return '找不到驗證請求，請重新發送';
   if (code === 'RATE_LIMITED' || status === 429) return '發送次數過多，請於 15 分鐘後再試';
-  return axErr?.response?.data?.message ?? '驗證失敗，請稍後再試';
+  return getApiErrorMessage(err) ?? '驗證失敗，請稍後再試';
 }
 
 const OTP_TTL_SECS = 600;
@@ -75,9 +86,8 @@ export function KycStep3PhoneOtp({ phone, onVerified }: KycStep3PhoneOtpProps) {
       startResendTimer();
       startTtlTimer();
     } catch (err) {
-      const axErr = err as AxiosError<{ code?: string }>;
-      const code = axErr?.response?.data?.code;
-      const status = axErr?.response?.status;
+      const code = getApiErrorCode(err);
+      const status = (err as { response?: { status?: number } })?.response?.status;
       if (code === 'RATE_LIMITED' || status === 429) {
         setError('發送次數過多，請於 15 分鐘後再試');
       } else {
@@ -101,9 +111,10 @@ export function KycStep3PhoneOtp({ phone, onVerified }: KycStep3PhoneOtpProps) {
         onVerified(res.promoted, res.currentTier);
       }
     } catch (err) {
-      const axErr = err as AxiosError<{ code?: string }>;
+      const code = getApiErrorCode(err);
+      const status = (err as { response?: { status?: number } })?.response?.status;
       // 409 ALREADY_VERIFIED → silently advance
-      if (axErr?.response?.status === 409 || axErr?.response?.data?.code === 'ALREADY_VERIFIED') {
+      if (status === 409 || code === 'ALREADY_VERIFIED') {
         onVerified(false, 0);
         return;
       }
@@ -113,6 +124,7 @@ export function KycStep3PhoneOtp({ phone, onVerified }: KycStep3PhoneOtpProps) {
 
   const ttlMin = Math.floor(ttlCountdown / 60);
   const ttlSec = ttlCountdown % 60;
+  const maskedPhone = maskPhone(phone);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -121,7 +133,7 @@ export function KycStep3PhoneOtp({ phone, onVerified }: KycStep3PhoneOtpProps) {
           Step 3 / 5 — 手機驗證
         </h2>
         <p style={{ fontSize: 13, color: 'var(--co-text-dim)', lineHeight: 1.6 }}>
-          驗證碼已寄送至 <strong style={{ color: 'var(--co-text)' }}>{phone}</strong>，請在 10 分鐘內輸入。
+          驗證碼已寄送至 <strong style={{ color: 'var(--co-text)' }}>{maskedPhone}</strong>，請在 10 分鐘內輸入。
         </p>
       </div>
 

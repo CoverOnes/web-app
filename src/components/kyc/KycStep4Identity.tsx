@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import type { AxiosError } from 'axios';
 import type { AccountType, KycSubmitRequest } from '../../lib/api/coverones';
 import { useKycVerifyId, useSubmitKyc } from '../../lib/query';
+import { getApiErrorCode, getApiErrorMessage } from '../../lib/api/http';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import {
@@ -18,25 +18,34 @@ interface KycStep4IdentityProps {
 }
 
 function mapVerifyIdError(err: unknown): string {
-  const axErr = err as AxiosError<{ code?: string; message?: string }>;
-  const code = axErr?.response?.data?.code;
-  const status = axErr?.response?.status;
+  const code = getApiErrorCode(err);
+  const status = (err as { response?: { status?: number } })?.response?.status;
 
   if (code === 'ID_IMAGE_UNREADABLE') return '無法辨識身分證圖片，請重新拍攝清晰照片';
   if (code === 'ID_DATA_MISMATCH') return '身分資料不符，請確認姓名與身分證字號是否正確';
   if (code === 'DUPLICATE_IDENTITY') return '此身分證已綁定其他帳號，請聯繫客服';
   if (code === 'ACCOUNT_TYPE_NOT_SUPPORTED') return '公司帳號不支援身分證驗證，請使用統一編號';
   if (code === 'RATE_LIMITED' || status === 429) return '發送次數過多，請稍後再試';
-  return axErr?.response?.data?.message ?? '驗證失敗，請稍後再試';
+  return getApiErrorMessage(err) ?? '驗證失敗，請稍後再試';
 }
 
 function mapSubmitError(err: unknown): string {
-  const axErr = err as AxiosError<{ code?: string; message?: string }>;
-  const code = axErr?.response?.data?.code;
-  const status = axErr?.response?.status;
+  const code = getApiErrorCode(err);
+  const status = (err as { response?: { status?: number } })?.response?.status;
   if (code === 'RATE_LIMITED' || status === 429) return '提交次數過於頻繁，請於 15 分鐘後再試';
   if (code === 'VALIDATION_ERROR') return '輸入資料有誤，請檢查後再試一次';
-  return axErr?.response?.data?.message ?? 'KYC 提交失敗，請稍後再試';
+  return getApiErrorMessage(err) ?? 'KYC 提交失敗，請稍後再試';
+}
+
+/** Validates and sets the image file, returning an error string if invalid. */
+function validateImageFile(file: File): string | null {
+  if (!['image/jpeg', 'image/png'].includes(file.type)) {
+    return '僅接受 JPEG 或 PNG 格式的圖片';
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return '圖片大小不得超過 8 MB';
+  }
+  return null;
 }
 
 export function KycStep4Identity({ accountType, onSuccess }: KycStep4IdentityProps) {
@@ -46,6 +55,7 @@ export function KycStep4Identity({ accountType, onSuccess }: KycStep4IdentityPro
   const fileRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
   const [showTextFallback, setShowTextFallback] = useState(accountType === 'COMPANY');
 
   // Text-submit fields
@@ -57,19 +67,44 @@ export function KycStep4Identity({ accountType, onSuccess }: KycStep4IdentityPro
   const isPersonal = accountType === 'PERSONAL';
   const isPending = verifyId.isPending || submitKyc.isPending;
 
-  // Image upload handler
+  // Image upload handler (file input change)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setImageError('');
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!['image/jpeg', 'image/png'].includes(file.type)) {
-      setImageError('僅接受 JPEG 或 PNG 格式的圖片');
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setImageError('圖片大小不得超過 8 MB');
-      return;
-    }
+    const err = validateImageFile(file);
+    if (err) { setImageError(err); return; }
+    setImageFile(file);
+  };
+
+  // Drag-and-drop handlers
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    setImageError('');
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    const err = validateImageFile(file);
+    if (err) { setImageError(err); return; }
     setImageFile(file);
   };
 
@@ -86,8 +121,8 @@ export function KycStep4Identity({ accountType, onSuccess }: KycStep4IdentityPro
       const res = await verifyId.mutateAsync(fd);
       onSuccess(res.promoted, res.currentTier, false);
     } catch (err) {
-      const axErr = err as AxiosError<{ code?: string }>;
-      if (axErr?.response?.data?.code === 'ID_DATA_MISMATCH') {
+      const code = getApiErrorCode(err);
+      if (code === 'ID_DATA_MISMATCH') {
         setFormError(mapVerifyIdError(err));
         setShowTextFallback(true);
       } else {
@@ -179,16 +214,24 @@ export function KycStep4Identity({ accountType, onSuccess }: KycStep4IdentityPro
             </label>
             <div
               style={{
-                border: `2px dashed ${imageFile ? 'var(--co-green)' : 'var(--co-line-strong)'}`,
+                border: `2px dashed ${isDragOver ? 'var(--co-primary)' : imageFile ? 'var(--co-green)' : 'var(--co-line-strong)'}`,
                 borderRadius: 10,
                 padding: 20,
                 textAlign: 'center',
                 cursor: 'pointer',
-                background: imageFile ? 'rgba(16,185,129,0.06)' : 'var(--co-bg-3)',
-                transition: 'border-color 200ms',
+                background: isDragOver
+                  ? 'rgba(99,102,241,0.08)'
+                  : imageFile
+                  ? 'rgba(16,185,129,0.06)'
+                  : 'var(--co-bg-3)',
+                transition: 'border-color 200ms, background 200ms',
               }}
               onClick={() => fileRef.current?.click()}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileRef.current?.click(); }}
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
               role="button"
               tabIndex={0}
               aria-label="選擇身分證照片"
@@ -199,7 +242,7 @@ export function KycStep4Identity({ accountType, onSuccess }: KycStep4IdentityPro
                 </p>
               ) : (
                 <>
-                  <p style={{ fontSize: 13, color: 'var(--co-text-dim)' }}>
+                  <p style={{ fontSize: 13, color: isDragOver ? 'var(--co-primary)' : 'var(--co-text-dim)' }}>
                     點擊選取或拖曳圖片至此
                   </p>
                   <p style={{ fontSize: 11, color: 'var(--co-text-muted)', marginTop: 4 }}>

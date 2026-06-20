@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { AxiosError } from 'axios';
 import { useKycEmailStart, useKycEmailVerify } from '../../lib/query';
+import { getApiErrorCode, getApiErrorMessage } from '../../lib/api/http';
 import { KycOtpInput } from './KycOtpInput';
 import { Button } from '../ui/Button';
 
@@ -9,10 +9,20 @@ interface KycStep2EmailOtpProps {
   onVerified: () => void;
 }
 
+/** Masks an email for PII-safe display: user -> m***, domain preserved.
+ *  e.g. "mary@example.com" → "m***@example.com"
+ */
+function maskEmail(email: string): string {
+  const atIdx = email.indexOf('@');
+  if (atIdx <= 0) return '***';
+  const local = email.slice(0, atIdx);
+  const domain = email.slice(atIdx);
+  return local.slice(0, 1) + '***' + domain;
+}
+
 function mapEmailOtpError(err: unknown, attempt: number): string {
-  const axErr = err as AxiosError<{ code?: string; message?: string }>;
-  const code = axErr?.response?.data?.code;
-  const status = axErr?.response?.status;
+  const code = getApiErrorCode(err);
+  const status = (err as { response?: { status?: number } })?.response?.status;
 
   if (code === 'CHALLENGE_EXPIRED') return '驗證碼已過期，請重新發送';
   if (code === 'CODE_MISMATCH') {
@@ -22,7 +32,7 @@ function mapEmailOtpError(err: unknown, attempt: number): string {
   if (code === 'MAX_ATTEMPTS') return '嘗試次數過多，請重新發送驗證碼';
   if (code === 'CHALLENGE_NOT_FOUND') return '找不到驗證請求，請重新發送';
   if (code === 'RATE_LIMITED' || status === 429) return '發送次數過多，請於 15 分鐘後再試';
-  return axErr?.response?.data?.message ?? '驗證失敗，請稍後再試';
+  return getApiErrorMessage(err) ?? '驗證失敗，請稍後再試';
 }
 
 const OTP_TTL_SECS = 600; // 10 min
@@ -77,9 +87,8 @@ export function KycStep2EmailOtp({ email, onVerified }: KycStep2EmailOtpProps) {
       startResendTimer();
       startTtlTimer();
     } catch (err) {
-      const axErr = err as AxiosError<{ code?: string }>;
-      const code = axErr?.response?.data?.code;
-      const status = axErr?.response?.status;
+      const code = getApiErrorCode(err);
+      const status = (err as { response?: { status?: number } })?.response?.status;
       if (code === 'RATE_LIMITED' || status === 429) {
         setError('發送次數過多，請於 15 分鐘後再試');
       } else {
@@ -103,9 +112,10 @@ export function KycStep2EmailOtp({ email, onVerified }: KycStep2EmailOtpProps) {
         onVerified();
       }
     } catch (err) {
-      const axErr = err as AxiosError<{ code?: string }>;
+      const code = getApiErrorCode(err);
+      const status = (err as { response?: { status?: number } })?.response?.status;
       // 409 ALREADY_VERIFIED → silently advance
-      if (axErr?.response?.status === 409 || axErr?.response?.data?.code === 'ALREADY_VERIFIED') {
+      if (status === 409 || code === 'ALREADY_VERIFIED') {
         onVerified();
         return;
       }
@@ -115,6 +125,7 @@ export function KycStep2EmailOtp({ email, onVerified }: KycStep2EmailOtpProps) {
 
   const ttlMin = Math.floor(ttlCountdown / 60);
   const ttlSec = ttlCountdown % 60;
+  const maskedEmail = maskEmail(email);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -123,7 +134,7 @@ export function KycStep2EmailOtp({ email, onVerified }: KycStep2EmailOtpProps) {
           Step 2 / 5 — Email 驗證
         </h2>
         <p style={{ fontSize: 13, color: 'var(--co-text-dim)', lineHeight: 1.6 }}>
-          驗證碼已寄送至 <strong style={{ color: 'var(--co-text)' }}>{email}</strong>，請在 10 分鐘內輸入。
+          驗證碼已寄送至 <strong style={{ color: 'var(--co-text)' }}>{maskedEmail}</strong>，請在 10 分鐘內輸入。
         </p>
       </div>
 
