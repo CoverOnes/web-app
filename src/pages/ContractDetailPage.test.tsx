@@ -266,4 +266,62 @@ describe('ContractDetailPage', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(cancelMutate).not.toHaveBeenCalled();
   });
+
+  // ── render: （您）label appears next to the matching party ─────────────────────
+  // Lines ~588/592 in ContractDetailPage.tsx:
+  //   clientUserId.slice(0,12)+"…"+(user.id===clientUserId ? "（您）" : "")
+  //   freelancerUserId.slice(0,12)+"…"+(user.id===freelancerUserId ? "（您）" : "")
+
+  it('(render-7) client user sees （您） next to 甲方 (clientUserId) field', async () => {
+    // CLIENT_USER.id === 'client-1', which matches contract.clientUserId
+    useAuthStore.setState({
+      accessToken: 'tok',
+      refreshToken: 'ref',
+      user: CLIENT_USER,
+      isAuthenticated: true,
+      isHydrating: false,
+    });
+    setupAllMocks({ clientUserId: 'client-1', freelancerUserId: 'freelancer-9' });
+    const { default: Page } = await import('./ContractDetailPage');
+    render(<Page />, { wrapper: makeWrapper() });
+
+    // The client row should show （您） suffix; freelancer row should not
+    // Both desktop and mobile render → use getAllByText and check at least one
+    const clientCells = screen.getAllByText(/client-1.*（您）/);
+    expect(clientCells.length).toBeGreaterThanOrEqual(1);
+
+    // Freelancer row should NOT show （您）
+    const freelancerYouCells = screen.queryAllByText(/freelancer-9.*（您）/);
+    expect(freelancerYouCells).toHaveLength(0);
+  });
+
+  it('(render-8) freelancer user sees （您） next to 乙方 (freelancerUserId) field', async () => {
+    const FREELANCER_USER: AuthUser = {
+      id: 'freelancer-9',
+      email: 'freelancer@example.com',
+      displayName: 'Freelancer User',
+      avatarUrl: null,
+      accountType: 'PERSONAL',
+      kycTier: 1,
+      status: 'ACTIVE',
+      emailVerified: false,
+    };
+    useAuthStore.setState({
+      accessToken: 'tok',
+      refreshToken: 'ref',
+      user: FREELANCER_USER,
+      isAuthenticated: true,
+      isHydrating: false,
+    });
+    setupAllMocks({ clientUserId: 'client-1', freelancerUserId: 'freelancer-9' });
+    const { default: Page } = await import('./ContractDetailPage');
+    render(<Page />, { wrapper: makeWrapper() });
+
+    // The freelancer row should show （您）; client row should not
+    const freelancerCells = screen.getAllByText(/freelancer-9.*（您）/);
+    expect(freelancerCells.length).toBeGreaterThanOrEqual(1);
+
+    const clientYouCells = screen.queryAllByText(/client-1.*（您）/);
+    expect(clientYouCells).toHaveLength(0);
+  });
 });

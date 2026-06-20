@@ -264,3 +264,47 @@ describe('Settings — avatarSettings flag', () => {
     });
   });
 });
+
+describe('Settings — isBinding loading state', () => {
+  it('clicking bind button shows 綁定中… and disables the button until the promise settles', async () => {
+    // mockIdentities from beforeEach: google is bound, LINE is unbound.
+    // bindIdentity for LINE returns a never-resolving promise so isBinding stays set.
+    let resolveBind: () => void;
+    mockAuthApi.bindIdentity.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveBind = resolve;
+      }) as ReturnType<typeof mockAuthApi.bindIdentity>,
+    );
+
+    const Wrapper = createWrapper();
+    render(<Settings />, { wrapper: Wrapper });
+
+    // Navigate to 認證與資格 section
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    fireEvent.click(within(nav).getByRole('button', { name: '認證與資格' }));
+
+    // Wait for identities to load and LINE bind button to appear
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: '綁定 LINE' }).length).toBeGreaterThanOrEqual(1);
+    });
+
+    // Click the first bind button for LINE
+    const bindButtons = screen.getAllByRole('button', { name: '綁定 LINE' });
+    fireEvent.click(bindButtons[0]);
+
+    // After clicking, the button should show 綁定中… and be disabled
+    await waitFor(() => {
+      const loadingButtons = screen.getAllByText('綁定中…');
+      expect(loadingButtons.length).toBeGreaterThanOrEqual(1);
+    });
+
+    // The button element itself should be disabled
+    const disabledBindButtons = screen.getAllByRole('button').filter(
+      (btn) => btn.textContent?.includes('綁定中…'),
+    );
+    expect(disabledBindButtons[0]).toBeDisabled();
+
+    // Clean up: resolve the promise
+    resolveBind!();
+  });
+});
