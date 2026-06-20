@@ -85,6 +85,16 @@ function IconChevronDown() {
   );
 }
 
+// ─── Email masking ────────────────────────────────────────────────────────────
+
+function maskEmail(email: string): string {
+  const atIdx = email.indexOf('@');
+  if (atIdx <= 0) return email;
+  const local = email.slice(0, atIdx);
+  const domain = email.slice(atIdx); // includes '@'
+  return local.charAt(0) + '***' + domain;
+}
+
 const NAV_SECTIONS: NavSection[] = [
   {
     group: '企業',
@@ -236,7 +246,7 @@ function CompanySection({ profile, isLoading, isError }: CompanySectionProps) {
           <span className="settings-row-label-sub">帳號登入信箱</span>
         </div>
         <div className="settings-row-value">
-          {profile?.email ?? '—'}
+          {profile?.email ? maskEmail(profile.email) : '—'}
         </div>
         <div />
       </div>
@@ -301,6 +311,7 @@ function VerificationSection({
   const qc = useQueryClient();
   const [unbindError, setUnbindError] = React.useState<string | null>(null);
   const [bindError, setBindError] = React.useState<string | null>(null);
+  const [isBinding, setIsBinding] = React.useState<OAuthProvider | null>(null);
 
   const unbind = useMutation<unknown, Error, OAuthProvider>({
     mutationFn: (provider) => authApi.unbindIdentity(provider) as Promise<unknown>,
@@ -330,8 +341,10 @@ function VerificationSection({
 
   const handleBind = (provider: OAuthProvider) => {
     setBindError(null);
+    setIsBinding(provider);
     authApi.bindIdentity(provider).catch(() => {
       setBindError('無法啟動綁定流程，請稍後再試。');
+      setIsBinding(null);
     });
   };
 
@@ -529,6 +542,7 @@ function VerificationSection({
                   ) : (
                     <button
                       type="button"
+                      disabled={isBinding === provider}
                       onClick={() => handleBind(provider)}
                       aria-label={`綁定 ${label}`}
                       style={{
@@ -536,16 +550,17 @@ function VerificationSection({
                         borderRadius: 8,
                         border: '1px solid rgba(99,102,241,0.4)',
                         background: 'rgba(99,102,241,0.1)',
-                        color: '#C7D2FE',
+                        color: 'var(--co-indigo-lt)',
                         fontSize: 13,
                         fontWeight: 500,
-                        cursor: 'pointer',
+                        cursor: isBinding === provider ? 'not-allowed' : 'pointer',
+                        opacity: isBinding === provider ? 0.5 : 1,
                         transition: 'opacity 150ms',
                         minWidth: 80,
                         minHeight: 44,
                       }}
                     >
-                      綁定帳號
+                      {isBinding === provider ? '綁定中…' : '綁定帳號'}
                     </button>
                   )}
                 </div>
@@ -644,8 +659,10 @@ function AccordionItem({ id, label, icon, isOpen, onToggle, children }: Accordio
 // ─── Main Settings page ───────────────────────────────────────────────────────
 
 const Settings = () => {
+  // Single source of truth for both desktop nav active item and mobile accordion.
+  // Derive openAccordion from activeSection so they can never fall out of sync.
   const [activeSection, setActiveSection] = React.useState<SectionId>('company');
-  const [openAccordion, setOpenAccordion] = React.useState<SectionId | null>('company');
+  const openAccordion = activeSection;
 
   // Shared API queries
   const {
@@ -776,7 +793,9 @@ const Settings = () => {
   );
 
   const handleAccordionToggle = (id: SectionId) => {
-    setOpenAccordion((prev) => (prev === id ? null : id));
+    // Toggling an already-open section closes it by resetting to the first section.
+    // This keeps openAccordion (derived from activeSection) in sync with the tap.
+    setActiveSection((prev) => (prev === id ? 'company' : id));
   };
 
   return (

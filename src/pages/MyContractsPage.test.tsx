@@ -257,4 +257,59 @@ describe('MyContractsPage', () => {
     // Total count should be 3 (all contracts), not 1 (filtered)
     expect(screen.getByText(/共 3 份合約/)).toBeInTheDocument();
   });
+
+  // ── render: counterparty derivation ──────────────────────────────────────────
+  // When current user is the client (clientUserId matches user.id), the
+  // counterparty column should show the freelancerUserId slice.
+  // When current user is the freelancer, the counterparty column shows clientUserId.
+
+  it('(render-8) client user sees freelancerUserId as counterparty', async () => {
+    // user is set to client-1 in beforeEach
+    const contract = makeContract({
+      clientUserId: 'client-1',
+      freelancerUserId: 'freelancer-abc',
+    });
+    mockUseContracts.mockReturnValue(makeQueryResult({ data: [contract] }));
+    const { default: Page } = await import('./MyContractsPage');
+    render(<Page />, { wrapper: makeWrapper() });
+
+    // Counterparty cell shows freelancerUserId.slice(0, 8) + "…"
+    expect(screen.getByText('freelanc…')).toBeInTheDocument();
+    // clientUserId slice should NOT appear in counterparty column
+    // (it may appear in other cells, but the freelancer slice must be present)
+    expect(screen.queryByText('client-1…')).not.toBeInTheDocument();
+  });
+
+  it('(render-9) freelancer user sees clientUserId as counterparty', async () => {
+    // Switch user to freelancer-1
+    useAuthStore.setState({
+      accessToken: 'tok',
+      refreshToken: 'ref',
+      user: {
+        id: 'freelancer-1',
+        email: 'freelancer@example.com',
+        displayName: 'Freelancer User',
+        avatarUrl: null,
+        accountType: 'PERSONAL',
+        kycTier: 1,
+        status: 'ACTIVE',
+        emailVerified: true,
+      },
+      isAuthenticated: true,
+      isHydrating: false,
+    });
+
+    const contract = makeContract({
+      clientUserId: 'client-abc',
+      freelancerUserId: 'freelancer-1',
+    });
+    mockUseContracts.mockReturnValue(makeQueryResult({ data: [contract] }));
+    const { default: Page } = await import('./MyContractsPage');
+    render(<Page />, { wrapper: makeWrapper() });
+
+    // Counterparty cell shows clientUserId.slice(0, 8) + "…"
+    expect(screen.getByText('client-a…')).toBeInTheDocument();
+    // freelancerUserId slice should NOT appear in counterparty column
+    expect(screen.queryByText('freelanc…')).not.toBeInTheDocument();
+  });
 });

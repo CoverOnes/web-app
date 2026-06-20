@@ -104,7 +104,7 @@ describe('Settings — render', () => {
     render(<Settings />, { wrapper: Wrapper });
     // Both desktop and mobile sections render (CSS hides one at runtime; jsdom shows both)
     await waitFor(() => {
-      expect(screen.getAllByText('test@example.com').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('t***@example.com').length).toBeGreaterThanOrEqual(1);
     });
     expect(screen.getAllByText('公司帳號').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('測試公司').length).toBeGreaterThanOrEqual(1);
@@ -129,7 +129,7 @@ describe('Settings — section nav', () => {
     render(<Settings />, { wrapper: Wrapper });
     // Default section is 公司資訊 — profile fields loaded (desktop + mobile both render)
     await waitFor(() => {
-      expect(screen.getAllByText('test@example.com').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('t***@example.com').length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -262,5 +262,49 @@ describe('Settings — avatarSettings flag', () => {
       // avatarSettings=true shows company avatar with initials (desktop + mobile = multiple)
       expect(screen.getAllByLabelText('公司頭像').length).toBeGreaterThanOrEqual(1);
     });
+  });
+});
+
+describe('Settings — isBinding loading state', () => {
+  it('clicking bind button shows 綁定中… and disables the button until the promise settles', async () => {
+    // mockIdentities from beforeEach: google is bound, LINE is unbound.
+    // bindIdentity for LINE returns a never-resolving promise so isBinding stays set.
+    let resolveBind: () => void;
+    mockAuthApi.bindIdentity.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveBind = resolve;
+      }) as ReturnType<typeof mockAuthApi.bindIdentity>,
+    );
+
+    const Wrapper = createWrapper();
+    render(<Settings />, { wrapper: Wrapper });
+
+    // Navigate to 認證與資格 section
+    const nav = screen.getByRole('complementary', { name: '設定導覽' });
+    fireEvent.click(within(nav).getByRole('button', { name: '認證與資格' }));
+
+    // Wait for identities to load and LINE bind button to appear
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: '綁定 LINE' }).length).toBeGreaterThanOrEqual(1);
+    });
+
+    // Click the first bind button for LINE
+    const bindButtons = screen.getAllByRole('button', { name: '綁定 LINE' });
+    fireEvent.click(bindButtons[0]);
+
+    // After clicking, the button should show 綁定中… and be disabled
+    await waitFor(() => {
+      const loadingButtons = screen.getAllByText('綁定中…');
+      expect(loadingButtons.length).toBeGreaterThanOrEqual(1);
+    });
+
+    // The button element itself should be disabled
+    const disabledBindButtons = screen.getAllByRole('button').filter(
+      (btn) => btn.textContent?.includes('綁定中…'),
+    );
+    expect(disabledBindButtons[0]).toBeDisabled();
+
+    // Clean up: resolve the promise
+    resolveBind!();
   });
 });

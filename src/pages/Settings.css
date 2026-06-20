@@ -86,7 +86,7 @@
 
 .settings-nav-item--active {
   background: rgba(99, 102, 241, 0.15);
-  color: #c7d2fe;
+  color: var(--co-indigo-lt);
   font-weight: 600;
 }
 
@@ -216,7 +216,7 @@
 
 .verify-card-icon:not(.verify-card-icon--done) {
   background: rgba(245, 158, 11, 0.15);
-  color: #fcd34d;
+  color: var(--co-status-amber-text);
 }
 
 .verify-card-title {
@@ -235,7 +235,7 @@
 }
 
 .verify-card-status--warn {
-  color: #fcd34d;
+  color: var(--co-status-amber-text);
 }
 
 .verify-card-desc {
