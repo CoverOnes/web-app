@@ -23,6 +23,16 @@ function _notify(): void {
   _listeners.forEach((fn) => fn());
 }
 
+/**
+ * __resetToasts — test-only helper to clear module-level singleton state.
+ * Call in afterEach (or beforeEach) to isolate tests from each other.
+ * Never call this in production code.
+ */
+export function __resetToasts(): void {
+  _toasts = [];
+  _listeners.clear();
+}
+
 export function addToast(t: Omit<Toast, 'id'>): void {
   const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   // Max 3 stacked: remove oldest when 4th arrives

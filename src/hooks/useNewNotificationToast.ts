@@ -5,6 +5,10 @@
  * Suppressed when user is already on /notifications page.
  *
  * Called once at the top of CoverOnesLayout.
+ *
+ * Spurious-toast prevention:
+ *   The first time data resolves from undefined we record the baseline count
+ *   without toasting.  Only subsequent increases above that baseline fire a toast.
  */
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -13,11 +17,22 @@ import { addToast } from '../components/notifications/useToast';
 
 export function useNewNotificationToast(): void {
   const { data } = useUnreadCount();
-  const prevCount = useRef<number>(data?.count ?? 0);
+  // null = not yet initialized (data still undefined); number = baseline established
+  const prevCount = useRef<number | null>(null);
   const location = useLocation();
 
   useEffect(() => {
-    const curr = data?.count ?? 0;
+    // Wait until we have a real resolved value
+    if (data === undefined) return;
+
+    const curr = data.count;
+
+    if (prevCount.current === null) {
+      // First resolved value — seed the baseline, no toast
+      prevCount.current = curr;
+      return;
+    }
+
     if (curr > prevCount.current && location.pathname !== '/notifications') {
       addToast({
         title: '你有新通知',
@@ -26,5 +41,5 @@ export function useNewNotificationToast(): void {
       });
     }
     prevCount.current = curr;
-  }, [data?.count, location.pathname]);
+  }, [data, location.pathname]);
 }
