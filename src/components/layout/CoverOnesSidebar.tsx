@@ -189,6 +189,9 @@ const CoverOnesSidebar = () => {
     // sidebar's existing fallback convention (see Icon.Building note above).
     { path: '/reports',        label: '產業報告',  icon: (s) => <Icon.FileText size={s} /> },
     { path: '/insights',       label: '數據洞察',  icon: (s) => <Icon.Star size={s} /> },
+    // 訂閱方案: Icon.Shield used here (Icon.Tag taken by 招標進度, Icon.Star by 數據洞察).
+    // Shield is in accountNav only when kycTier < 2 (conditional), so no permanent duplicate.
+    { path: '/pricing',        label: '訂閱方案',  icon: (s) => <Icon.Shield size={s} /> },
     // 收藏: Icon.Bookmark does not exist in the Icon set; Icon.Pin is the closest
     // existing save/bookmark glyph (Tag/Star are already taken by 招標進度/數據洞察)
     // per the sidebar's fallback convention (see Icon.Building note above).
