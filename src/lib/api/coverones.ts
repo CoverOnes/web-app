@@ -799,6 +799,36 @@ export interface KycSubmitResponse {
   promoted: boolean;
 }
 
+// ===== KYC Wizard — Tier 0→1 OTP verification types =====
+export interface KycEmailStartRequest { email: string; }
+export interface KycPhoneStartRequest { phone: string; }  // E.164, e.g. "+886912345678"
+export interface KycVerifyOtpRequest  { code: string; }
+
+export interface KycVerifyOtpResponse {
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+  promoted: boolean;
+  currentTier: number;
+}
+
+// GET /api/kyc/v1/kyc/me — full KYC record (masked PII)
+export interface KycMeResponse {
+  id: string;
+  userId: string;
+  currentTier: number;
+  kycType: string;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  emailMasked?: string;   // "****@example.com"
+  phoneMasked?: string;   // "****4321"
+  tier1VerifiedAt?: string;
+}
+
+export interface KycVerifyIdResponse {
+  currentTier: number;
+  promoted: boolean;
+}
+
 export const kycApi = {
   // GET /api/kyc/v1/kyc/status → { data: { currentTier, kycType, submission } }
   getStatus: () =>
@@ -807,6 +837,34 @@ export const kycApi = {
   // POST /api/kyc/v1/kyc/submit — dev returns 201 with promoted=true, tierGranted=2.
   submit: (data: KycSubmitRequest) =>
     http.post<KycSubmitResponse>('/api/kyc/v1/kyc/submit', data).then((r) => r.data),
+
+  // GET /api/kyc/v1/kyc/me — authed. Returns masked PII + verification state.
+  getMe: () =>
+    http.get<KycMeResponse>('/api/kyc/v1/kyc/me').then((r) => r.data),
+
+  // POST /api/kyc/v1/kyc/email/start — rate-limited 3/15min. Returns 204.
+  emailStart: (data: KycEmailStartRequest) =>
+    http.post<void>('/api/kyc/v1/kyc/email/start', data).then((r) => r.data),
+
+  // POST /api/kyc/v1/kyc/email/verify — rate-limited 10/15min.
+  emailVerify: (data: KycVerifyOtpRequest) =>
+    http.post<KycVerifyOtpResponse>('/api/kyc/v1/kyc/email/verify', data).then((r) => r.data),
+
+  // POST /api/kyc/v1/kyc/phone/start — rate-limited 3/15min. Returns 204.
+  phoneStart: (data: KycPhoneStartRequest) =>
+    http.post<void>('/api/kyc/v1/kyc/phone/start', data).then((r) => r.data),
+
+  // POST /api/kyc/v1/kyc/phone/verify — rate-limited 10/15min.
+  // On promoted=true → tier 0→1 auto-promoted (both email + phone verified).
+  phoneVerify: (data: KycVerifyOtpRequest) =>
+    http.post<KycVerifyOtpResponse>('/api/kyc/v1/kyc/phone/verify', data).then((r) => r.data),
+
+  // POST /api/kyc/v1/kyc/verify-id — multipart/form-data; JPEG/PNG ≤ 8 MB.
+  // Requires Tier 1 (RequireEmailVerified middleware). PERSONAL accounts only.
+  verifyId: (formData: FormData) =>
+    http.post<KycVerifyIdResponse>('/api/kyc/v1/kyc/verify-id', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data),
 };
 
 export const workspaceApi = {
