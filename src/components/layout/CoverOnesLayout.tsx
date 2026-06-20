@@ -12,10 +12,15 @@ import ChatPopup from '../chat/ChatPopup';
 import { UnverifiedBanner } from '../auth/UnverifiedBanner';
 import MobileFABProvider from './MobileFABProvider';
 import { getApiErrorCode } from '../../lib/api/http';
+import { ToastContainer } from '../notifications/ToastContainer';
+import { useNewNotificationToast } from '../../hooks/useNewNotificationToast';
 
 const MOBILE_BREAKPOINT = 768;
 
 const CoverOnesLayout = () => {
+  // Fire in-app toast when unread notification count increases
+  useNewNotificationToast();
+
   const location = useLocation();
   const userId = useAuthStore((s) => s.user?.id ?? '');
   const { openPopups, setRooms, setRoomsLoaded, setRoomsLoadError } = useChatStore();
@@ -177,6 +182,9 @@ const CoverOnesLayout = () => {
           <ChatPopup key={room.id} room={room} index={index} />
         ))}
       </AppShell>
+
+      {/* Global in-app toast notifications — fixed bottom-right, z-[500] */}
+      <ToastContainer />
     </MobileFABProvider>
   );
 };
